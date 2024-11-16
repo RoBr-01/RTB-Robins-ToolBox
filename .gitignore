@@ -1,3 +1,5 @@
 main.cpp
 build/
 Commands.txt
+CMakeLists.txt
+CMakePresets.json
