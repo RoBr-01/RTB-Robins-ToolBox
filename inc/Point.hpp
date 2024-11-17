@@ -1,9 +1,10 @@
 #ifndef POINT_HPP
 #define POINT_HPP
 
-#include <cstddef>
+
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 
@@ -16,7 +17,7 @@ class Point {
 
 private:
 
-    std::array<T, N> coords; // Array to hold coordinates
+    std::array<T, N> coords;
 
 public:
 
@@ -45,18 +46,9 @@ public:
         return coords[index];
     }
 
-    double distanceTo(const Point<T, N>& other) const {
-        T sum = static_cast<T>(0);
-        for (std::size_t i = 0; i < N; ++i) {
-            T diff = coords[i] - other.coords[i];
-            sum += diff * diff;
-        }
-        return std::sqrt(static_cast<double>(sum));
-    }
-
     void print() const {
         std::cout << "(";
-        for (std::size_t i = 0; i < N; ++i) {
+        for (std::size_t i = 0; i < N; i++) {
             std::cout << coords[i];
             if (i < N - 1) {
                 std::cout << ", ";
@@ -64,8 +56,31 @@ public:
         }
         std::cout << ")" << std::endl;
     }
-};
 
+};//End of class
 
+template <typename T1, typename T2, std::size_t N>
+double distance_2points(const Point<T1,N> &P1, const Point<T2,N> &P2){
+
+    double sum = 0.0;
+    for (std::size_t i = 0; i < N; i++) {
+        double diff = P2[i] - P1[i];
+        sum += diff * diff;
+    }
+    return std::sqrt(static_cast<double>(sum));
 }
+
+
+template <typename T1, typename T2, std::size_t N>
+Point<double, N> midpoint(const Point<T1, N>& P1, const Point<T2, N>& P2) {
+
+    Point<double, N> mid;
+    for (std::size_t i = 0; i < N; i++) {
+        mid[i] = (P1[i] + P2[i]) / 2.0;
+    }
+
+    return mid;
+}
+
+}//End of namespace
 #endif

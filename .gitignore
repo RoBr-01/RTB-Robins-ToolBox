@@ -1,3 +1,6 @@
 main.cpp
 build/
 Commands.txt
+*.icloud
+.DS_Store
+.vscode
