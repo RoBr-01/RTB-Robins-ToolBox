@@ -1,12 +1,13 @@
 #ifndef POINT_HPP
 #define POINT_HPP
 
-
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <stdexcept>
 #include <type_traits>
+#include "Standards.hpp"
 
 namespace RTB{
 
@@ -15,6 +16,8 @@ class Point {
 
     static_assert(std::is_arithmetic<T>::value, 
     "Point can only use arithmetic types");
+
+    static_assert(N > 0, "Point dimension must be greater than zero");
 
 private:
 
@@ -59,30 +62,32 @@ public:
         std::cout << ")" << std::endl;
     }
 
-};//End of class
+};//Point
 
 template <typename T1, typename T2, std::size_t N>
-double distance_2points(const Point<T1,N> &P1, const Point<T2,N> &P2){
+RESOLUTION distance_2points(const Point<T1,N> &P1, const Point<T2,N> &P2){
 
-    double sum = 0.0;
+    RESOLUTION sum = 0.0;
     for (std::size_t i = 0; i < N; i++) {
-        double diff = P2[i] - P1[i];
+        RESOLUTION diff = P2[i] - P1[i];
         sum += diff * diff;
     }
-    return std::sqrt(static_cast<double>(sum));
+    return std::sqrt(static_cast<RESOLUTION>(sum));
 }
 
 
 template <typename T1, typename T2, std::size_t N>
-Point<double, N> midpoint(const Point<T1, N>& P1, const Point<T2, N>& P2) {
+Point<RESOLUTION, N> midpoint(const Point<T1, N>& P1, const Point<T2, N>& P2) {
 
-    Point<double, N> mid;
+    Point<RESOLUTION, N> mid;
     for (std::size_t i = 0; i < N; i++) {
         mid[i] = (P1[i] + P2[i]) / 2.0;
     }
 
     return mid;
 }
+
+using Point3f = Point<float,3>;
 
 } //RTB
 
