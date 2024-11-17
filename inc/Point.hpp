@@ -13,7 +13,8 @@ namespace RTB{
 template <typename T, std::size_t N>
 class Point {
 
-    static_assert(std::is_arithmetic<T>::value, "Point can only use arithmetic types");
+    static_assert(std::is_arithmetic<T>::value, 
+    "Point can only use arithmetic types");
 
 private:
 
@@ -27,7 +28,8 @@ public:
 
     Point(const std::initializer_list<T>& values) {
         if (values.size() != N) {
-            throw std::invalid_argument("Initializer list size does not match point dimension.");
+            throw std::invalid_argument(
+                "Initializer list size does not match point dimension.");
         }
         std::copy(values.begin(), values.end(), coords.begin());
     }
