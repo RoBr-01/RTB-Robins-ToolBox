@@ -1,0 +1,1 @@
+//Needs a way to check intersections with triangles and other shapes (2D and 3D)

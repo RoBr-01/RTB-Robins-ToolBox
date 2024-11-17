@@ -82,5 +82,6 @@ Point<double, N> midpoint(const Point<T1, N>& P1, const Point<T2, N>& P2) {
     return mid;
 }
 
-}//End of namespace
-#endif
+} //RTB
+
+#endif //POINT_HPP
