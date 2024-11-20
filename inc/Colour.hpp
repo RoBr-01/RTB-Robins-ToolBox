@@ -4,6 +4,8 @@
 #include <array>
 #include <cstddef>
 // a colour is represented by an array of 3 or 4 bytes: RGB(A)
+// Using int_fast8_t because its not worth risking wanting exactly 8 bits when
+// it might negatively impact speed
 
 namespace RTB {
 
