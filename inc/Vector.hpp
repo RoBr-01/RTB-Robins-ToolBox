@@ -35,6 +35,10 @@ class Vector {
 
   ~Vector() = default;
 
+  std::size_t Size(){
+    return N;
+  }
+
   // Only for 1D, 2D, 3D
   T x() const {
     static_assert(N < 4, "This operation can only be performed on 3D vectors");

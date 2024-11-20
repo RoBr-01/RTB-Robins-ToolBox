@@ -51,6 +51,7 @@ T atand(const T &value) {
 }
 
 // The cart2sph and sph2cart follow SOFA convention
+// TODO: update to work with any container (of size 3)
 template <typename T>
 std::array<T, 3> Cart2SphD(const std::array<T, 3> &Cart) {
   std::array<T, 3> Spherical;
