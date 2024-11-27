@@ -86,6 +86,32 @@ std::array<T, 3> Sph2CartD(const std::array<T, 3> &Spherical) {
   return Cartesian;
 }
 
+//John Carmacks's fast inverse sqrt, but in c++
+template <typename T>
+T fastInverseSqrt(T number) {
+  constexpr T threeHalves = static_cast<T>(1.5);
+
+  T x2 = number * static_cast<T>(0.5);
+  T y = number;
+
+  // Use different magic numbers depending on the type
+  std::uint64_t i;
+  if constexpr (std::is_same<T, double>::value) {
+    i = *reinterpret_cast<std::uint64_t *>(&y);  // Double magic constant
+    i = 0x5FE6EB50C7B537A9 - (i >> 1);           // Magic number for double
+  } else {
+    i = *reinterpret_cast<std::uint32_t *>(&y);  // Float magic constant
+    i = 0x5f3759df - (i >> 1);                   // Magic number for float
+  }
+
+  y = *reinterpret_cast<T *>(&i);  // Convert back to floating-point
+
+  y = y * (threeHalves - (x2 * y * y));  // One iteration of Newton's method
+  // y = y * (threeHalves - (x2 * y * y));  // Second iteration - optional
+
+  return y;
+}
+
 }  // namespace RTB
 
 #endif  // MATH_HPP
