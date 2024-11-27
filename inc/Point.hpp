@@ -33,6 +33,11 @@ class Point {
     std::copy(values.begin(), values.end(), coords.begin());
   }
 
+  std::array<T, N> &GetCoords() { return coords; }
+  std::array<T, N> &SetCoords() { return coords; }
+
+  void SetCoords(const std::array<T, N> &newCoords) { coords = newCoords; }
+
   T &operator[](std::size_t index) {
     if (index >= N) {
       throw std::out_of_range("Index out of range");
@@ -81,7 +86,7 @@ Point<RESOLUTION, N> midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2) {
 }
 
 using Point3f = Point<float, 3>;
-using Point3R = Point<RESOLUTION,3>;
+using Point3R = Point<RESOLUTION, 3>;
 
 }  // namespace RTB
 

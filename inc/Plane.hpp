@@ -38,7 +38,6 @@ class Plane {
   void Print() const {
     std::cout << "Plane coefficients: ";
     m_coefficients.print();  // Call the print method of the Vector class
-    std::cout << std::endl;
   }
 
  private:

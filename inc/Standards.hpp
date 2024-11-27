@@ -28,11 +28,15 @@ constexpr RESOLUTION PI_4 = PI / 4;
 constexpr RESOLUTION PI_180 = PI / 180;
 constexpr RESOLUTION R180_PI = 180 / PI;
 
-// Optional but usefull:
+// Optional but useful:
 enum Axes { x, y, z };
 enum Coefficients { a, b, c, d };
 enum Directions { Left, Right, Front, Back, Up, Down };
 enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
+
+
+RESOLUTION SpeedOfSound = 344; // meters per second
+RESOLUTION ReferenceVolume = 85; // dB SPL @ 1m
 
 }  // namespace RTB
 #endif  // STANDARDS_HPP

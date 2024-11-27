@@ -4,7 +4,7 @@
 #include <array>
 #include <cmath>
 
-#include "inc/Standards.hpp"
+#include "Standards.hpp"
 
 // Generally trying to prevent function calls within function calls
 
@@ -86,7 +86,7 @@ std::array<T, 3> Sph2CartD(const std::array<T, 3> &Spherical) {
   return Cartesian;
 }
 
-//John Carmacks's fast inverse sqrt, but in c++
+// John Carmacks's fast inverse sqrt, but in c++
 template <typename T>
 T fastInverseSqrt(T number) {
   constexpr T threeHalves = static_cast<T>(1.5);
