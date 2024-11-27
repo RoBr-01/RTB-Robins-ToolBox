@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-// Shamelessly "inspired" by thecherno:
+// Original by the cherno:
 // https://github.com/StudioCherno/Walnut/blob/master/Walnut/src/Walnut/Timer.h
 
 namespace RTB {
