@@ -1,10 +1,24 @@
 #ifndef STANDARDS_HPP
 #define STANDARDS_HPP
 
+/*
+Axes follow the SOFA convention:
+https://www.sofaconventions.org/mediawiki/index.php/SOFA_specifications
+Cartesian is thus basically the physics convention (right hand rule)
+FRONT = +X, BACK = -X
+LEFT = +Y, RIGHT = -Y
+UP = +Z, DOWN = -Z
+Spherical just has the Elevation reversed
++Azimuth = rotate from +X to +Y
+-Azimuth = rotate from +X to -Y
++Elevation = rotate from XY-Plane to +Z
+-Elevation = rotate from XY-Plane to -Z
+*/
+
 // Some stuff you can control for the entire library
 namespace RTB {
 
-using RESOLUTION = double;
+using RESOLUTION = float;
 
 // Slightly unnecessary - use cmath or math.h instead?
 constexpr RESOLUTION PI = 3.141592653589793238462643383279502884;
@@ -14,17 +28,11 @@ constexpr RESOLUTION PI_4 = PI / 4;
 constexpr RESOLUTION PI_180 = PI / 180;
 constexpr RESOLUTION R180_PI = 180 / PI;
 
-// Axes follow the SOFA convention:
-// https://www.sofaconventions.org/mediawiki/index.php/SOFA_specifications
-// Cartesian is thus basically the physics convention (right hand rule)
-// FRONT = +X, BACK = -X
-// LEFT = +Y, RIGHT = -Y
-// UP = +Z, DOWN = -Z
-// Spherical just has the Elevation reversed
-// +Azimuth = rotate from +X to +Y
-// -Azimuth = rotate from +X to -Y
-// +Elevation = rotate from XY-Plane to +Z
-// -Elevation = rotate from XY-Plane to -Z
+// Optional but usefull:
+enum Axes { x, y, z };
+enum Coefficients { a, b, c, d };
+enum Directions { Left, Right, Front, Back, Up, Down };
+enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
 
 }  // namespace RTB
 #endif  // STANDARDS_HPP

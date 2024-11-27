@@ -47,7 +47,7 @@ class Point {
     return coords[index];
   }
 
-  void print() const {
+  void Print() const {
     std::cout << "(";
     for (std::size_t i = 0; i < N; i++) {
       std::cout << coords[i];
@@ -81,6 +81,7 @@ Point<RESOLUTION, N> midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2) {
 }
 
 using Point3f = Point<float, 3>;
+using Point3R = Point<RESOLUTION,3>;
 
 }  // namespace RTB
 
