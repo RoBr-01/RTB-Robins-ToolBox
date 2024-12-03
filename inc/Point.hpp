@@ -28,12 +28,13 @@ class Point {
   Point(const std::initializer_list<T> &values) {
     if (values.size() != N) {
       throw std::invalid_argument(
-          "Initializer list size does not match point dimension.");
+          "Point constructor : Initializer list size does not match point dimension.");
     }
     std::copy(values.begin(), values.end(), coords.begin());
   }
 
   std::array<T, N> &GetCoords() { return coords; }
+  // std::array<T, N> GetCoords() { return coords; }
   std::array<T, N> &SetCoords() { return coords; }
 
   void SetCoords(const std::array<T, N> &newCoords) { coords = newCoords; }

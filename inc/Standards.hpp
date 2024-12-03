@@ -20,6 +20,14 @@ namespace RTB {
 
 using RESOLUTION = float;
 
+
+// auto Test = make_value(10);
+// std::cout << typeid(Test).name() << std::endl;
+template <typename T>
+inline RESOLUTION make_value(T value) {
+  return static_cast<RESOLUTION>(value);
+}
+
 // Slightly unnecessary - use cmath or math.h instead?
 constexpr RESOLUTION PI = 3.141592653589793238462643383279502884;
 constexpr RESOLUTION TAU = 2 * PI;

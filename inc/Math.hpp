@@ -112,6 +112,18 @@ T fastInverseSqrt(T number) {
   return y;
 }
 
+template<typename T>
+T frac_to_dB(T Frac){
+    
+    return 20*std::log10(Frac);
+}
+
+template<typename T>
+T dB_to_frac(T dB){
+    
+    return std::pow(10,(dB/20));
+}
+
 }  // namespace RTB
 
 #endif  // MATH_HPP
