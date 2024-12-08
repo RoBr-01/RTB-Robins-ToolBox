@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "Point.hpp"
 #include "Standards.hpp"
 
 namespace RTB {
@@ -33,11 +34,19 @@ class Vector {
     std::copy(values.begin(), values.end(), components.begin());
   }
 
+  Vector(const Point3R &startPoint, const Point3R &endPoint) {
+    components[0] = endPoint[0] - startPoint[0];  // X component
+    components[1] = endPoint[1] - startPoint[1];  // Y component
+    components[2] = endPoint[2] - startPoint[2];  // Z component
+  }
+
   ~Vector() = default;
 
-  std::size_t Size(){
-    return N;
-  }
+  std::size_t Size() { return N; }
+
+  std::array<T, N> GetComponents() { return components; }
+
+  void SetComponents(const std::array<T, N> &values) { components = values; }
 
   // Only for 1D, 2D, 3D
   T x() const {

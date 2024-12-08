@@ -40,6 +40,14 @@ class Plane {
     m_coefficients.print();  // Call the print method of the Vector class
   }
 
+  Vec3R GetNormalVector(){
+    Vec3R normal;
+    normal[0] = m_coefficients[0];
+    normal[1] = m_coefficients[1];
+    normal[2] = m_coefficients[2];
+    return normal;
+  }
+
  private:
   //   std::array<T, 4> m_coefficients;
   Vector<T, 4> m_coefficients;  // Because member functions are hidden anyway

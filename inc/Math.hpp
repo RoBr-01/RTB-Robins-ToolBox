@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "Standards.hpp"
+#include "Vector.hpp"
 
 // Generally trying to prevent function calls within function calls
 
@@ -112,16 +113,27 @@ T fastInverseSqrt(T number) {
   return y;
 }
 
-template<typename T>
-T frac_to_dB(T Frac){
-    
-    return 20*std::log10(Frac);
+template <typename T>
+T frac_to_dB(T Frac) {
+  return 20 * std::log10(Frac);
 }
 
-template<typename T>
-T dB_to_frac(T dB){
-    
-    return std::pow(10,(dB/20));
+template <typename T>
+T dB_to_frac(T dB) {
+  return std::pow(10, (dB / 20));
+}
+
+template <typename T>
+T PolardB(T polar_pattern, T max_attenuation_offset, Vec3R rayvector,
+          Vec3R zeroaxis) {
+  T alpha = acosd(dotprod(rayvector, zeroaxis));
+
+  T frac = (std::abs(polar_pattern + (1 - polar_pattern) * cosd(alpha)) +
+            max_attenuation_offset) /
+           (1 + max_attenuation_offset);
+  T dB = frac_to_dB(frac);
+
+  return dB;
 }
 
 }  // namespace RTB
