@@ -20,12 +20,11 @@ namespace RTB {
 
 using RESOLUTION = float;
 
-
 // auto Test = make_value(10);
 // std::cout << typeid(Test).name() << std::endl;
 template <typename T>
 inline RESOLUTION make_value(T value) {
-  return static_cast<RESOLUTION>(value);
+    return static_cast<RESOLUTION>(value);
 }
 
 // Slightly unnecessary - use cmath or math.h instead?
@@ -42,9 +41,8 @@ enum Coefficients { a, b, c, d };
 enum Directions { Left, Right, Front, Back, Up, Down };
 enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
 
-
-RESOLUTION SpeedOfSound = 344; // meters per second
-RESOLUTION ReferenceVolume = 85; // dB SPL @ 1m
+RESOLUTION SpeedOfSound = 344;    // meters per second
+RESOLUTION ReferenceVolume = 85;  // dB SPL @ 1m
 
 }  // namespace RTB
 #endif  // STANDARDS_HPP

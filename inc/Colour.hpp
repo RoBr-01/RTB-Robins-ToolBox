@@ -10,16 +10,16 @@
 namespace RTB {
 
 class Colour {
- private:
-  std::array<int_fast8_t, 3> components;
+   private:
+    std::array<int_fast8_t, 3> components;
 
- public:
-  Colour() : components{0, 0, 0} {}
+   public:
+    Colour() : components{0, 0, 0} {}
 
-  ~Colour();
+    ~Colour();
 
-  Colour(int_fast8_t c1 = 0, int_fast8_t c2 = 0, int_fast8_t c3 = 0)
-      : components{c1, c2, c3} {}
+    Colour(int_fast8_t c1 = 0, int_fast8_t c2 = 0, int_fast8_t c3 = 0)
+        : components{c1, c2, c3} {}
 };
 
 #endif  // COLOUR_HPP
