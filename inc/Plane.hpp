@@ -54,7 +54,7 @@ class Plane {
         return normal;
     }
 
-    T GetIntersection(const Ray &ray) {
+    T GetIntersection(const Ray3R &ray) {
         Point3R rayOriginPoint = ray.GetOrigin();
         Vec3R rayOrigin{
             rayOriginPoint[0], rayOriginPoint[1], rayOriginPoint[2]};
@@ -82,7 +82,7 @@ class Plane {
         return t;
     }
 
-    void Reflect(Ray &ray, float &t) {
+    void Reflect(Ray3R &ray, float &t) {
         Point3R intersectionPoint = ray.GetPosition(t);
         Vec3R normal = GetNormalVector();
         normal = unit_vector(normal);
@@ -99,9 +99,10 @@ class Plane {
     }
 
    private:
-    Vector<T, 4> m_coefficients;  // Because member functions are hidden anyway
+    Vector<T, 4> m_coefficients;
 };
 
+template class Plane<RESOLUTION>; //explicit instantiation for compiler
 using PlaneR = Plane<RESOLUTION>;
 }  // namespace RTB
 

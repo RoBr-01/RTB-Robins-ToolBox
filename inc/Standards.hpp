@@ -4,15 +4,15 @@
 /*
 Axes follow the SOFA convention:
 https://www.sofaconventions.org/mediawiki/index.php/SOFA_specifications
-Cartesian is thus basically the physics convention (right hand rule)
-FRONT = +X, BACK = -X
-LEFT = +Y, RIGHT = -Y
-UP = +Z, DOWN = -Z
-Spherical just has the Elevation reversed
-+Azimuth = rotate from +X to +Y
--Azimuth = rotate from +X to -Y
-+Elevation = rotate from XY-Plane to +Z
--Elevation = rotate from XY-Plane to -Z
+Cartesian is thus basically the physics convention (right hand rule):
+    FRONT = +X, BACK = -X
+    LEFT = +Y, RIGHT = -Y
+    UP = +Z, DOWN = -Z
+Spherical:
+    +Azimuth = rotate from +X to +Y
+    -Azimuth = rotate from +X to -Y
+    +Elevation = rotate from XY-Plane to +Z
+    -Elevation = rotate from XY-Plane to -Z
 */
 
 // Some stuff you can control for the entire library
@@ -22,6 +22,7 @@ using RESOLUTION = float;
 
 // auto Test = make_value(10);
 // std::cout << typeid(Test).name() << std::endl;
+// Explicit constructor for a standard-complient type
 template <typename T>
 inline RESOLUTION make_value(T value) {
     return static_cast<RESOLUTION>(value);

@@ -1,55 +1,54 @@
 #ifndef RAY_HPP
 #define RAY_HPP
 
-#include "Math.hpp"
 #include "Point.hpp"
 #include "Standards.hpp"
 #include "Vector.hpp"
 
 namespace RTB {
 
+template <typename T, std::size_t N>
 class Ray {
-   private:
-    Vec3R m_direction;
-    Point3R m_origin;
-
    public:
-    Ray() {
-        m_direction = {0, 0, 0};
-        m_origin = {0, 0, 0};
-    }
+    Ray() = default;
 
-    Ray(const Point3R& origin, const Vec3R& direction) {
+    Ray(const Point<T, N>& origin, const Vector<T, N>& direction) {
         m_origin = origin;
         m_direction = direction;
-        Normalize();
     };
 
-    void Update(const Point3R& newOrigin, const Vec3R& newDirection) {
+    void Update(const Point<T, N>& newOrigin,
+                const Vector<T, N>& newDirection) {
         m_origin = newOrigin;
         m_direction = newDirection;
-        Normalize();
     }
 
     void Normalize() {
         m_direction = unit_vector(m_direction);
     }
 
-    Point3R GetPosition(const RESOLUTION t) const {
-        return {m_origin[x] + t * m_direction[x],
-                m_origin[y] + t * m_direction[y],
-                m_origin[z] + t * m_direction[z]};
+    Point<T, N> GetPosition(const T& t) const {
+        Point<T, N> position;
+        for (std::size_t i = 0; i < N; ++i) {
+            position[i] = m_origin[i] + t * m_direction[i];
+        }
+        return position;
     }
 
-    Vec3R GetDirection() const {
+    Vector<T, N> GetDirection() const {
         return m_direction;
     }
-    Point3R GetOrigin() const {
+    Point<T, N> GetOrigin() const {
         return m_origin;
     }
+
+   private:
+    Vector<T, N> m_direction;
+    Point<T, N> m_origin;
 };
 
-// using RayR = Ray<RESOLUTION>;
+template class Ray<RESOLUTION, 3>;
+using Ray3R = Ray<RESOLUTION, 3>;
 
 }  // namespace RTB
 

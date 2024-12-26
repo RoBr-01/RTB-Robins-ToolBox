@@ -226,7 +226,7 @@ inline std::ostream &operator<<(std::ostream &out, const Vector<T, N> &v) {
     return out << v[0] << ' ' << v[1] << ' ' << v[2];
 }
 
-using Vec3f = Vector<float, 3>;
+// using Vec3f = Vector<float, 3>;
 using Vec3R = Vector<RESOLUTION, 3>;
 
 }  // namespace RTB

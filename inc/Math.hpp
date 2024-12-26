@@ -1,13 +1,13 @@
 #ifndef MATH_HPP
 #define MATH_HPP
 
+// STL
 #include <array>
 #include <cmath>
 
+// RTB
 #include "Standards.hpp"
 #include "Vector.hpp"
-
-// Generally trying to prevent function calls within function calls
 
 namespace RTB {
 
@@ -51,23 +51,20 @@ T atand(const T &value) {
     return std::atan(value) * R180_PI;
 }
 
-// The cart2sph and sph2cart follow SOFA convention
-// TODO: update to work with any container (of size 3)
 template <typename T>
-std::array<T, 3> Cart2SphD(const std::array<T, 3> &Cart) {
-    std::array<T, 3> Spherical;
+std::array<T, 3> Cart2SphD(const std::array<T, 3> &cartesian) {
+    std::array<T, 3> spherical;
 
-    T x = Cart[0];
-    T y = Cart[1];
-    T z = Cart[2];
+    T x = cartesian[0];
+    T y = cartesian[1];
+    T z = cartesian[2];
 
-    Spherical[0] = (std::atan2(y, x))*R180_PI;  // Azimuth
-    Spherical[1] =
+    spherical[0] = (std::atan2(y, x))*R180_PI;  // Azimuth
+    spherical[1] =
         (std::atan2(z, std::sqrt(x * x + y * y))) * R180_PI;  // Elevation
-    Spherical[2] = std::sqrt(Cart[0] * Cart[0] + Cart[1] * Cart[1] +
-                             Cart[2] * Cart[2]);  // Radius
+    spherical[2] = std::sqrt(x * x + y * y + z * z);          // Radius
 
-    return Spherical;
+    return spherical;
 }
 
 template <typename T>
@@ -78,11 +75,14 @@ std::array<T, 3> Sph2CartD(const std::array<T, 3> &Spherical) {
     T El = Spherical[1];
     T r = Spherical[2];
 
-    // Since i want to prevent internal function calls, formula again, could be
-    // replaced by cosd and sind
-    Cartesian[0] = r * std::cos(El * PI_180) * std::cos(Az * PI_180);  // x
-    Cartesian[1] = r * std::cos(El * PI_180) * std::sin(Az * PI_180);  // y
-    Cartesian[2] = r * std::sin(El * PI_180);                          // z
+    T cosEl = cosd(El);
+    T sinEl = sind(El);
+    T cosAz = cosd(Az);
+    T sinAz = sind(Az);
+
+    Cartesian[0] = r * cosEl * cosAz;  // x
+    Cartesian[1] = r * cosEl * sinAz;  // y
+    Cartesian[2] = r * sinEl;          // z
 
     return Cartesian;
 }
@@ -123,6 +123,9 @@ T dB_to_frac(T dB) {
     return std::pow(10, (dB / 20));
 }
 
+// TODO: split into positive and negative part of curve,
+// use negative part to invert polarity of signal
+// Split the absolute value
 template <typename T>
 T PolardB(T polar_pattern,
           T max_attenuation_offset,
