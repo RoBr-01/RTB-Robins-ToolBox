@@ -10,6 +10,8 @@
 
 namespace RTB {
 
+namespace Measurement {
+
 class Timer {
    public:
     Timer() {
@@ -55,5 +57,7 @@ class ScopedTimer {
     std::string Resolution;
     Timer Timer;
 };
+
+}  // namespace Measurement
 }  // namespace RTB
 #endif  // TIMER_HPP

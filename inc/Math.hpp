@@ -11,44 +11,46 @@
 
 namespace RTB {
 
+namespace Math {
+
 template <typename T>
 T deg2rad(const T &degrees) {
-    return degrees * PI_180;
+    return degrees * Math::PI_180;
 }
 
 template <typename T>
 T rad2deg(const T &radians) {
-    return radians * R180_PI;
+    return radians * Math::R180_PI;
 }
 
 template <typename T>
 T sind(const T &degrees) {
-    return std::sin(degrees * PI_180);
+    return std::sin(degrees * Math::PI_180);
 }
 
 template <typename T>
 T asind(const T &value) {
-    return std::asin(value) * R180_PI;
+    return std::asin(value) * Math::R180_PI;
 }
 
 template <typename T>
 T cosd(const T &degrees) {
-    return std::cos(degrees * PI_180);
+    return std::cos(degrees * Math::PI_180);
 }
 
 template <typename T>
 T acosd(const T &value) {
-    return std::acos(value) * R180_PI;
+    return std::acos(value) * Math::R180_PI;
 }
 
 template <typename T>
 T tand(const T &degrees) {
-    return std::tan(degrees * PI_180);
+    return std::tan(degrees * Math::PI_180);
 }
 
 template <typename T>
 T atand(const T &value) {
-    return std::atan(value) * R180_PI;
+    return std::atan(value) * Math::R180_PI;
 }
 
 template <typename T>
@@ -59,10 +61,10 @@ std::array<T, 3> Cart2SphD(const std::array<T, 3> &cartesian) {
     T y = cartesian[1];
     T z = cartesian[2];
 
-    spherical[0] = (std::atan2(y, x))*R180_PI;  // Azimuth
+    spherical[0] = (std::atan2(y, x))*Math::R180_PI;  // Azimuth
     spherical[1] =
-        (std::atan2(z, std::sqrt(x * x + y * y))) * R180_PI;  // Elevation
-    spherical[2] = std::sqrt(x * x + y * y + z * z);          // Radius
+        (std::atan2(z, std::sqrt(x * x + y * y))) * Math::R180_PI;  // Elevation
+    spherical[2] = std::sqrt(x * x + y * y + z * z);                // Radius
 
     return spherical;
 }
@@ -140,6 +142,8 @@ T PolardB(T polar_pattern,
 
     return dB;
 }
+
+}  // namespace Math
 
 }  // namespace RTB
 
