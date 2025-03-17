@@ -1,6 +1,7 @@
 #ifndef RANDOM_HPP
 #define RANDOM_HPP
 
+// STL
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -8,10 +9,14 @@
 #include <random>
 #include <vector>
 
+// RTB
 #include "Standards.hpp"
 #include "Vector.hpp"
+#include <iostream>
 
 namespace RTB {
+
+namespace Random {
 
 // PCG (permuted congruential generator). Thanks to:
 // www.pcg-random.org and www.shadertoy.com/view/XlGch
@@ -31,7 +36,7 @@ float RandomHashValue(uint32_t state) {
 Vec3R RandSampleSphere(std::mt19937& generator) {
     std::uniform_real_distribution<RESOLUTION> uniform01(0.0, 1.0);
 
-    RESOLUTION theta = 2 * PI * uniform01(generator);
+    RESOLUTION theta = 2 * Math::PI * uniform01(generator);
     RESOLUTION phi = acos(1 - 2 * uniform01(generator));
     RESOLUTION x = sin(phi) * cos(theta);
     RESOLUTION y = sin(phi) * sin(theta);
@@ -39,5 +44,15 @@ Vec3R RandSampleSphere(std::mt19937& generator) {
 
     return Vec3R({x, y, z});
 }
+
+Point3R RandSampleSpherePoint(std::mt19937& generator) {
+    std::uniform_real_distribution<RESOLUTION> uniform01(0.0, 1.0);
+    RESOLUTION theta = 2 * PI * uniform01(generator);
+    RESOLUTION phi = acos(2 * uniform01(generator) - 1);
+
+    return Point3R({Math::rad2deg(theta), 90 - Math::rad2deg(phi), 1.0});
+}
+}  // namespace Random
+
 }  // namespace RTB
-#endif  // RANDOM_HPP
+#endif/* RANDOM_HPP */
