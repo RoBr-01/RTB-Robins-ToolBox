@@ -34,6 +34,10 @@ class Plane {
 
     void Reflect(Ray<T, 3> &ray, T &t) const;
 
+    Vector<T, 4> GetCoefficients() const {
+        return m_coefficients;
+    }
+
    private:
     Vector<T, 4> m_coefficients;
     // Would this be better using a normal array?
@@ -135,6 +139,50 @@ void Plane<T>::Reflect(Ray<T, 3> &ray, T &t) const {
 // explicit instantiation
 template class Plane<RESOLUTION>;
 using PlaneR = Plane<RESOLUTION>;
+
+Ray3R IntersectPlanes(const PlaneR &plane1, const PlaneR &plane2) {
+    Vector<RESOLUTION, 3> normal1 = plane1.GetNormalVector();
+    Vector<RESOLUTION, 3> normal2 = plane2.GetNormalVector();
+    RESOLUTION d1 = plane1.GetCoefficients()[3];
+    RESOLUTION d2 = plane2.GetCoefficients()[3];
+
+    // Direction of the intersection line (cross product of normals)
+    Vector<RESOLUTION, 3> direction = crossprod(normal1, normal2);
+
+    // Check if planes are parallel (direction is zero vector)
+    if (direction.Length() < std::numeric_limits<RESOLUTION>::epsilon()) {
+        throw std::runtime_error("Planes are parallel and do not intersect.");
+    }
+
+    // Find a point on the line by fixing one coordinate (z=0, y=0, or x=0)
+    Point3R point;
+    RESOLUTION denom;
+
+    // Try z=0 first (solve for x and y)
+    denom = normal1[0] * normal2[1] - normal2[0] * normal1[1];
+    if (std::abs(denom) > std::numeric_limits<RESOLUTION>::epsilon()) {
+        point[0] = (-d1 * normal2[1] - (-d2) * normal1[1]) / denom;
+        point[1] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
+        point[2] = 0;
+    }
+    // If z=0 fails, try y=0
+    else if (std::abs(normal1[0] * normal2[2] - normal2[0] * normal1[2]) >
+             std::numeric_limits<RESOLUTION>::epsilon()) {
+        denom = normal1[0] * normal2[2] - normal2[0] * normal1[2];
+        point[0] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
+        point[2] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
+        point[1] = 0;
+    }
+    // If y=0 fails, try x=0
+    else {
+        denom = normal1[1] * normal2[2] - normal2[1] * normal1[2];
+        point[1] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
+        point[2] = (normal1[1] * (-d2) - normal2[1] * (-d1)) / denom;
+        point[0] = 0;
+    }
+
+    return Ray3R(point, direction);
+}
 }  // namespace RTB
 
-#endif  // PLANE_HPP
+#endif /* PLANE_HPP */
