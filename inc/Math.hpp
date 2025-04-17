@@ -61,7 +61,7 @@ std::array<T, 3> Cart2SphD(const std::array<T, 3> &cartesian) {
     T y = cartesian[1];
     T z = cartesian[2];
 
-    spherical[0] = (std::atan2(y, x))*Math::R180_PI;  // Azimuth
+    spherical[0] = (std::atan2(y, x)) * Math::R180_PI;  // Azimuth
     spherical[1] =
         (std::atan2(z, std::sqrt(x * x + y * y))) * Math::R180_PI;  // Elevation
     spherical[2] = std::sqrt(x * x + y * y + z * z);                // Radius
@@ -125,9 +125,7 @@ T dB_to_frac(T dB) {
     return static_cast<T>(std::pow(10, static_cast<double>(dB) / 20));
 }
 
-// TODO: split into positive and negative part of curve,
-// use negative part to invert polarity of signal
-// Split the absolute value
+// TODO: use formula to define what part needs to have the polarity flipped
 template <typename T>
 T PolardB(T polar_pattern,
           T max_attenuation_offset,
