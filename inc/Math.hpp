@@ -141,6 +141,19 @@ T PolardB(T polar_pattern,
     return dB;
 }
 
+// Spherical linear interpolation between unit vectors u and v
+Vec3R slerp(const Vec3R &u, const Vec3R &v, double t) {
+    double omega = acos(dotprod(u, v));
+    if (omega < 1e-8)
+        return u;  // avoid divide by 0 for tiny angles
+    double sin_omega = sin(omega);
+    double s1 = sin((1 - t) * omega) / sin_omega;
+    double s2 = sin(t * omega) / sin_omega;
+    return Vec3R{(s1 * u[0] + s2 * v[0]),
+                 (s1 * u[1] + s2 * v[1]),
+                 (s1 * u[2] + s2 * v[2])};
+}
+
 }  // namespace Math
 
 }  // namespace RTB
