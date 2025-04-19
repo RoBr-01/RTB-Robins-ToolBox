@@ -21,14 +21,18 @@ template <typename T>
 struct trace_results {
     std::array<T, 2> pathlengths;
     std::array<T, 2> arclengths;
-    std::array<Point<T,3>, 2> tangents;
+    std::array<Point<T, 3>, 2> tangents;
 };
 
 template <typename T>
 class Ellipsoid {
    public:
     Ellipsoid();
+    Ellipsoid(T length, T width, T height);
+    Ellipsoid(std::initializer_list<T> sizes);
     ~Ellipsoid();
+    std::array<T, 3> GetDimensions();
+
     std::array<T, 2> GetIntersection(const Ray3R &ray);
     trace_results<T> TracePathEllipsoid(const Point3R &Source);
 

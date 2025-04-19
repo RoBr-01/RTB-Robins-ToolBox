@@ -129,8 +129,8 @@ T dB_to_frac(T dB) {
 template <typename T>
 T PolardB(T polar_pattern,
           T max_attenuation_offset,
-          Vec3R rayvector,
-          Vec3R zeroaxis) {
+          Vector<T,3> rayvector,
+          Vector<T,3> zeroaxis) {
     T alpha = acosd(dotprod(rayvector, zeroaxis));
 
     T frac = (std::abs(polar_pattern + (1 - polar_pattern) * cosd(alpha)) +

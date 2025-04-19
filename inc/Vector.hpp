@@ -24,6 +24,8 @@ class Vector {
 
     Vector(const std::initializer_list<T>& values);
 
+    Vector(std::array<T, N> values);
+
     Vector(const Point<T, N>& startPoint, const Point<T, N>& endPoint);
 
     std::size_t GetSize() const;
@@ -83,6 +85,10 @@ Vector<T, N>::Vector(const std::initializer_list<T>& values) {
     }
     std::copy(values.begin(), values.end(), m_components.begin());
 }
+
+// Constructor using std::array
+template <typename T, std::size_t N>
+Vector<T, N>::Vector(std::array<T, N> values) : m_components(values) {}
 
 // Constructor using two points
 template <typename T, std::size_t N>
