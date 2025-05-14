@@ -21,7 +21,8 @@ template <typename T>
 struct trace_results {
     std::array<T, 2> pathlengths;
     std::array<T, 2> arclengths;
-    std::array<Point<T, 3>, 2> tangents;
+    std::array<Point<T, 3>, 2> tangent_points;
+    std::array<Vector<T, 3>, 2> direct_rays;  // source to tangent
 };
 
 template <typename T>
@@ -30,11 +31,13 @@ class Ellipsoid {
     Ellipsoid();
     Ellipsoid(T length, T width, T height);
     Ellipsoid(std::initializer_list<T> sizes);
+    Ellipsoid(std::array<T, 3> sizes);
     ~Ellipsoid();
     std::array<T, 3> GetDimensions();
 
     std::array<T, 2> GetIntersection(const Ray3R &ray);
-    trace_results<T> TracePathEllipsoid(const Point3R &Source);
+    trace_results<T> TracePathEllipsoid(const Point3R &Source,
+                                        const std::array<Point3R, 2> &ears);
 
     Vec3R scale_ellipsoid(const Vec3R &dir, double a, double b, double c);
 
@@ -66,10 +69,30 @@ class Ellipsoid {
 };
 
 template <typename T>
-Ellipsoid<T>::Ellipsoid() {}
+Ellipsoid<T>::Ellipsoid() {
+    m_dimensions = {0, 0, 0};
+};
+
+template <typename T>
+Ellipsoid<T>::Ellipsoid(T length, T width, T height) {
+    m_dimensions = {length, width, height};
+};
+
+template <typename T>
+Ellipsoid<T>::Ellipsoid(std::initializer_list<T> sizes) {
+    std::copy(sizes.begin(), sizes.end(), m_dimensions.begin());
+};
+
+template <typename T>
+Ellipsoid<T>::Ellipsoid(std::array<T, 3> sizes) : m_dimensions{sizes} {};
 
 template <typename T>
 Ellipsoid<T>::~Ellipsoid() {}
+
+template <typename T>
+std::array<T, 3> Ellipsoid<T>::GetDimensions() {
+    return m_dimensions;
+};
 
 template <typename T>
 std::array<T, 2> Ellipsoid<T>::GetIntersection(const Ray3R &ray) {
@@ -145,7 +168,7 @@ Vec3R Ellipsoid<T>::dEllipsoid_dt(const Vec3R &unit_start,
                                   double a,
                                   double b,
                                   double c,
-                                  double h = 1e-5) {
+                                  double h) {
     Vec3R pt1 =
         scale_ellipsoid(Math::slerp(unit_start, unit_end, t - h), a, b, c);
     Vec3R pt2 =
@@ -178,8 +201,8 @@ T Ellipsoid<T>::AccurateArcLength(const Vec3R &unit_start,
 template <typename T>
 T Ellipsoid<T>::ArcLengthOnEllipsoid(const Vec3R &dir_from_center_1,
                                      const Vec3R &dir_from_center_2,
-                                     ArcMode mode = ArcMode::Accurate,
-                                     int steps = 100) {
+                                     ArcMode mode,
+                                     int steps) {
     Vec3R u = unit_vector(dir_from_center_1);
     Vec3R v = unit_vector(dir_from_center_2);
 
@@ -195,7 +218,8 @@ T Ellipsoid<T>::ArcLengthOnEllipsoid(const Vec3R &dir_from_center_1,
 }
 
 template <typename T>
-trace_results<T> Ellipsoid<T>::TracePathEllipsoid(const Point3R &Source) {
+trace_results<T> Ellipsoid<T>::TracePathEllipsoid(
+    const Point3R &Source, const std::array<Point3R, 2> &ears) {
     std::array<Point3R, 2> tangent_points;
     std::array<T, 2> pathlengths;
     std::array<T, 2> arclengths;
@@ -214,7 +238,7 @@ trace_results<T> Ellipsoid<T>::TracePathEllipsoid(const Point3R &Source) {
     T c = m_dimensions[2];
 
     for (size_t Currentear = 0; Currentear < 2; Currentear++) {
-        Point3R ear = m_earpositions_cart[Currentear];
+        Point3R ear = ears[Currentear];
 
         // Construct the plane defined by source, origin, and ear
         PlaneR STO_plane(origin, ear, Source);
@@ -311,7 +335,13 @@ trace_results<T> Ellipsoid<T>::TracePathEllipsoid(const Point3R &Source) {
             tangent_points[Currentear] = ear;
         }
     }
-    return {pathlengths, arclengths, tangent_points};
+
+    Vector<T, 3> rayleft(Source, tangent_points[0]);
+    Vector<T, 3> rayright(Source, tangent_points[1]);
+
+    std::array<Vector<T, 3>, 2> rays = {rayleft, rayright};
+
+    return {pathlengths, arclengths, tangent_points, rays};
 }
 
 }  // namespace RTB

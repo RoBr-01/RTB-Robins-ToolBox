@@ -45,12 +45,12 @@ Vec3R RandSampleSphere(std::mt19937& generator) {
     return Vec3R({x, y, z});
 }
 
-Point3R RandSampleSpherePoint(std::mt19937& generator) {
+std::array<float, 3> RandSampleSpherePoint(std::mt19937& generator) {
     std::uniform_real_distribution<RESOLUTION> uniform01(0.0, 1.0);
-    RESOLUTION theta = 2 * PI * uniform01(generator);
-    RESOLUTION phi = acos(2 * uniform01(generator) - 1);
+    float theta = 2 * PI * uniform01(generator);
+    float phi = acos(2 * uniform01(generator) - 1);
 
-    return Point3R({Math::rad2deg(theta), 90 - Math::rad2deg(phi), 1.0});
+    return {Math::rad2deg(theta), 90 - Math::rad2deg(phi), 1.0f};
 }
 }  // namespace Random
 
