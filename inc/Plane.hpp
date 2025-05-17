@@ -140,7 +140,7 @@ void Plane<T>::Reflect(Ray<T, 3> &ray, T &t) const {
 template class Plane<RESOLUTION>;
 using PlaneR = Plane<RESOLUTION>;
 
-Ray3R IntersectPlanes(const PlaneR &plane1, const PlaneR &plane2) {
+inline Ray3R IntersectPlanes(const PlaneR &plane1, const PlaneR &plane2) {
     Vector<RESOLUTION, 3> normal1 = plane1.GetNormalVector();
     Vector<RESOLUTION, 3> normal2 = plane2.GetNormalVector();
     RESOLUTION d1 = plane1.GetCoefficients()[3];

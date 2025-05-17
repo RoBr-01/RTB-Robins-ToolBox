@@ -142,7 +142,7 @@ T PolardB(T polar_pattern,
 }
 
 // Spherical linear interpolation between unit vectors u and v
-Vec3R slerp(const Vec3R &u, const Vec3R &v, double t) {
+inline Vec3R slerp(const Vec3R &u, const Vec3R &v, double t) {
     double omega = acos(dotprod(u, v));
     if (omega < 1e-8)
         return u;  // avoid divide by 0 for tiny angles
