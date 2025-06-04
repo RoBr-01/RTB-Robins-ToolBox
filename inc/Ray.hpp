@@ -28,8 +28,8 @@ class Ray {
     void Print() const;
 
    private:
-    Vector<T, N> m_direction;
     Point<T, N> m_origin;
+    Vector<T, N> m_direction;
 };
 
 // Implementation
