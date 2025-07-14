@@ -192,7 +192,7 @@ Vector<T, N> Vector<T, N>::operator*(const Vector& v) const {
 template <typename T, std::size_t N>
 Vector<T, N> Vector<T, N>::operator/(const T t) const {
     if (t == static_cast<T>(0)) {
-        throw std::invalid_argument("Division by zero is not allowed.");
+        std::cerr << "Division by zero is not allowed.\n";
     }
     Vector result = *this;
     result /= t;
@@ -257,7 +257,7 @@ Vector<T, N>& Vector<T, N>::operator*=(const Vector& v) {
 template <typename T, std::size_t N>
 Vector<T, N>& Vector<T, N>::operator/=(const T t) {
     if (t == static_cast<T>(0)) {
-        throw std::invalid_argument("Division by zero is not allowed.");
+        std::cerr << "Division by zero is not allowed\n.";
     }
     for (auto& comp : m_components) {
         comp /= t;
