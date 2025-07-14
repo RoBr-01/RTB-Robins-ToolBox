@@ -151,7 +151,7 @@ inline Ray3R IntersectPlanes(const PlaneR &plane1, const PlaneR &plane2) {
 
     // Check if planes are parallel (direction is zero vector)
     if (direction.Length() < std::numeric_limits<RESOLUTION>::epsilon()) {
-        throw std::runtime_error("Planes are parallel and do not intersect.");
+        std::cerr << "Planes are parallel and do not intersect.\n";
     }
 
     // Find a point on the line by fixing one coordinate (z=0, y=0, or x=0)

@@ -45,9 +45,8 @@ Point<T, N>::Point() {
 template <typename T, std::size_t N>
 Point<T, N>::Point(const std::initializer_list<T> &values) {
     if (values.size() != N) {
-        throw std::invalid_argument(
-            "Point constructor : Initializer list size does not match "
-            "point dimension.");
+        std::cerr << "Point constructor : Initializer list size does not match "
+                     "point dimension.\n";
     }
     std::copy(values.begin(), values.end(), m_coords.begin());
 }
@@ -64,7 +63,8 @@ void Point<T, N>::SetCoords(const std::array<T, N> &newCoords) {
 template <typename T, std::size_t N>
 T &Point<T, N>::operator[](std::size_t index) {
     if (index >= N) {
-        throw std::out_of_range("Index out of range");
+        std::cerr << "Index out of range\n";
+        
     }
     return m_coords[index];
 }
@@ -72,7 +72,7 @@ T &Point<T, N>::operator[](std::size_t index) {
 template <typename T, std::size_t N>
 const T &Point<T, N>::operator[](std::size_t index) const {
     if (index >= N) {
-        throw std::out_of_range("Index out of range");
+        std::cerr << "Index out of range\n";
     }
     return m_coords[index];
 }
@@ -112,7 +112,7 @@ Point<RESOLUTION, N> midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2) {
 
 // explicit instantiation
 template class Point<RESOLUTION, 3>;
-template class Point<float,3>;
+template class Point<float, 3>;
 using Point3R = Point<RESOLUTION, 3>;
 
 }  // namespace RTB

@@ -80,8 +80,7 @@ Vector<T, N>::Vector() {
 template <typename T, std::size_t N>
 Vector<T, N>::Vector(const std::initializer_list<T>& values) {
     if (values.size() != N) {
-        throw std::invalid_argument(
-            "Initializer list size does not match vector dimension.");
+        std::cerr << "Initializer list size does not match vector dimension\n";
     }
     std::copy(values.begin(), values.end(), m_components.begin());
 }
@@ -121,7 +120,7 @@ void Vector<T, N>::SetComponents(const std::array<T, N>& values) {
 template <typename T, std::size_t N>
 T& Vector<T, N>::operator[](std::size_t index) {
     if (index >= N) {
-        throw std::out_of_range("Index out of range");
+        std::cerr << "Index out of range\n";
     }
     return m_components[index];
 }
@@ -130,7 +129,7 @@ T& Vector<T, N>::operator[](std::size_t index) {
 template <typename T, std::size_t N>
 const T& Vector<T, N>::operator[](std::size_t index) const {
     if (index >= N) {
-        throw std::out_of_range("Index out of range");
+        std::cerr << "Index out of range\n";
     }
     return m_components[index];
 }
