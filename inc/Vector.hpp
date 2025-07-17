@@ -28,6 +28,8 @@ class Vector {
 
     Vector(const Point<T, N>& startPoint, const Point<T, N>& endPoint);
 
+    Vector(const Point<T, N>& endPoint);
+
     std::size_t GetSize() const;
 
     std::array<T, N> GetComponents() const;
@@ -95,6 +97,14 @@ Vector<T, N>::Vector(const Point<T, N>& startPoint,
                      const Point<T, N>& endPoint) {
     for (std::size_t i = 0; i < N; ++i) {
         m_components[i] = endPoint[i] - startPoint[i];
+    }
+}
+
+// Constructor using one point
+template <typename T, std::size_t N>
+Vector<T, N>::Vector(const Point<T, N>& endPoint) {
+    for (std::size_t i = 0; i < N; ++i) {
+        m_components[i] = endPoint[i];
     }
 }
 
