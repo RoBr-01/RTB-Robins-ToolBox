@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Test VERSION 0.0.1)
+project(RTB VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -24,3 +24,18 @@ endif()
 
 # Now use that preset name in the executable target name
 add_executable(${PROJECT_NAME}_${PRESET_NAME} ${SOURCES})
+
+# Optional: testing
+option(ENABLE_TESTING "Enable building of tests" OFF)
+
+# Enable testing automatically when using "test" preset
+if(CMAKE_PRESET_NAME STREQUAL "test")
+    message(STATUS "Detected 'test' preset: enabling tests")
+    set(ENABLE_TESTING ON)
+endif()
+
+if(ENABLE_TESTING)
+    enable_testing()
+    add_subdirectory(lib/GoogleTest)
+    add_subdirectory(test)
+endif()
