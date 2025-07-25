@@ -23,15 +23,12 @@ namespace RTB {
 template <typename T, std::size_t N>
 class Vector;
 
-template <typename T, std::size_t N>
-Vector<T, N> unit_vector(const Vector<T, N>& v);
-
 template <typename T, typename T2, std::size_t N>
-auto crossprod(const Vector<T, N>& v1, const Vector<T2, N>& v2)
+auto CrossProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2)
     -> Vector<typename std::common_type<T, T2>::type, N>;
 
 template <typename T, typename T2, std::size_t N>
-auto dotprod(const Vector<T, N>& v1, const Vector<T2, N>& v2) ->
+auto DotProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2) ->
     typename std::common_type<T, T2>::type;
 
 template <typename T, std::size_t N>
@@ -104,12 +101,12 @@ class Vector {
     /**
      * @brief Returns the Euclidean length (magnitude) of the vector.
      */
-    T Length() const;
+    T Magnitude() const;
 
     /**
      * @brief Returns the squared length of the vector.
      */
-    T Length_squared() const;
+    T MagnitudeSquared() const;
 
     /**
      * @brief Prints the vector components to std::cout.
@@ -122,9 +119,14 @@ class Vector {
     Vector& Invert();
 
     /**
+     * @brief Gives a new normalized copy
+     */
+    Vector Normalize() const;
+
+    /**
      * @brief Normalizes the vector in-place.
      */
-    Vector& Normalize();
+    Vector& NormalizeInPlace();
 
    private:
     std::array<T, N> m_components;
@@ -300,7 +302,7 @@ Vector<T, N>& Vector<T, N>::operator/=(const T t) {
 }
 
 template <typename T, std::size_t N>
-T Vector<T, N>::Length_squared() const {
+T Vector<T, N>::MagnitudeSquared() const {
     T sum = static_cast<T>(0);
     for (const auto& c : m_components)
         sum += c * c;
@@ -308,20 +310,31 @@ T Vector<T, N>::Length_squared() const {
 }
 
 template <typename T, std::size_t N>
-T Vector<T, N>::Length() const {
-    return std::sqrt(Length_squared());
+T Vector<T, N>::Magnitude() const {
+    return std::sqrt(MagnitudeSquared());
 }
 
 template <typename T, std::size_t N>
 void Vector<T, N>::Print() const {
+    std::cout << "[Vector] - ";
     std::cout << *this << "\n";
 }
 
 template <typename T, std::size_t N>
-Vector<T, N>& Vector<T, N>::Normalize() {
-    T len = Length();
-    if (len != static_cast<T>(0))
+Vector<T, N> Vector<T, N>::Normalize() const {
+    T len = Magnitude();
+    if (len != static_cast<T>(0)) {
+        return *this / len;
+    }
+    return *this;
+}
+
+template <typename T, std::size_t N>
+Vector<T, N>& Vector<T, N>::NormalizeInPlace() {
+    T len = Magnitude();
+    if (len != static_cast<T>(0)) {
         *this /= len;
+    }
     return *this;
 }
 
@@ -336,13 +349,8 @@ Vector<T, N>& Vector<T, N>::Invert() {
 // Non-member function definitions
 // ==============================
 
-template <typename T, std::size_t N>
-Vector<T, N> unit_vector(const Vector<T, N>& v) {
-    return v / v.Length();
-}
-
 template <typename T, typename T2, std::size_t N>
-auto crossprod(const Vector<T, N>& v1, const Vector<T2, N>& v2)
+auto CrossProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2)
     -> Vector<typename std::common_type<T, T2>::type, N> {
     static_assert(N == 3, "Cross product is only defined for 3D vectors.");
     using R = typename std::common_type<T, T2>::type;
@@ -353,11 +361,14 @@ auto crossprod(const Vector<T, N>& v1, const Vector<T2, N>& v2)
 }
 
 template <typename T, typename T2, std::size_t N>
-auto dotprod(const Vector<T, N>& v1, const Vector<T2, N>& v2) ->
+auto DotProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2) ->
     typename std::common_type<T, T2>::type {
-    static_assert(N == 3, "Dot product is only defined for 3D vectors.");
-    using R = typename std::common_type<T, T2>::type;
-    return static_cast<R>(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]);
+    using CommonT = typename std::common_type<T, T2>::type;
+    CommonT result = static_cast<CommonT>(0);
+    for (std::size_t i = 0; i < N; ++i) {
+        result += static_cast<CommonT>(v1[i] * v2[i]);
+    }
+    return result;
 }
 
 template <typename T, std::size_t N>
@@ -412,8 +423,14 @@ bool operator!=(const Vector<T, N>& lhs, const Vector<T, N>& rhs) {
 // Explicit instantiations
 // ==============================
 
-template class Vector<RESOLUTION, 3>;
-using Vec3R = Vector<RESOLUTION, 3>;
+template class Vector<float, 2>;
+using Vec2f = Vector<float, 2>;
+
+template class Vector<float, 3>;
+using Vec3f = Vector<float, 3>;
+
+template class Vector<float, 4>;
+using Vec4f = Vector<float, 4>;
 
 }  // namespace RTB
 

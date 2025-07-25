@@ -10,8 +10,6 @@
 
 namespace RTB {
 
-namespace Measurement {
-
 class Timer {
    public:
     Timer() {
@@ -22,7 +20,7 @@ class Timer {
         Clock = std::chrono::high_resolution_clock::now();
     }
 
-    float Stop_and_count(const std::string& resolution) {
+    float StopAndCount(const std::string& resolution) {
         auto elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                               std::chrono::high_resolution_clock::now() - Clock)
                               .count();
@@ -38,6 +36,11 @@ class Timer {
         }
     }
 
+    void StopAndPrint(const std::string& resolution) {
+        float time = StopAndCount(resolution);
+        std::cout << "[TIMER] " << " - " << time << " " << resolution << "\n";
+    }
+
    private:
     std::chrono::time_point<std::chrono::high_resolution_clock> Clock;
 };
@@ -47,9 +50,9 @@ class ScopedTimer {
     ScopedTimer(const std::string& name, const std::string& resolution)
         : Name(name), Resolution(resolution) {}
     ~ScopedTimer() {
-        float time = Timer.Stop_and_count(Resolution);
-        std::cout << "[TIMER] " << Name << " - " << time << " " << Resolution
-                  << "\n";
+        float time = Timer.StopAndCount(Resolution);
+        std::cout << "[TIMER] " << "\'" << Name << "\'" << " - " << time << " "
+                  << Resolution << "\n";
     }
 
    private:
@@ -58,6 +61,5 @@ class ScopedTimer {
     Timer Timer;
 };
 
-}  // namespace Measurement
 }  // namespace RTB
 #endif  // TIMER_HPP

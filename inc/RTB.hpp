@@ -1,13 +1,10 @@
 #ifndef RTB_HPP
 #define RTB_HPP
 
-/*
-TODO:
-    - Add a nice logging library for error handling (or a small DIY version)
-    - 
-*/
+// This header includes everything, use with care
 
 #include "Colour.hpp"
+#include "Ellipsoid.hpp"
 #include "Line.hpp"
 #include "Math.hpp"
 #include "Plane.hpp"

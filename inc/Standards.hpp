@@ -1,8 +1,5 @@
 #ifndef STANDARDS_HPP
 #define STANDARDS_HPP
-
-#include <type_traits>
-
 /*
  * Axes follow the SOFA convention:
  * https://www.sofaconventions.org/mediawiki/index.php/SOFA_specifications
@@ -16,51 +13,22 @@
  *   +Elevation = rotate from XY-Plane to +Z
  *   -Elevation = rotate from XY-Plane to -Z
  */
-
-// Some stuff you can control for the entire library
 namespace RTB {
 
-using RESOLUTION = double;
+constexpr double PI = 3.141592653589793238462643383279502884;
+constexpr double TAU = 2 * PI;
+constexpr double PI_div_2 = PI / 2;
+constexpr double PI_div_4 = PI / 4;
+constexpr double PI_div_180 = PI / 180;
+constexpr double R180_div_PI = 180 / PI;
 
-constexpr RESOLUTION Epsilon = std::numeric_limits<RESOLUTION>::epsilon();
+enum class Axes { x, y, z };
+enum class Coefficients { a, b, c, d };
+enum class Directions { Left, Right, Front, Back, Up, Down };
+enum class Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
 
-// auto Test = make_value(10);
-// std::cout << typeid(Test).name() << std::endl;
-// Explicit constructor for a standard-complient type
-template <typename T>
-inline RESOLUTION make_value(T value) {
-    return static_cast<RESOLUTION>(value);
-}
-
-// Slightly unnecessary - use cmath or math.h instead?
-constexpr RESOLUTION PI = static_cast<RESOLUTION>(3.141592653589793238462643383279502884);
-namespace Math {
-
-constexpr RESOLUTION PI = 3.141592653589793238462643383279502884;
-constexpr RESOLUTION TAU = 2 * PI;
-constexpr RESOLUTION PI_2 = PI / 2;
-constexpr RESOLUTION PI_4 = PI / 4;
-constexpr RESOLUTION PI_180 = PI / 180;
-constexpr RESOLUTION R180_PI = 180 / PI;
-
-}  // namespace Math
-
-enum Axes { x, y, z };
-enum Coefficients { a, b, c, d };
-enum Directions { Left, Right, Front, Back, Up, Down };
-enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
-
-
-template <typename T>
-constexpr auto to_index(T e) noexcept {
-    return static_cast<std::underlying_type_t<T>>(e);
-}
-
-namespace Physics {
-
-constexpr RESOLUTION SpeedOfSound = 344;    // meters per second
-constexpr RESOLUTION ReferenceVolume = 85;  // dB SPL @ 1m
-}  // namespace physics
+constexpr double speed_of_sound = 344;          // meters per second
+constexpr double speed_of_light = 299'792'458;  // meters per second
 
 }  // namespace RTB
 #endif  // STANDARDS_HPP

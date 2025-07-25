@@ -71,7 +71,7 @@ void Plane<T>::Invert() {
 
 template <typename T>
 void Plane<T>::Normalize() {
-    m_coefficients = unit_vector(m_coefficients);
+    m_coefficients.NormalizeInPlace();
 }
 
 template <typename T>
@@ -120,54 +120,55 @@ T Plane<T>::GetIntersection(const Ray<T, 3> &ray) const {
     return t;
 }
 
+// Non-member functions
+
 template <typename T>
 void Plane<T>::Reflect(Ray<T, 3> &ray, T &t) const {
     Point<T, 3> intersectionPoint = ray.GetPosition(t);
     Vector<T, 3> normal = GetNormalVector();
-    normal = unit_vector(normal);
+    normal.NormalizeInPlace();
 
     ray.Normalize();
     Vector<T, 3> incomingDirection = ray.GetDirection();
 
     Vector<T, 3> reflectedDirection =
-        incomingDirection - normal * (2 * dotprod(incomingDirection, normal));
+        incomingDirection -
+        normal * (2 * DotProduct(incomingDirection, normal));
 
-    reflectedDirection = unit_vector(reflectedDirection);
+    reflectedDirection.NormalizeInPlace();
     ray.Update(intersectionPoint, reflectedDirection);
 }
 
-// explicit instantiation
-template class Plane<RESOLUTION>;
-using PlaneR = Plane<RESOLUTION>;
-
-inline Ray3R IntersectPlanes(const PlaneR &plane1, const PlaneR &plane2) {
-    Vector<RESOLUTION, 3> normal1 = plane1.GetNormalVector();
-    Vector<RESOLUTION, 3> normal2 = plane2.GetNormalVector();
-    RESOLUTION d1 = plane1.GetCoefficients()[3];
-    RESOLUTION d2 = plane2.GetCoefficients()[3];
+template <typename T>
+inline Ray<T, 3> IntersectPlanes(const Plane<T> &plane1,
+                                 const Plane<T> &plane2) {
+    Vector<T, 3> normal1 = plane1.GetNormalVector();
+    Vector<T, 3> normal2 = plane2.GetNormalVector();
+    T d1 = plane1.GetCoefficients()[3];
+    T d2 = plane2.GetCoefficients()[3];
 
     // Direction of the intersection line (cross product of normals)
-    Vector<RESOLUTION, 3> direction = crossprod(normal1, normal2);
+    Vector<T, 3> direction = CrossProduct(normal1, normal2);
 
     // Check if planes are parallel (direction is zero vector)
-    if (direction.Length() < std::numeric_limits<RESOLUTION>::epsilon()) {
+    if (direction.Magnitude() < std::numeric_limits<T>::epsilon()) {
         std::cerr << "Planes are parallel and do not intersect.\n";
     }
 
     // Find a point on the line by fixing one coordinate (z=0, y=0, or x=0)
-    Point3R point;
-    RESOLUTION denom;
+    Point<T, 3> point;
+    T denom;
 
     // Try z=0 first (solve for x and y)
     denom = normal1[0] * normal2[1] - normal2[0] * normal1[1];
-    if (std::abs(denom) > std::numeric_limits<RESOLUTION>::epsilon()) {
+    if (std::abs(denom) > std::numeric_limits<T>::epsilon()) {
         point[0] = (-d1 * normal2[1] - (-d2) * normal1[1]) / denom;
         point[1] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
         point[2] = 0;
     }
     // If z=0 fails, try y=0
     else if (std::abs(normal1[0] * normal2[2] - normal2[0] * normal1[2]) >
-             std::numeric_limits<RESOLUTION>::epsilon()) {
+             std::numeric_limits<T>::epsilon()) {
         denom = normal1[0] * normal2[2] - normal2[0] * normal1[2];
         point[0] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
         point[2] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
@@ -181,8 +182,13 @@ inline Ray3R IntersectPlanes(const PlaneR &plane1, const PlaneR &plane2) {
         point[0] = 0;
     }
 
-    return Ray3R(point, direction);
+    return Ray<T, 3>(point, direction);
 }
+
+// explicit instantiation
+template class Plane<float>;
+using Planef = Plane<float>;
+
 }  // namespace RTB
 
 #endif /* PLANE_HPP */

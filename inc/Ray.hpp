@@ -7,7 +7,9 @@
 
 namespace RTB {
 
+// ==============================
 // Interface
+// ==============================
 template <typename T, std::size_t N>
 class Ray {
    public:
@@ -32,7 +34,10 @@ class Ray {
     Vector<T, N> m_direction;
 };
 
+// ==============================
 // Implementation
+// ==============================
+
 template <typename T, std::size_t N>
 Ray<T, N>::Ray(const Point<T, N>& origin, const Vector<T, N>& direction)
     : m_origin(origin), m_direction(direction) {}
@@ -46,7 +51,7 @@ void Ray<T, N>::Update(const Point<T, N>& newOrigin,
 
 template <typename T, std::size_t N>
 void Ray<T, N>::Normalize() {
-    m_direction = unit_vector(m_direction);
+    m_direction.NormalizeInPlace();
 }
 
 template <typename T, std::size_t N>
@@ -78,8 +83,8 @@ void Ray<T, N>::Print() const {
 }
 
 // Explicit instantiation
-template class Ray<RESOLUTION, 3>;
-using Ray3R = Ray<RESOLUTION, 3>;
+template class Ray<float, 3>;
+using Ray3f = Ray<float, 3>;
 
 }  // namespace RTB
 
