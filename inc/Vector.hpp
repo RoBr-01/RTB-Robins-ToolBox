@@ -137,7 +137,7 @@ class Vector {
 // ==============================
 
 template <typename T, std::size_t N>
-Vector<T, N>::Vector() : m_components{} {};
+Vector<T, N>::Vector() : m_components{} {}
 
 template <typename T, std::size_t N>
 Vector<T, N>::Vector(const std::initializer_list<T>& values) {

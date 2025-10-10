@@ -33,37 +33,38 @@ class Ellipsoid {
     Ellipsoid(std::initializer_list<T> sizes);
     Ellipsoid(std::array<T, 3> sizes);
     ~Ellipsoid();
-    std::array<T, 3> GetDimensions();
+    const std::array<T, 3>& GetDimensions() const;
 
-    std::array<T, 2> GetIntersection(const Ray<T, 3> &ray);
-    trace_results<T> TracePathEllipsoid(const Point<T, 3> &Source,
-                                        const std::array<Point<T, 3>, 2> &ears);
+    std::array<T, 2> GetIntersection(const Ray<T, 3>& ray);
+    trace_results<T> TracePathEllipsoid(
+        const Point<T, 3>& Source,
+        const std::array<Point<T, 3>, 2>& ears) const;
 
-    Vector<T, 3> scale_ellipsoid(const Vector<T, 3> &dir,
+    Vector<T, 3> scale_ellipsoid(const Vector<T, 3>& dir,
                                  double a,
                                  double b,
-                                 double c);
+                                 double c) const;
 
    private:
-    T ArcLengthOnEllipsoid(const Vector<T, 3> &dir_from_center_1,
-                           const Vector<T, 3> &dir_from_center_2,
+    T ArcLengthOnEllipsoid(const Vector<T, 3>& dir_from_center_1,
+                           const Vector<T, 3>& dir_from_center_2,
                            ArcMode mode = ArcMode::Accurate,
-                           int steps = 100);
+                           int steps = 100) const;
 
-    T AccurateArcLength(const Vector<T, 3> &unit_start,
-                        const Vector<T, 3> &unit_end,
+    T AccurateArcLength(const Vector<T, 3>& unit_start,
+                        const Vector<T, 3>& unit_end,
                         double a,
                         double b,
                         double c,
-                        int steps);
+                        int steps) const;
 
-    Vector<T, 3> dEllipsoid_dt(const Vector<T, 3> &unit_start,
-                               const Vector<T, 3> &unit_end,
+    Vector<T, 3> dEllipsoid_dt(const Vector<T, 3>& unit_start,
+                               const Vector<T, 3>& unit_end,
                                double t,
                                double a,
                                double b,
                                double c,
-                               double h = 1e-5);
+                               double h = 1e-5) const;
 
    private:
     std::array<T, 3> m_dimensions;
@@ -93,12 +94,12 @@ template <typename T>
 Ellipsoid<T>::~Ellipsoid() {}
 
 template <typename T>
-std::array<T, 3> Ellipsoid<T>::GetDimensions() {
+const std::array<T, 3>& Ellipsoid<T>::GetDimensions() const {
     return m_dimensions;
 };
 
 template <typename T>
-std::array<T, 2> Ellipsoid<T>::GetIntersection(const Ray<T, 3> &ray) {
+std::array<T, 2> Ellipsoid<T>::GetIntersection(const Ray<T, 3>& ray) {
     // ray and ellipsoid intersection
 
     auto direction = ray.GetDirection();
@@ -107,7 +108,6 @@ std::array<T, 2> Ellipsoid<T>::GetIntersection(const Ray<T, 3> &ray) {
     T vx = direction[RTB::Axes::x];
     T vy = direction[RTB::Axes::y];
     T vz = direction[RTB::Axes::z];
-
 
     auto origin = ray.GetOrigin();
 
@@ -161,38 +161,46 @@ std::array<T, 2> Ellipsoid<T>::GetIntersection(const Ray<T, 3> &ray) {
 
 // Apply ellipsoid scaling to a direction vector
 template <typename T>
-Vector<T, 3> Ellipsoid<T>::scale_ellipsoid(const Vector<T, 3> &dir,
+Vector<T, 3> Ellipsoid<T>::scale_ellipsoid(const Vector<T, 3>& dir,
                                            double a,
                                            double b,
-                                           double c) {
-    return Vector<T, 3>{a * dir[0], b * dir[1], c * dir[2]};
+                                           double c) const {
+    return Vector<T, 3>{static_cast<T>(a * dir[0]),
+                        static_cast<T>(b * dir[1]),
+                        static_cast<T>(c * dir[2])};
 }
 
 // Derivative of ellipsoid path at point t using central difference
 template <typename T>
-Vector<T, 3> Ellipsoid<T>::dEllipsoid_dt(const Vector<T, 3> &unit_start,
-                                         const Vector<T, 3> &unit_end,
+Vector<T, 3> Ellipsoid<T>::dEllipsoid_dt(const Vector<T, 3>& unit_start,
+                                         const Vector<T, 3>& unit_end,
                                          double t,
                                          double a,
                                          double b,
                                          double c,
-                                         double h) {
-    Vector<T, 3> pt1 =
-        scale_ellipsoid(slerp(unit_start, unit_end, t - h), a, b, c);
-    Vector<T, 3> pt2 =
-        scale_ellipsoid(slerp(unit_start, unit_end, t + h), a, b, c);
-    return Vector<T, 3>{(pt2[0] - pt1[0]) / (2 * h),
-                        (pt2[1] - pt1[1]) / (2 * h),
-                        (pt2[2] - pt1[2]) / (2 * h)};
+                                         double h) const {
+    Vector<T, 3> pt1 = scale_ellipsoid(
+        RTB::slerp<T>(unit_start, unit_end, static_cast<T>(t - h)),
+        static_cast<T>(a),
+        static_cast<T>(b),
+        static_cast<T>(c));
+    Vector<T, 3> pt2 = scale_ellipsoid(
+        RTB::slerp<T>(unit_start, unit_end, static_cast<T>(t + h)),
+        static_cast<T>(a),
+        static_cast<T>(b),
+        static_cast<T>(c));
+    return Vector<T, 3>{static_cast<T>((pt2[0] - pt1[0]) / (2 * h)),
+                        static_cast<T>((pt2[1] - pt1[1]) / (2 * h)),
+                        static_cast<T>((pt2[2] - pt1[2]) / (2 * h))};
 }
 // Arc length via Simpson's rule
 template <typename T>
-T Ellipsoid<T>::AccurateArcLength(const Vector<T, 3> &unit_start,
-                                  const Vector<T, 3> &unit_end,
+T Ellipsoid<T>::AccurateArcLength(const Vector<T, 3>& unit_start,
+                                  const Vector<T, 3>& unit_end,
                                   double a,
                                   double b,
                                   double c,
-                                  int steps) {
+                                  int steps) const {
     double total = 0.0;
     double h = 1.0 / steps;
 
@@ -207,12 +215,12 @@ T Ellipsoid<T>::AccurateArcLength(const Vector<T, 3> &unit_start,
 }
 
 template <typename T>
-T Ellipsoid<T>::ArcLengthOnEllipsoid(const Vector<T, 3> &dir_from_center_1,
-                                     const Vector<T, 3> &dir_from_center_2,
+T Ellipsoid<T>::ArcLengthOnEllipsoid(const Vector<T, 3>& dir_from_center_1,
+                                     const Vector<T, 3>& dir_from_center_2,
                                      ArcMode mode,
-                                     int steps) {
-    Vector<T, 3> u = unit_vector(dir_from_center_1);
-    Vector<T, 3> v = unit_vector(dir_from_center_2);
+                                     int steps) const {
+    Vector<T, 3> u = dir_from_center_1.Normalize();
+    Vector<T, 3> v = dir_from_center_2.Normalize();
 
     if (mode == ArcMode::FastEstimate) {
         double angle = acos(DotProduct(u, v));  // radians
@@ -227,7 +235,7 @@ T Ellipsoid<T>::ArcLengthOnEllipsoid(const Vector<T, 3> &dir_from_center_1,
 
 template <typename T>
 trace_results<T> Ellipsoid<T>::TracePathEllipsoid(
-    const Point<T, 3> &Source, const std::array<Point<T, 3>, 2> &ears) {
+    const Point<T, 3>& Source, const std::array<Point<T, 3>, 2>& ears) const {
     std::array<Point<T, 3>, 2> tangent_points;
     std::array<T, 2> pathlengths;
     std::array<T, 2> arclengths;

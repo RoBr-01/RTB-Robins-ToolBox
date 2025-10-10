@@ -24,8 +24,8 @@ constexpr double R180_div_PI = 180 / PI;
 
 enum class Axes { x, y, z };
 enum class Coefficients { a, b, c, d };
-enum class Directions { Left, Right, Front, Back, Up, Down };
-enum class Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
+enum Directions { Left, Right, Front, Back, Up, Down };
+enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
 
 constexpr double speed_of_sound = 344;          // meters per second
 constexpr double speed_of_light = 299'792'458;  // meters per second
