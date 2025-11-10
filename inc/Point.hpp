@@ -64,7 +64,6 @@ template <typename T, std::size_t N>
 T &Point<T, N>::operator[](std::size_t index) {
     if (index >= N) {
         std::cerr << "Index out of range\n";
-        
     }
     return m_coords[index];
 }
@@ -91,18 +90,24 @@ void Point<T, N>::Print() const {
 
 // Template non-member functions
 template <typename T1, typename T2, std::size_t N>
-RESOLUTION distance_2points(const Point<T1, N> &P1, const Point<T2, N> &P2) {
-    RESOLUTION sum = 0.0;
-    for (std::size_t i = 0; i < N; i++) {
-        RESOLUTION diff = P2[i] - P1[i];
+auto distance_2points(const Point<T1, N> &P1, const Point<T2, N> &P2) ->
+    typename std::common_type<T1, T2>::type {
+    using CommonT = typename std::common_type<T1, T2>::type;
+    CommonT sum = CommonT{0};
+
+    for (std::size_t i = 0; i < N; ++i) {
+        CommonT diff =
+            static_cast<CommonT>(P2[i]) - static_cast<CommonT>(P1[i]);
         sum += diff * diff;
     }
-    return std::sqrt(static_cast<RESOLUTION>(sum));
+
+    return std::sqrt(sum);
 }
 
 template <typename T1, typename T2, std::size_t N>
-Point<RESOLUTION, N> midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2) {
-    Point<RESOLUTION, N> mid;
+auto midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2)
+    -> Point<typename std::common_type<T1, T2>::type, N> {
+    Point<typename std::common_type<T1, T2>::type, N> mid;
     for (std::size_t i = 0; i < N; i++) {
         mid[i] = (P1[i] + P2[i]) / 2.0;
     }
@@ -111,9 +116,8 @@ Point<RESOLUTION, N> midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2) {
 }
 
 // explicit instantiation
-template class Point<RESOLUTION, 3>;
 template class Point<float, 3>;
-using Point3R = Point<RESOLUTION, 3>;
+using Point3f = Point<float, 3>;
 
 }  // namespace RTB
 

@@ -6,17 +6,16 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include <random>
 #include <vector>
 
 // RTB
+#include "Point.hpp"
 #include "Standards.hpp"
 #include "Vector.hpp"
-#include <iostream>
 
 namespace RTB {
-
-namespace Random {
 
 // PCG (permuted congruential generator). Thanks to:
 // www.pcg-random.org and www.shadertoy.com/view/XlGch
@@ -33,26 +32,27 @@ float RandomHashValue(uint32_t state) {
 }
 
 // Returns a random ray
-Vec3R RandSampleSphere(std::mt19937& generator) {
-    std::uniform_real_distribution<RESOLUTION> uniform01(0.0, 1.0);
+template <typename T>
+Vector<T, 3> RandSampleSphere(std::mt19937& generator) {
+    std::uniform_real_distribution<T> uniform01(0.0, 1.0);
 
-    RESOLUTION theta = 2 * Math::PI * uniform01(generator);
-    RESOLUTION phi = acos(1 - 2 * uniform01(generator));
-    RESOLUTION x = sin(phi) * cos(theta);
-    RESOLUTION y = sin(phi) * sin(theta);
-    RESOLUTION z = cos(phi);
+    T theta = 2 * PI * uniform01(generator);
+    T phi = acos(1 - 2 * uniform01(generator));
+    T x = sin(phi) * cos(theta);
+    T y = sin(phi) * sin(theta);
+    T z = cos(phi);
 
-    return Vec3R({x, y, z});
+    return Vector<T, 3>({x, y, z});
 }
 
-std::array<float, 3> RandSampleSpherePoint(std::mt19937& generator) {
-    std::uniform_real_distribution<RESOLUTION> uniform01(0.0, 1.0);
-    float theta = 2 * PI * uniform01(generator);
-    float phi = acos(2 * uniform01(generator) - 1);
+template <typename T>
+Point<T, 3> RandSampleSpherePoint(std::mt19937& generator) {
+    std::uniform_real_distribution<T> uniform01(0.0, 1.0);
+    T theta = 2 * PI * uniform01(generator);
+    T phi = acos(2 * uniform01(generator) - 1);
 
-    return {Math::rad2deg(theta), 90 - Math::rad2deg(phi), 1.0f};
+    return {rad2deg(theta), 90 - rad2deg(phi), 1.0f};
 }
-}  // namespace Random
 
 }  // namespace RTB
-#endif/* RANDOM_HPP */
+#endif /* RANDOM_HPP */

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
 // a colour is represented by an array of 3 or 4 bytes: RGB(A)
 
 namespace RTB {
@@ -19,20 +20,19 @@ class Colour {
 
     Colour(const std::initializer_list<T> &values) {
         if (values.size() != N) {
-            throw std::invalid_argument(
-                "[COLOUR_HPP] @ L22: Initializer list size does not match "
-                "dimension.");
+            std::cerr
+                << "[COLOUR_HPP] @ L22: Initializer list size does not match "
+                   "dimension.\n";
         }
         std::copy(values.begin(), values.end(), components.begin());
     }
 
-    void Update(){}
-    void Clamp(const T &lowerbound, const T &upperbound){}
+    void Update() {}
+    void Clamp(const T &lowerbound, const T &upperbound) {}
 
-    //Overloaded functions
-    // Multiply (constant or other color)
-    // Add (constant or other color)
-
+    // Overloaded functions
+    //  Multiply (constant or other color)
+    //  Add (constant or other color)
 };
 
 // Using int_fast8_t because its not worth risking wanting exactly 8 bits when

@@ -71,7 +71,7 @@ void Plane<T>::Invert() {
 
 template <typename T>
 void Plane<T>::Normalize() {
-    m_coefficients = unit_vector(m_coefficients);
+    m_coefficients.NormalizeInPlace();
 }
 
 template <typename T>
@@ -120,22 +120,26 @@ T Plane<T>::GetIntersection(const Ray<T, 3> &ray) const {
     return t;
 }
 
+// Non-member functions
+
 template <typename T>
 void Plane<T>::Reflect(Ray<T, 3> &ray, T &t) const {
     Point<T, 3> intersectionPoint = ray.GetPosition(t);
     Vector<T, 3> normal = GetNormalVector();
-    normal = unit_vector(normal);
+    normal.NormalizeInPlace();
 
     ray.Normalize();
     Vector<T, 3> incomingDirection = ray.GetDirection();
 
     Vector<T, 3> reflectedDirection =
-        incomingDirection - normal * (2 * dotprod(incomingDirection, normal));
+        incomingDirection -
+        normal * (2 * DotProduct(incomingDirection, normal));
 
-    reflectedDirection = unit_vector(reflectedDirection);
+    reflectedDirection.NormalizeInPlace();
     ray.Update(intersectionPoint, reflectedDirection);
 }
 
+<<<<<<< HEAD
 // explicit instantiation
 template class Plane<RESOLUTION>;
 using PlaneR = Plane<RESOLUTION>;
@@ -184,6 +188,8 @@ using PlaneR = Plane<RESOLUTION>;
 //     return Ray3R(point, direction);
 // }
 
+=======
+>>>>>>> 0b2bac8175f881b8e9a6b79a13067578e535697a
 template <typename T>
 inline Ray<T, 3> IntersectPlanes(const Plane<T> &plane1,
                                  const Plane<T> &plane2) {
@@ -193,15 +199,26 @@ inline Ray<T, 3> IntersectPlanes(const Plane<T> &plane1,
     T d2 = plane2.GetCoefficients()[3];
 
     // Direction of the intersection line (cross product of normals)
+<<<<<<< HEAD
     Vector<T, 3> direction = crossprod(normal1, normal2);
 
     // Check if planes are parallel (direction is zero vector)
     if (direction.Length() < std::numeric_limits<T>::epsilon()) {
+=======
+    Vector<T, 3> direction = CrossProduct(normal1, normal2);
+
+    // Check if planes are parallel (direction is zero vector)
+    if (direction.Magnitude() < std::numeric_limits<T>::epsilon()) {
+>>>>>>> 0b2bac8175f881b8e9a6b79a13067578e535697a
         std::cerr << "Planes are parallel and do not intersect.\n";
         // Consider throwing an exception or returning an optional here.
     }
 
+<<<<<<< HEAD
     // Find a point on the line by fixing one coordinate
+=======
+    // Find a point on the line by fixing one coordinate (z=0, y=0, or x=0)
+>>>>>>> 0b2bac8175f881b8e9a6b79a13067578e535697a
     Point<T, 3> point;
     T denom;
 
@@ -230,6 +247,11 @@ inline Ray<T, 3> IntersectPlanes(const Plane<T> &plane1,
 
     return Ray<T, 3>(point, direction);
 }
+
+// explicit instantiation
+template class Plane<float>;
+using Planef = Plane<float>;
+
 }  // namespace RTB
 
 #endif /* PLANE_HPP */
