@@ -13,7 +13,7 @@ namespace RTB {
 template <typename T, std::size_t N>
 class Ray {
    public:
-    Ray() = default;
+    Ray();
 
     Ray(const Point<T, N>& origin, const Vector<T, N>& direction);
 
