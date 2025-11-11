@@ -142,49 +142,74 @@ void Plane<T>::Reflect(Ray<T, 3>& ray, T& t) const {
 template <typename T>
 inline Ray<T, 3> IntersectPlanes(const Plane<T>& plane1,
                                  const Plane<T>& plane2) {
-    Vector<T, 3> normal1 = plane1.GetNormalVector();
-    Vector<T, 3> normal2 = plane2.GetNormalVector();
+    Vector<T, 3> n1 = plane1.GetNormalVector();
+    Vector<T, 3> n2 = plane2.GetNormalVector();
     T d1 = plane1.GetCoefficients()[3];
     T d2 = plane2.GetCoefficients()[3];
 
-    // Direction of the intersection line (cross product of normals)
-    Vector<T, 3> direction = CrossProduct(normal1, normal2);
+    // Direction = cross product of normals
+    Vector<T, 3> dir = CrossProduct(n1, n2);
+    T denom = dir.MagnitudeSquared();
 
-    // Check if planes are parallel (direction is zero vector)
-    if (direction.Magnitude() < std::numeric_limits<T>::epsilon()) {
-        std::cerr << "Planes are parallel and do not intersect.\n";
-        // Consider throwing an exception or returning an optional here.
+    if (denom < std::numeric_limits<T>::epsilon()) {
+        std::cerr << "Planes are parallel or nearly parallel.\n";
+        return Ray<T, 3>(Point<T, 3>{0, 0, 0},
+                         Vector<T, 3>{0, 0, 0});  // safe fallback
     }
 
-    // Find a point on the line by fixing one coordinate (z=0, y=0, or x=0)
-    Point<T, 3> point;
-    T denom;
+    // Compute a single point on the intersection line
+    Vector<T, 3> term = CrossProduct((n2 * d1 - n1 * d2), dir);
+    Point<T, 3> p0{term[0] / denom, term[1] / denom, term[2] / denom};
 
-    // Try z = 0
-    denom = normal1[0] * normal2[1] - normal2[0] * normal1[1];
-    if (std::abs(denom) > std::numeric_limits<T>::epsilon()) {
-        point[0] = (-d1 * normal2[1] - (-d2) * normal1[1]) / denom;
-        point[1] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
-        point[2] = static_cast<T>(0);
-    }
-    // Try y = 0
-    else if (std::abs(normal1[0] * normal2[2] - normal2[0] * normal1[2]) >
-             std::numeric_limits<T>::epsilon()) {
-        denom = normal1[0] * normal2[2] - normal2[0] * normal1[2];
-        point[0] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
-        point[2] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
-        point[1] = static_cast<T>(0);
-    }
-    // Try x = 0
-    else {
-        denom = normal1[1] * normal2[2] - normal2[1] * normal1[2];
-        point[1] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
-        point[2] = (normal1[1] * (-d2) - normal2[1] * (-d1)) / denom;
-        point[0] = static_cast<T>(0);
-    }
-
-    return Ray<T, 3>(point, direction);
+    return Ray<T, 3>(p0, dir.Normalize());
 }
+
+// template <typename T>
+// inline Ray<T, 3> IntersectPlanes(const Plane<T>& plane1,
+//                                  const Plane<T>& plane2) {
+//     Vector<T, 3> normal1 = plane1.GetNormalVector();
+//     Vector<T, 3> normal2 = plane2.GetNormalVector();
+//     T d1 = plane1.GetCoefficients()[3];
+//     T d2 = plane2.GetCoefficients()[3];
+
+//     // Direction of the intersection line (cross product of normals)
+//     Vector<T, 3> direction = CrossProduct(normal1, normal2);
+
+//     // Check if planes are parallel (direction is zero vector)
+//     if (direction.Magnitude() < std::numeric_limits<T>::epsilon()) {
+//         std::cerr << "Planes are parallel and do not intersect.\n";
+//         // Consider throwing an exception or returning an optional here.
+//     }
+
+//     // Find a point on the line by fixing one coordinate (z=0, y=0, or x=0)
+//     Point<T, 3> point;
+//     T denom;
+
+//     // Try z = 0
+//     denom = normal1[0] * normal2[1] - normal2[0] * normal1[1];
+//     if (std::abs(denom) > std::numeric_limits<T>::epsilon()) {
+//         point[0] = (-d1 * normal2[1] - (-d2) * normal1[1]) / denom;
+//         point[1] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
+//         point[2] = static_cast<T>(0);
+//     }
+//     // Try y = 0
+//     else if (std::abs(normal1[0] * normal2[2] - normal2[0] * normal1[2]) >
+//              std::numeric_limits<T>::epsilon()) {
+//         denom = normal1[0] * normal2[2] - normal2[0] * normal1[2];
+//         point[0] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
+//         point[2] = (normal1[0] * (-d2) - normal2[0] * (-d1)) / denom;
+//         point[1] = static_cast<T>(0);
+//     }
+//     // Try x = 0
+//     else {
+//         denom = normal1[1] * normal2[2] - normal2[1] * normal1[2];
+//         point[1] = (-d1 * normal2[2] - (-d2) * normal1[2]) / denom;
+//         point[2] = (normal1[1] * (-d2) - normal2[1] * (-d1)) / denom;
+//         point[0] = static_cast<T>(0);
+//     }
+
+//     return Ray<T, 3>(point, direction);
+// }
 
 // explicit instantiation
 template class Plane<float>;
