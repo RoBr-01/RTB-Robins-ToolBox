@@ -8,13 +8,16 @@
 // Original by the cherno:
 // https://github.com/StudioCherno/Walnut/blob/master/Walnut/src/Walnut/Timer.h
 
+// TODO: Switch to an enum class for the time intervals and use the
+// std::chrono:: compile time ratios for converting to that time format
+
 namespace RTB {
 
 class Timer {
    public:
     Timer() {
         Start();
-    };
+    }
 
     void Start() {
         Clock = std::chrono::high_resolution_clock::now();

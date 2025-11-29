@@ -104,12 +104,12 @@ T fastInverseSqrt(T number) {
     T y = number;
 
     // Use different magic numbers depending on the type
-    std::uint64_t i;
+    uint64_t i;
     if constexpr (std::is_same<T, double>::value) {
-        i = *reinterpret_cast<std::uint64_t*>(&y);  // Double magic constant
+        i = *reinterpret_cast<uint64_t*>(&y);  // Double magic constant
         i = 0x5FE6EB50C7B537A9 - (i >> 1);          // Magic number for double
     } else {
-        i = *reinterpret_cast<std::uint32_t*>(&y);  // Float magic constant
+        i = *reinterpret_cast<uint32_t*>(&y);  // Float magic constant
         i = 0x5f3759df - (i >> 1);                  // Magic number for float
     }
 
