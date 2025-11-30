@@ -32,7 +32,7 @@ class Ellipsoid {
     Ellipsoid(T length, T width, T height);
     Ellipsoid(std::initializer_list<T> sizes);
     Ellipsoid(std::array<T, 3> sizes);
-    ~Ellipsoid();
+    ~Ellipsoid() = default;
     const std::array<T, 3>& GetDimensions() const;
 
     std::array<T, 2> GetIntersection(const Ray<T, 3>& ray);
@@ -85,9 +85,6 @@ Ellipsoid<T>::Ellipsoid(std::initializer_list<T> sizes) {
 
 template <typename T>
 Ellipsoid<T>::Ellipsoid(std::array<T, 3> sizes) : m_dimensions{sizes} {};
-
-template <typename T>
-Ellipsoid<T>::~Ellipsoid() {}
 
 template <typename T>
 const std::array<T, 3>& Ellipsoid<T>::GetDimensions() const {

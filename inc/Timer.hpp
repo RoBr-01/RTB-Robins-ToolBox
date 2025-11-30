@@ -54,7 +54,7 @@ class ScopedTimer {
         : Name(name), Resolution(resolution) {}
     ~ScopedTimer() {
         float time = Timer.StopAndCount(Resolution);
-        std::cout << "[TIMER] " << "\'" << Name << "\'" << " - " << time << " "
+        std::cout << "[TIMER] " << Name << " - " << time << " "
                   << Resolution << "\n";
     }
 
