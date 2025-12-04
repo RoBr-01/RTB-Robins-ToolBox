@@ -139,29 +139,85 @@ void Plane<T>::Reflect(Ray<T, 3>& ray, T& t) const {
     ray.Update(intersectionPoint, reflectedDirection);
 }
 
-template <typename T>
-inline Ray<T, 3> IntersectPlanes(const Plane<T>& plane1,
-                                 const Plane<T>& plane2) {
-    Vector<T, 3> n1 = plane1.GetNormalVector();
-    Vector<T, 3> n2 = plane2.GetNormalVector();
-    T d1 = plane1.GetCoefficients()[3];
-    T d2 = plane2.GetCoefficients()[3];
+// Intersect two planes in the form:   n · x + d = 0
+// Assumes: normals are unit length (planes are pre-normalized).
+// Returns: a Ray (point + direction) representing the intersection line.
+//          If planes are parallel or degenerate, direction = (0,0,0).
 
-    // Direction = cross product of normals
-    Vector<T, 3> dir = CrossProduct(n1, n2);
+template <typename T>
+Ray<T,3> IntersectPlanes(const Plane<T>& p1,
+                               const Plane<T>& p2)
+{
+    Vector<T,3> n1 = p1.GetNormalVector();  // unit normals
+    Vector<T,3> n2 = p2.GetNormalVector();
+    T d1 = p1.GetCoefficients()[3];
+    T d2 = p2.GetCoefficients()[3];
+
+    // Direction of the intersection: n1 × n2
+    Vector<T,3> dir = CrossProduct(n1, n2);
     T denom = dir.MagnitudeSquared();
 
+    // If nearly parallel
     if (denom < std::numeric_limits<T>::epsilon()) {
-        std::cerr << "Planes are parallel or nearly parallel.\n";
-        return Ray<T, 3>(Point<T, 3>{0, 0, 0},
-                         Vector<T, 3>{0, 0, 0});  // safe fallback
+        return Ray<T,3>({0,0,0}, {0,0,0});
     }
 
-    // Compute a single point on the intersection line
-    Vector<T, 3> term = CrossProduct((n2 * d1 - n1 * d2), dir);
-    Point<T, 3> p0{term[0] / denom, term[1] / denom, term[2] / denom};
+    // Choose the coordinate with the largest magnitude for numerical stability
+    T ax = std::abs(dir[0]);
+    T ay = std::abs(dir[1]);
+    T az = std::abs(dir[2]);
 
-    return Ray<T, 3>(p0, dir.Normalize());
+    int k = (ax >= ay && ax >= az) ? 0 :
+            (ay >= az)            ? 1 : 2;
+
+    // Solve reduced 2×2 system by setting coordinate k = 0
+    T x = 0, y = 0, z = 0;
+
+    auto eps = std::numeric_limits<T>::epsilon();
+
+    if (k == 0) {
+        // x = 0 → solve for y,z
+        T A = n1[1], B = n1[2], C = -d1;
+        T D = n2[1], E = n2[2], F = -d2;
+
+        T det = A*E - B*D;
+        if (std::abs(det) < eps) {
+            return Ray<T,3>({0,0,0}, {0,0,0});
+        }
+
+        y = (C*E - B*F) / det;
+        z = (A*F - C*D) / det;
+    }
+    else if (k == 1) {
+        // y = 0 → solve for x,z
+        T A = n1[0], B = n1[2], C = -d1;
+        T D = n2[0], E = n2[2], F = -d2;
+
+        T det = A*E - B*D;
+        if (std::abs(det) < eps) {
+            return Ray<T,3>({0,0,0}, {0,0,0});
+        }
+
+        x = (C*E - B*F) / det;
+        z = (A*F - C*D) / det;
+    }
+    else { // k == 2
+        // z = 0 → solve for x,y
+        T A = n1[0], B = n1[1], C = -d1;
+        T D = n2[0], E = n2[1], F = -d2;
+
+        T det = A*E - B*D;
+        if (std::abs(det) < eps) {
+            return Ray<T,3>({0,0,0}, {0,0,0});
+        }
+
+        x = (C*E - B*F) / det;
+        y = (A*F - C*D) / det;
+    }
+
+    Point<T,3> p0{x, y, z};
+
+    return Ray<T,3>(p0, dir.Normalize());
 }
 
 // template <typename T>
