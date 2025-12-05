@@ -3,6 +3,7 @@
 
 // STL
 #include <array>
+#include <source_location>
 
 // RTB
 #include "Math.hpp"
@@ -10,12 +11,6 @@
 #include "Ray.hpp"
 
 namespace RTB {
-
-// Arc length calculation mode
-enum class ArcMode {
-    FastEstimate,  // Use cbrt(a*b*c) * angle approximation
-    Accurate       // Use slerp + numerical integration on ellipsoid surface
-};
 
 template <typename T>
 struct trace_results {
@@ -35,36 +30,14 @@ class Ellipsoid {
     ~Ellipsoid() = default;
     const std::array<T, 3>& GetDimensions() const;
 
-    std::array<T, 2> GetIntersection(const Ray<T, 3>& ray);
+    std::array<T, 2> Intersect(const Ray<T, 3>& ray) const;
     trace_results<T> TracePath(const Point<T, 3>& Source,
                                const std::array<Point<T, 3>, 2>& ears) const;
 
-    Vector<T, 3> scale_ellipsoid(const Vector<T, 3>& dir, T a, T b, T c) const;
-
    private:
-    T ArcLengthOnEllipsoid(const Vector<T, 3>& dir_from_center_1,
-                           const Vector<T, 3>& dir_from_center_2,
-                           ArcMode mode = ArcMode::Accurate,
-                           int steps = 100) const;
-
-    T AccurateArcLength(const Vector<T, 3>& unit_start,
-                        const Vector<T, 3>& unit_end,
-                        T a,
-                        T b,
-                        T c,
-                        int steps) const;
-
-    Vector<T, 3> dEllipsoid_dt(const Vector<T, 3>& unit_start,
-                               const Vector<T, 3>& unit_end,
-                               T t,
-                               T a,
-                               T b,
-                               T c,
-                               T h = 1e-5) const;
-
    private:
     std::array<T, 3> m_dimensions;
-    // Center
+    Point<T, 3> m_origin = {0, 0, 0};
     // Rotation
 };
 
@@ -91,289 +64,171 @@ const std::array<T, 3>& Ellipsoid<T>::GetDimensions() const {
     return m_dimensions;
 };
 
-template <typename T>
-std::array<T, 2> Ellipsoid<T>::GetIntersection(const Ray<T, 3>& ray) {
-    // ray and ellipsoid intersection
+// template <typename T>
+// std::array<T, 2> Ellipsoid<T>::Intersect(const Ray<T, 3>& ray) const {
+//     auto direction = ray.GetDirection();
 
+//     // This splitting is really inefficient
+//     T vx = direction[0];
+//     T vy = direction[1];
+//     T vz = direction[2];
+
+//     auto origin = ray.GetOrigin();
+
+//     T x0 = origin[0];
+//     T y0 = origin[1];
+//     T z0 = origin[2];
+
+//     T A = m_dimensions[0];
+//     T B = m_dimensions[1];
+//     T C = m_dimensions[2];
+
+//     T a = (vx / A) * (vx / A) + (vy / B) * (vy / B) + (vz / C) * (vz / C);
+//     T b = (2) * (((x0 * vx) / (A * A)) + ((y0 * vy) / (B * B)) +
+//                  ((z0 * vz) / (C * C)));
+//     T c = (x0 / A) * (x0 / A) + (y0 / B) * (y0 / B) + (z0 / C) * (z0 / C) -
+//     1;
+
+//     // Calculate discriminant
+//     T d = b * b - 4 * a * c;
+
+//     // Early return - no valid intersection
+//     if (d < 0) {
+//         return {-1, -1};
+//     }
+
+//     // Only one intersection, compact calculation
+//     if (d == 0) {
+//         T t_tangent = -b / (2 * a);
+
+//         // Can't be negative or zero
+//         if (t_tangent <= 0) {
+//             return {-1, -1};
+//         }
+
+//         return {t_tangent, -1};
+//     }
+
+//     T t_one = (-b + std::sqrt(d)) / (2 * a);
+//     T t_two = (-b - std::sqrt(d)) / (2 * a);
+
+//     return {t_one, t_two};
+// }
+
+template <typename T>
+std::array<T, 2> Ellipsoid<T>::Intersect(const Ray<T, 3>& ray) const {
     auto direction = ray.GetDirection();
-
-    // This splitting is really inefficient
-    T vx = direction[RTB::Axes::x];
-    T vy = direction[RTB::Axes::y];
-    T vz = direction[RTB::Axes::z];
-
     auto origin = ray.GetOrigin();
-
-    T x0 = origin[RTB::Axes::x];
-    T y0 = origin[RTB::Axes::y];
-    T z0 = origin[RTB::Axes::z];
-
-    T A = m_dimensions[RTB::Axes::x];
-    T B = m_dimensions[RTB::Axes::y];
-    T C = m_dimensions[RTB::Axes::z];
-
-    T a = (vx / A) * (vx / A) + (vy / B) * (vy / B) + (vz / C) * (vz / C);
-    T b = (2) * (((x0 * vx) / (A * A)) + ((y0 * vy) / (B * B)) +
-                 ((z0 * vz) / (C * C)));
-    T c = (x0 / A) * (x0 / A) + (y0 / B) * (y0 / B) + (z0 / C) * (z0 / C) - 1;
-
-    // Calculate discriminant
+    T vx = direction[0], vy = direction[1], vz = direction[2];
+    T x0 = origin[0], y0 = origin[1], z0 = origin[2];
+    T A = m_dimensions[0], B = m_dimensions[1], C = m_dimensions[2];
+    // Correct coefficient calculation
+    T a = (vx * vx) / (A * A) + (vy * vy) / (B * B) + (vz * vz) / (C * C);
+    T b = 2 * ((x0 * vx) / (A * A) + (y0 * vy) / (B * B) + (z0 * vz) / (C * C));
+    T c = (x0 * x0) / (A * A) + (y0 * y0) / (B * B) + (z0 * z0) / (C * C) - 1;
     T d = b * b - 4 * a * c;
-
-    // Early return - no valid intersection
     if (d < 0) {
-        return {-1, -1};
+        return {};  // No intersection
     }
-
-    // Only one intersection, compact calculation
     if (d == 0) {
-        T t_tangent = -b / (2 * a);
-
-        // Can't be negative or zero
-        if (t_tangent <= 0) {
-            return {-1, -1};
-        }
-
-        return {t_tangent, -1};
+        return {-b / (2 * a), -1};  // Tangent
     }
-
-    T t_one = (-b + std::sqrt(d)) / (2 * a);
-    T t_two = (-b - std::sqrt(d)) / (2 * a);
-
-    // Can't be negative or zero
-    if (t_one <= 0) {
-        t_one = -1;
-    }
-
-    if (t_two <= 0) {
-        t_two = -1;
-    }
-
-    return {t_one, t_two};
-}
-
-// Apply ellipsoid scaling to a direction vector
-template <typename T>
-Vector<T, 3> Ellipsoid<T>::scale_ellipsoid(const Vector<T, 3>& dir,
-                                           T a,
-                                           T b,
-                                           T c) const {
-    return Vector<T, 3>{static_cast<T>(a * dir[0]),
-                        static_cast<T>(b * dir[1]),
-                        static_cast<T>(c * dir[2])};
-}
-
-// Derivative of ellipsoid path at point t using central difference
-template <typename T>
-Vector<T, 3> Ellipsoid<T>::dEllipsoid_dt(const Vector<T, 3>& unit_start,
-                                         const Vector<T, 3>& unit_end,
-                                         T t,
-                                         T a,
-                                         T b,
-                                         T c,
-                                         T h) const {
-    Vector<T, 3> pt1 = scale_ellipsoid(
-        RTB::slerp<T>(unit_start, unit_end, static_cast<T>(t - h)),
-        static_cast<T>(a),
-        static_cast<T>(b),
-        static_cast<T>(c));
-    Vector<T, 3> pt2 = scale_ellipsoid(
-        RTB::slerp<T>(unit_start, unit_end, static_cast<T>(t + h)),
-        static_cast<T>(a),
-        static_cast<T>(b),
-        static_cast<T>(c));
-    return Vector<T, 3>{static_cast<T>((pt2[0] - pt1[0]) / (2 * h)),
-                        static_cast<T>((pt2[1] - pt1[1]) / (2 * h)),
-                        static_cast<T>((pt2[2] - pt1[2]) / (2 * h))};
-}
-// Arc length via Simpson's rule
-template <typename T>
-T Ellipsoid<T>::AccurateArcLength(const Vector<T, 3>& unit_start,
-                                  const Vector<T, 3>& unit_end,
-                                  T a,
-                                  T b,
-                                  T c,
-                                  int steps) const {
-    T total = 0.0;
-    T h = 1.0 / steps;
-
-    for (int i = 0; i <= steps; ++i) {
-        T t = i * h;
-        T weight = (i == 0 || i == steps) ? 1 : (i % 2 == 0 ? 2 : 4);
-        Vector<T, 3> deriv = dEllipsoid_dt(unit_start, unit_end, t, a, b, c);
-        total += weight * deriv.Magnitude();
-    }
-
-    return (h / 3.0) * total;
-}
-
-template <typename T>
-T Ellipsoid<T>::ArcLengthOnEllipsoid(const Vector<T, 3>& dir_from_center_1,
-                                     const Vector<T, 3>& dir_from_center_2,
-                                     ArcMode mode,
-                                     int steps) const {
-    Vector<T, 3> u = dir_from_center_1.Normalize();
-    Vector<T, 3> v = dir_from_center_2.Normalize();
-
-    if (mode == ArcMode::FastEstimate) {
-        T angle = acos(DotProduct(u, v));  // radians
-        T r_avg =
-            std::cbrt(m_dimensions[0] * m_dimensions[1] * m_dimensions[2]);
-        return r_avg * angle;
-    } else {
-        return AccurateArcLength(
-            u, v, m_dimensions[0], m_dimensions[1], m_dimensions[2], steps);
-    }
+    T sqrt_d = std::sqrt(d);
+    T t1 = (-b + sqrt_d) / (2 * a);
+    T t2 = (-b - sqrt_d) / (2 * a);
+    return {t1, t2};
 }
 
 template <typename T>
 trace_results<T> Ellipsoid<T>::TracePath(
-    const Point<T, 3>& Source, const std::array<Point<T, 3>, 2>& ears) const {
-    std::array<Point<T, 3>, 2> tangent_points;
-    std::array<T, 2> pathlengths;
-    std::array<T, 2> arclengths;
-
+    const Point<T, 3>& source, const std::array<Point<T, 3>, 2>& ears) const {
+    trace_results<T> results;
     // Split for ease of use
-    T a = m_dimensions[0];
-    T b = m_dimensions[1];
-    T c = m_dimensions[2];
+    T A = m_dimensions[0];
+    T B = m_dimensions[1];
+    T C = m_dimensions[2];
 
-    T Sx = Source[0];
-    T Sy = Source[1];
-    T Sz = Source[2];
+    T A_sq = A * A;
+    T B_sq = B * B;
+    T C_sq = C * C;
+
+    T Sx = source[0];
+    T Sy = source[1];
+    T Sz = source[2];
 
     // Construct the polar plane from the source point and ellipsoid
-    T a1 = Sx / (a * a);
-    T b1 = Sy / (b * b);
-    T c1 = Sz / (c * c);
-    Plane<T> polar_plane(a1, b1, c1, -1);
+    T polar_a = Sx / A_sq;
+    T polar_b = Sy / B_sq;
+    T polar_c = Sz / C_sq;
+    Plane<T> polar_plane(polar_a, polar_b, polar_c, -1);
 
     polar_plane.Normalize();
 
-    Point<T, 3> origin = {0, 0, 0};
-
     for (size_t Currentear = 0; Currentear < 2; Currentear++) {
-        Point<T, 3> ear = ears[Currentear];
+        const Point<T, 3> ear = ears[Currentear];
 
-        // Construct the plane defined by source, origin, and ear
-        // When the points are colinear (or approximately, we should use the XY
-        // plane instead)
-        Vector<T, 3> vEar(origin, ear);
-        Vector<T, 3> vSrc(origin, Source);
-        Vector<T, 3> cross = CrossProduct(vEar, vSrc);
-
-        Plane<T> STO_plane;
-
-        if (cross.MagnitudeSquared() < 1e-10) {
-            // Collinear: replace STO plane with the XY plane
-            STO_plane = Plane<T>(0, 0, 1, 0);
-        } else {
-            // Regular case
-            STO_plane = Plane<T>(origin, ear, Source);
+        // First check if the straight path to the ear crosses the Ellipsoid, if
+        // it doesn't then we're done
+        Vector<T, 3> to_ear(source, ear);
+        Ray<T, 3> source_to_ear(source, to_ear);
+        std::array<T, 2> straight_intersections = Intersect(source_to_ear);
+        bool path_clear = true;
+        constexpr T epsilon = std::numeric_limits<T>::epsilon() * 100;
+        for (T t : straight_intersections) {
+            // Check if intersection is within the segment
+            if (t > epsilon && t < 1 - epsilon) {
+                path_clear = false;
+                break;
+            }
         }
-        // Plane<T> STO_plane(origin, ear, Source);
+        T ear_distance = to_ear.Magnitude();
+        if (path_clear) {
+            // Straight path doesn't cross ellipsoid
+            results.tangent_points[Currentear] = ear;
+            results.direct_rays[Currentear] = to_ear;
+            results.pathlengths[Currentear] = ear_distance;
+            continue;
+        }
+
+        Plane<T> STO_plane(m_origin, ear, source);
         STO_plane.Normalize();
 
         Ray<T, 3> intersection_line = IntersectPlanes(polar_plane, STO_plane);
 
-        Vector<T, 3> N = intersection_line.GetDirection();
-        Point<T, 3> P = intersection_line.GetOrigin();
+        std::array<T, 2> intersections = Intersect(intersection_line);
 
-        // Splits for formulas
-        T Nx = N[0], Ny = N[1], Nz = N[2];
-        T Px = P[0], Py = P[1], Pz = P[2];
+        Point<T, 3> tangent_one =
+            intersection_line.GetPosition(intersections[0]);
+        Point<T, 3> tangent_two =
+            intersection_line.GetPosition(intersections[1]);
 
-        // Ray-ellipsoid intersection
-        T A = (Nx * Nx) / (a * a) + (Ny * Ny) / (b * b) + (Nz * Nz) / (c * c);
+        // Now determine what tangent point is closer to this ear
+        T length_one = distance_2points(ear, tangent_one);
+        T length_two = distance_2points(ear, tangent_two);
 
-        T B = 2 *
-              ((Px * Nx) / (a * a) + (Py * Ny) / (b * b) + (Pz * Nz) / (c * c));
-
-        T C =
-            (Px * Px) / (a * a) + (Py * Py) / (b * b) + (Pz * Pz) / (c * c) - 1;
-
-        T D = B * B - 4 * A * C;
-
-        if (D < 0) {
-            std::cerr << "No intersection was found, this should be "
-                         "impossible!\n";
-            std::exit(1);
-        }
-
-        T t_plus = (-B + sqrt(D)) / (2 * A);
-        T t_minus = (-B - sqrt(D)) / (2 * A);
-
-        Point<T, 3> tangent_one = intersection_line.GetPosition(t_plus);
-        Point<T, 3> tangent_two = intersection_line.GetPosition(t_minus);
-
-        // Calculate the arc angles between the ear and both tangents
-        Vector<T, 3> vecEar(origin, ear);
-        // vecEar = unit_vector(vecEar);
-
-        Vector<T, 3> tangent_one_vec(origin, tangent_one);
-        // tangent_one_vec = unit_vector(tangent_one_vec);
-
-        Vector<T, 3> tangent_two_vec(origin, tangent_two);
-        // tangent_two_vec = unit_vector(tangent_two_vec);
-
-        // For future reference:
-        // Up until here everything is happy happy joyjoy, but now comes the
-        // kicker: finding the arclength along the ellipsoid (more
-        // specifically the geodesic), is non-trivial... Meaning we can't
-        // exactly calculate it, only approximate it. Usual approximations
-        // like vincenty's method assume rotational symmetry along at least
-        // one axis But since our head is triaxial (3 distinct axes) we need
-        // another method, that's the "ArcLengthOnEllipsoid" function below
-
-        // Calculate the arclength directly
-        T length_one = ArcLengthOnEllipsoid(
-            vecEar, tangent_one_vec, ArcMode::Accurate, 100);
-
-        T length_two = ArcLengthOnEllipsoid(
-            vecEar, tangent_two_vec, ArcMode::Accurate, 100);
-
-        // T arc_angle_one = acosd(
-        //     dotprod(unit_vector(vecEar), unit_vector(tangent_one_vec)));
-        // T arc_angle_two = acosd(
-        //     dotprod(unit_vector(vecEar), unit_vector(tangent_two_vec)));
-        T arclength;
-        Point<T, 3> closest_tangent;
-        T pathlength;
-        T tangent_one_path = distance_2points(Source, tangent_one);
-        T tangent_two_path = distance_2points(Source, tangent_two);
-
-        // Determine the closer tangent point
-        if (length_one <= length_two) {
-            arclength = length_one;
-            closest_tangent = tangent_one;
-            pathlength = tangent_one_path;
+        // TODO: this comparison needs to be very robust!
+        if (length_one < length_two - epsilon) {
+            results.tangent_points[Currentear] = tangent_one;
         } else {
-            arclength = length_two;
-            closest_tangent = tangent_two;
-            pathlength = tangent_two_path;
+            results.tangent_points[Currentear] = tangent_two;
         }
 
-        T direct_path = distance_2points(Source, ear);
+        // Direct ray
+        Vector<T, 3> direct_ray(source, results.tangent_points[Currentear]);
+        results.direct_rays[Currentear] = direct_ray;
 
-        if (pathlength + arclength <= direct_path) {
-            // Use the surface-bounce path
-            pathlengths[Currentear] = pathlength + arclength;
-            arclengths[Currentear] = arclength;
-            tangent_points[Currentear] = closest_tangent;
-        } else {
-            // Use direct path
-            pathlengths[Currentear] = direct_path;
-            arclengths[Currentear] = 0;
-            tangent_points[Currentear] = ear;
-        }
+        // Direct length (since vector hasnt been normalised yet)
+        T direct_length = direct_ray.Magnitude();
+
+        // Correct until here!
+        // Arc length :(
+        // T arc_length = Arclength(results.tangent_points[Currentear], ear);
+        T arc_length = 0;
+        results.arclengths[Currentear] = arc_length;
+        results.pathlengths[Currentear] = direct_length + arc_length;
     }
 
-    Vector<T, 3> rayleft(Source, tangent_points[0]);
-    Vector<T, 3> rayright(Source, tangent_points[1]);
-
-    std::array<Vector<T, 3>, 2> rays = {rayleft, rayright};
-
-    return {pathlengths, arclengths, tangent_points, rays};
+    return results;
 }
 
 }  // namespace RTB

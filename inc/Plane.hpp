@@ -39,8 +39,9 @@ class Plane {
     }
 
    private:
-    Vector<T, 4> m_coefficients;
-    // Would this be better using a normal array?
+    // TODO: change to regular std::array
+    // Vector<T, 4> m_coefficients;
+    std::array<T, 4> m_coefficients;
 };
 
 template <typename T>
@@ -69,15 +70,26 @@ void Plane<T>::Invert() {
     m_coefficients[3] = -m_coefficients[3];
 }
 
+// FIXME: non-standard normalization going on here!
 template <typename T>
 void Plane<T>::Normalize() {
-    m_coefficients.NormalizeInPlace();
+    T len = std::sqrt(m_coefficients[0] * m_coefficients[0] +
+                      m_coefficients[1] * m_coefficients[1] +
+                      m_coefficients[2] * m_coefficients[2]);
+
+    if (len != static_cast<T>(0)) {
+        m_coefficients[0] /= len;
+        m_coefficients[1] /= len;
+        m_coefficients[2] /= len;
+        m_coefficients[3] /= len;
+    }
 }
 
 template <typename T>
 void Plane<T>::Print() const {
     std::cout << "Plane coefficients: ";
-    m_coefficients.Print();  // Call the print method of the Vector class
+    std::cout << m_coefficients[0] << " " << m_coefficients[1] << " " 
+              << m_coefficients[2] << " " << m_coefficients[3] << std::endl;
 }
 
 template <typename T>
@@ -145,21 +157,19 @@ void Plane<T>::Reflect(Ray<T, 3>& ray, T& t) const {
 //          If planes are parallel or degenerate, direction = (0,0,0).
 
 template <typename T>
-Ray<T,3> IntersectPlanes(const Plane<T>& p1,
-                               const Plane<T>& p2)
-{
-    Vector<T,3> n1 = p1.GetNormalVector();  // unit normals
-    Vector<T,3> n2 = p2.GetNormalVector();
+Ray<T, 3> IntersectPlanes(const Plane<T>& p1, const Plane<T>& p2) {
+    Vector<T, 3> n1 = p1.GetNormalVector();  // unit normals
+    Vector<T, 3> n2 = p2.GetNormalVector();
     T d1 = p1.GetCoefficients()[3];
     T d2 = p2.GetCoefficients()[3];
 
     // Direction of the intersection: n1 × n2
-    Vector<T,3> dir = CrossProduct(n1, n2);
+    Vector<T, 3> dir = CrossProduct(n1, n2);
     T denom = dir.MagnitudeSquared();
 
     // If nearly parallel
     if (denom < std::numeric_limits<T>::epsilon()) {
-        return Ray<T,3>({0,0,0}, {0,0,0});
+        return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
     }
 
     // Choose the coordinate with the largest magnitude for numerical stability
@@ -167,8 +177,7 @@ Ray<T,3> IntersectPlanes(const Plane<T>& p1,
     T ay = std::abs(dir[1]);
     T az = std::abs(dir[2]);
 
-    int k = (ax >= ay && ax >= az) ? 0 :
-            (ay >= az)            ? 1 : 2;
+    int k = (ax >= ay && ax >= az) ? 0 : (ay >= az) ? 1 : 2;
 
     // Solve reduced 2×2 system by setting coordinate k = 0
     T x = 0, y = 0, z = 0;
@@ -180,44 +189,42 @@ Ray<T,3> IntersectPlanes(const Plane<T>& p1,
         T A = n1[1], B = n1[2], C = -d1;
         T D = n2[1], E = n2[2], F = -d2;
 
-        T det = A*E - B*D;
+        T det = A * E - B * D;
         if (std::abs(det) < eps) {
-            return Ray<T,3>({0,0,0}, {0,0,0});
+            return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
         }
 
-        y = (C*E - B*F) / det;
-        z = (A*F - C*D) / det;
-    }
-    else if (k == 1) {
+        y = (C * E - B * F) / det;
+        z = (A * F - C * D) / det;
+    } else if (k == 1) {
         // y = 0 → solve for x,z
         T A = n1[0], B = n1[2], C = -d1;
         T D = n2[0], E = n2[2], F = -d2;
 
-        T det = A*E - B*D;
+        T det = A * E - B * D;
         if (std::abs(det) < eps) {
-            return Ray<T,3>({0,0,0}, {0,0,0});
+            return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
         }
 
-        x = (C*E - B*F) / det;
-        z = (A*F - C*D) / det;
-    }
-    else { // k == 2
+        x = (C * E - B * F) / det;
+        z = (A * F - C * D) / det;
+    } else {  // k == 2
         // z = 0 → solve for x,y
         T A = n1[0], B = n1[1], C = -d1;
         T D = n2[0], E = n2[1], F = -d2;
 
-        T det = A*E - B*D;
+        T det = A * E - B * D;
         if (std::abs(det) < eps) {
-            return Ray<T,3>({0,0,0}, {0,0,0});
+            return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
         }
 
-        x = (C*E - B*F) / det;
-        y = (A*F - C*D) / det;
+        x = (C * E - B * F) / det;
+        y = (A * F - C * D) / det;
     }
 
-    Point<T,3> p0{x, y, z};
+    Point<T, 3> p0{x, y, z};
 
-    return Ray<T,3>(p0, dir.Normalize());
+    return Ray<T, 3>(p0, dir.Normalize());
 }
 
 // template <typename T>
