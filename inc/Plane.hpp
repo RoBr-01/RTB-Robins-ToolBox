@@ -34,13 +34,11 @@ class Plane {
 
     void Reflect(Ray<T, 3>& ray, T& t) const;
 
-    Vector<T, 4> GetCoefficients() const {
+    std::array<T, 4> GetCoefficients() const {
         return m_coefficients;
     }
 
    private:
-    // TODO: change to regular std::array
-    // Vector<T, 4> m_coefficients;
     std::array<T, 4> m_coefficients;
 };
 
@@ -88,7 +86,7 @@ void Plane<T>::Normalize() {
 template <typename T>
 void Plane<T>::Print() const {
     std::cout << "Plane coefficients: ";
-    std::cout << m_coefficients[0] << " " << m_coefficients[1] << " " 
+    std::cout << m_coefficients[0] << " " << m_coefficients[1] << " "
               << m_coefficients[2] << " " << m_coefficients[3] << std::endl;
 }
 
