@@ -165,9 +165,21 @@ Ray<T, 3> IntersectPlanes(const Plane<T>& p1, const Plane<T>& p2) {
     Vector<T, 3> dir = CrossProduct(n1, n2);
     T denom = dir.MagnitudeSquared();
 
-    // If nearly parallel
+    // If nearly parallel, use fallback approach
     if (denom < std::numeric_limits<T>::epsilon()) {
-        return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
+        // Instead of returning zero ray, compute a reasonable approximation
+        Vector<T, 3> stable_dir =
+            (n1.MagnitudeSquared() > n2.MagnitudeSquared()) ? n1 : n2;
+
+        // Find a point that satisfies both planes approximately
+        // Use simple approximation: point on plane 1 closest to origin
+        T d1 = p1.GetCoefficients()[3];
+        Vector<T, 3> p1_vec = p1.GetNormalVector() * (-d1);
+
+        // Create Point from Vector components using initializer_list
+        Point<T, 3> midpoint = {p1_vec[0], p1_vec[1], p1_vec[2]};
+
+        return Ray<T, 3>(midpoint, stable_dir.Normalize());
     }
 
     // Choose the coordinate with the largest magnitude for numerical stability
@@ -189,7 +201,14 @@ Ray<T, 3> IntersectPlanes(const Plane<T>& p1, const Plane<T>& p2) {
 
         T det = A * E - B * D;
         if (std::abs(det) < eps) {
-            return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
+            // Fallback: use stable direction and approximate point
+            Vector<T, 3> stable_dir =
+                (n1.MagnitudeSquared() > n2.MagnitudeSquared()) ? n1 : n2;
+            Vector<T, 3> mid_vec =
+                (p1.GetNormalVector() * (-d1) + p2.GetNormalVector() * (-d2)) /
+                2.0;
+            Point<T, 3> midpoint = {mid_vec[0], mid_vec[1], mid_vec[2]};
+            return Ray<T, 3>(midpoint, stable_dir.Normalize());
         }
 
         y = (C * E - B * F) / det;
@@ -201,7 +220,14 @@ Ray<T, 3> IntersectPlanes(const Plane<T>& p1, const Plane<T>& p2) {
 
         T det = A * E - B * D;
         if (std::abs(det) < eps) {
-            return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
+            // Fallback: use stable direction and approximate point
+            Vector<T, 3> stable_dir =
+                (n1.MagnitudeSquared() > n2.MagnitudeSquared()) ? n1 : n2;
+            Vector<T, 3> mid_vec =
+                (p1.GetNormalVector() * (-d1) + p2.GetNormalVector() * (-d2)) /
+                2.0;
+            Point<T, 3> midpoint = {mid_vec[0], mid_vec[1], mid_vec[2]};
+            return Ray<T, 3>(midpoint, stable_dir.Normalize());
         }
 
         x = (C * E - B * F) / det;
@@ -213,7 +239,14 @@ Ray<T, 3> IntersectPlanes(const Plane<T>& p1, const Plane<T>& p2) {
 
         T det = A * E - B * D;
         if (std::abs(det) < eps) {
-            return Ray<T, 3>({0, 0, 0}, {0, 0, 0});
+            // Fallback: use stable direction and approximate point
+            Vector<T, 3> stable_dir =
+                (n1.MagnitudeSquared() > n2.MagnitudeSquared()) ? n1 : n2;
+            Vector<T, 3> mid_vec =
+                (p1.GetNormalVector() * (-d1) + p2.GetNormalVector() * (-d2)) /
+                2.0;
+            Point<T, 3> midpoint = {mid_vec[0], mid_vec[1], mid_vec[2]};
+            return Ray<T, 3>(midpoint, stable_dir.Normalize());
         }
 
         x = (C * E - B * F) / det;

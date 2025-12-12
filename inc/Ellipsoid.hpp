@@ -169,7 +169,19 @@ trace_results<T> Ellipsoid<T>::TracePath(
     T polar_a = Sx / A_sq;
     T polar_b = Sy / B_sq;
     T polar_c = Sz / C_sq;
-    Plane<T> polar_plane(polar_a, polar_b, polar_c, -1);
+
+    // Add scaling for numerical stability with small dimensions
+    T scale_factor =
+        std::max({std::abs(polar_a), std::abs(polar_b), std::abs(polar_c)});
+    Plane<T> polar_plane;
+    if (scale_factor > 1000.0) {  // Threshold for numerical issues
+        polar_a /= scale_factor;
+        polar_b /= scale_factor;
+        polar_c /= scale_factor;
+        polar_plane = Plane<T>(polar_a, polar_b, polar_c, -1.0 / scale_factor);
+    } else {
+        polar_plane = Plane<T>(polar_a, polar_b, polar_c, -1);
+    }
 
     polar_plane.Normalize();
 
@@ -315,10 +327,16 @@ T Ellipsoid<T>::ArcLength(const Point<T, 3>& p1,
     for (int iter = 0; iter < 2; ++iter) {
         T sin_t = std::sin(corrected / a);
         T cos_t = std::cos(corrected / a);
-        T f = std::sqrt(a * a * sin_t * sin_t + b * b * cos_t * cos_t) -
-              std::sqrt(a * a * sin_t * sin_t + b * b * cos_t * cos_t);
-        T df = (b * b - a * a) * sin_t * cos_t /
-               std::sqrt(a * a * sin_t * sin_t + b * b * cos_t * cos_t);
+
+        // The function should compute: current_arc_length - target_arc_length
+        T current_arc_length =
+            corrected;  // Since we're using angle as parameter
+        T target_arc_length = angle_diff * a *
+                              (1.0 + 0.25 * ratio_sq - 0.125 * ratio_cu +
+                               0.0625 * ratio_sq * ratio_sq);
+
+        T f = current_arc_length - target_arc_length;
+        T df = 1.0;  // Derivative of arc length with respect to angle
 
         if (std::abs(df) > 1e-10) {
             corrected -= f / df;
