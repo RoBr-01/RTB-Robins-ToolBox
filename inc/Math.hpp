@@ -2,7 +2,6 @@
 #define MATH_HPP
 
 // STL
-#include <array>
 #include <cmath>
 
 // RTB
@@ -11,154 +10,196 @@
 
 namespace RTB {
 
+// ==============================
+// Coordinate types
+// ==============================
+
+/**
+ * @brief Cartesian 3D coordinate (x, y, z).
+ */
 template <typename T>
-T deg2rad(const T& degrees) {
-    return degrees * PI_div_180;
+struct CartesianCoord {
+    T x{}, y{}, z{};
+};
+
+/**
+ * @brief Spherical coordinate (azimuth, elevation, radius).
+ *
+ * Azimuth and elevation are in degrees. Radius is in the same unit as
+ * the originating Cartesian coordinate.
+ */
+template <typename T>
+struct SphericalCoord {
+    T az{}, el{}, r{};
+};
+
+// ==============================
+// Degree/radian conversion
+// ==============================
+
+template <typename T>
+T deg2rad(T degrees) {
+    return degrees * static_cast<T>(PI_div_180);
 }
 
 template <typename T>
-T rad2deg(const T& radians) {
-    return radians * R180_div_PI;
+T rad2deg(T radians) {
+    return radians * static_cast<T>(R180_div_PI);
 }
 
+// ==============================
+// Degree-domain trig
+// (all cast through double for precision)
+// ==============================
+
 template <typename T>
-T sind(const T& degrees) {
+T sind(T degrees) {
     return static_cast<T>(std::sin(static_cast<double>(degrees) *
                                    static_cast<double>(PI_div_180)));
 }
 
 template <typename T>
-T asind(const T& value) {
-    return std::asin(value) * R180_div_PI;
+T asind(T value) {
+    return static_cast<T>(std::asin(static_cast<double>(value)) *
+                          static_cast<double>(R180_div_PI));
 }
 
 template <typename T>
-T cosd(const T& degrees) {
+T cosd(T degrees) {
     return static_cast<T>(std::cos(static_cast<double>(degrees) *
                                    static_cast<double>(PI_div_180)));
 }
 
 template <typename T>
-T acosd(const T& value) {
+T acosd(T value) {
     return static_cast<T>(std::acos(static_cast<double>(value)) *
                           static_cast<double>(R180_div_PI));
 }
 
 template <typename T>
-T tand(const T& degrees) {
-    return std::tan(degrees * PI_div_180);
+T tand(T degrees) {
+    return static_cast<T>(std::tan(static_cast<double>(degrees) *
+                                   static_cast<double>(PI_div_180)));
 }
 
 template <typename T>
-T atand(const T& value) {
-    return std::atan(value) * R180_div_PI;
+T atand(T value) {
+    return static_cast<T>(std::atan(static_cast<double>(value)) *
+                          static_cast<double>(R180_div_PI));
 }
 
+// ==============================
+// Coordinate conversion
+// ==============================
+
+/**
+ * @brief Converts Cartesian (x, y, z) to Spherical (az, el, r).
+ *
+ * Azimuth and elevation are returned in degrees.
+ */
 template <typename T>
-std::array<T, 3> Cart2SphD(const std::array<T, 3>& cartesian) {
-    std::array<T, 3> spherical;
+SphericalCoord<T> Cart2Sph(const CartesianCoord<T>& c) {
+    const double x = static_cast<double>(c.x);
+    const double y = static_cast<double>(c.y);
+    const double z = static_cast<double>(c.z);
 
-    T x = cartesian[0];
-    T y = cartesian[1];
-    T z = cartesian[2];
+    const double rxy = std::sqrt(x * x + y * y);
 
-    spherical[0] = static_cast<T>(std::atan2(static_cast<double>(y),
-                                             static_cast<double>(x))) *
-                   R180_div_PI;  // Azimuth
-    spherical[1] = static_cast<T>(std::atan2(
-                       static_cast<double>(z),
-                       std::sqrt(static_cast<double>(x * x + y * y)))) *
-                   R180_div_PI;  // Elevation
-    spherical[2] = static_cast<T>(
-        std::sqrt(static_cast<double>(x * x + y * y + z * z)));  // Radius
-
-    return spherical;
+    SphericalCoord<T> s;
+    s.az = static_cast<T>(std::atan2(y, x) * static_cast<double>(R180_div_PI));
+    s.el =
+        static_cast<T>(std::atan2(z, rxy) * static_cast<double>(R180_div_PI));
+    s.r = static_cast<T>(std::sqrt(x * x + y * y + z * z));
+    return s;
 }
 
+/**
+ * @brief Converts Spherical (az, el, r) to Cartesian (x, y, z).
+ *
+ * Azimuth and elevation are expected in degrees.
+ */
 template <typename T>
-std::array<T, 3> Sph2CartD(const std::array<T, 3>& Spherical) {
-    std::array<T, 3> Cartesian;
+CartesianCoord<T> Sph2Cart(const SphericalCoord<T>& s) {
+    const T cosEl = cosd(s.el);
 
-    T Az = Spherical[0];
-    T El = Spherical[1];
-    T r = Spherical[2];
-
-    T cosEl = cosd(El);
-    T sinEl = sind(El);
-    T cosAz = cosd(Az);
-    T sinAz = sind(Az);
-
-    Cartesian[0] = r * cosEl * cosAz;  // x
-    Cartesian[1] = r * cosEl * sinAz;  // y
-    Cartesian[2] = r * sinEl;          // z
-
-    return Cartesian;
+    CartesianCoord<T> c;
+    c.x = s.r * cosEl * cosd(s.az);
+    c.y = s.r * cosEl * sind(s.az);
+    c.z = s.r * sind(s.el);
+    return c;
 }
 
-// John Carmacks's fast inverse sqrt, but in c++
+// ==============================
+// dB utilities
+// ==============================
+
+/** @brief Amplitude ratio to dB (20 * log10). */
 template <typename T>
-T fastInverseSqrt(T number) {
-    constexpr T threeHalves = static_cast<T>(1.5);
-
-    T x2 = number * static_cast<T>(0.5);
-    T y = number;
-
-    // Use different magic numbers depending on the type
-    uint64_t i;
-    if constexpr (std::is_same<T, double>::value) {
-        i = *reinterpret_cast<uint64_t*>(&y);  // Double magic constant
-        i = 0x5FE6EB50C7B537A9 - (i >> 1);          // Magic number for double
-    } else {
-        i = *reinterpret_cast<uint32_t*>(&y);  // Float magic constant
-        i = 0x5f3759df - (i >> 1);                  // Magic number for float
-    }
-
-    y = *reinterpret_cast<T*>(&i);  // Convert back to floating-point
-
-    y = y * (threeHalves - (x2 * y * y));  // One iteration of Newton's method
-    // y = y * (threeHalves - (x2 * y * y));  // Second iteration - optional
-
-    return y;
+T frac_to_dB(T frac) {
+    return static_cast<T>(20.0 * std::log10(static_cast<double>(frac)));
 }
 
-template <typename T>
-T frac_to_dB(T Frac) {
-    return 20 * std::log10(Frac);
-}
-
+/** @brief dB to amplitude ratio (inverse of 20 * log10). */
 template <typename T>
 T dB_to_frac(T dB) {
-    return static_cast<T>(std::pow(10, static_cast<double>(dB) / 20));
+    return static_cast<T>(std::pow(10.0, static_cast<double>(dB) / 20.0));
 }
 
-// TODO: use formula to define what part needs to have the polarity flipped
+// ==============================
+// Polar pattern
+// ==============================
+
+/**
+ * @brief Evaluates a cardioid-family polar pattern.
+ *
+ * Returns a signed fractional gain value. The sign indicates polarity:
+ * positive values are in the main lobe, negative values are in the rear lobe.
+ * To convert to dB: frac_to_dB(std::abs(PolarFrac(...)))
+ *
+ * @param polar_pattern           Pattern shape factor [0..1]:
+ *                                0 = omnidirectional, 1 = figure-of-eight,
+ *                                0.5 = cardioid.
+ * @param max_attenuation_offset  Offset to prevent log(0) at full null
+ *                                (dB floor control). Applied before
+ *                                normalization.
+ * @param rayvector               Unit vector toward the source (must be
+ * normalized).
+ * @param zeroaxis                Unit vector of the on-axis direction (must be
+ * normalized).
+ * @return Signed fractional gain. Magnitude in [0..1], sign encodes polarity.
+ */
 template <typename T>
-T PolardB(T polar_pattern,
-          T max_attenuation_offset,
-          Vector<T, 3> rayvector,
-          Vector<T, 3> zeroaxis) {
-    T alpha = acosd(DotProduct(rayvector, zeroaxis));
-
-    T frac = (std::abs(polar_pattern + (1 - polar_pattern) * cosd(alpha)) +
-              max_attenuation_offset) /
-             (1 + max_attenuation_offset);
-    T dB = frac_to_dB(frac);
-
-    return dB;
+T PolarFrac(T polar_pattern,
+            T max_attenuation_offset,
+            const Vector<T, 3>& rayvector,
+            const Vector<T, 3>& zeroaxis) {
+    const T alpha = acosd(DotProduct(rayvector, zeroaxis));
+    const T signed_frac = polar_pattern + (1 - polar_pattern) * cosd(alpha);
+    return (std::abs(signed_frac) + max_attenuation_offset) /
+           (1 + max_attenuation_offset);
 }
 
-// Spherical linear interpolation between unit vectors u and v
+// ==============================
+// Spherical linear interpolation
+// ==============================
+
+/**
+ * @brief Spherical linear interpolation between two unit vectors.
+ *
+ * @param u  Start unit vector (must be normalized).
+ * @param v  End unit vector (must be normalized).
+ * @param t  Interpolation parameter [0..1].
+ */
 template <typename T>
-inline Vector<T, 3> slerp(const Vector<T, 3>& u, const Vector<T, 3>& v, T t) {
-    T omega = acos(DotProduct(u, v));
-    if (omega < 1e-8)
-        return u;  // avoid divide by 0 for tiny angles
-    T sin_omega = sin(omega);
-    T s1 = sin((1 - t) * omega) / sin_omega;
-    T s2 = sin(t * omega) / sin_omega;
-    return Vector<T, 3>{(s1 * u[0] + s2 * v[0]),
-                        (s1 * u[1] + s2 * v[1]),
-                        (s1 * u[2] + s2 * v[2])};
+Vector<T, 3> Slerp(const Vector<T, 3>& u, const Vector<T, 3>& v, T t) {
+    const T omega = std::acos(static_cast<double>(DotProduct(u, v)));
+    if (omega < static_cast<T>(1e-6))
+        return u;
+    const T sin_omega = std::sin(static_cast<double>(omega));
+    const T s1 = std::sin(static_cast<double>((1 - t) * omega)) / sin_omega;
+    const T s2 = std::sin(static_cast<double>(t * omega)) / sin_omega;
+    return Vector<T, 3>{
+        s1 * u[0] + s2 * v[0], s1 * u[1] + s2 * v[1], s1 * u[2] + s2 * v[2]};
 }
 
 }  // namespace RTB

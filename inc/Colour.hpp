@@ -10,29 +10,28 @@ namespace RTB {
 
 template <typename T, std::size_t N>
 class Colour {
-   private:
-    std::array<T, N> components;
-
    public:
     Colour() {
-        components.fill(static_cast<T>(0));
+        m_components.fill(static_cast<T>(0));
     }
 
-    Colour(const std::initializer_list<T> &values) {
+    Colour(const std::initializer_list<T>& values) {
         if (values.size() != N) {
             std::cerr
                 << "[COLOUR_HPP] @ L22: Initializer list size does not match "
                    "dimension.\n";
         }
-        std::copy(values.begin(), values.end(), components.begin());
+        std::copy(values.begin(), values.end(), m_components.begin());
     }
 
     void Update() {}
-    void Clamp(const T &lowerbound, const T &upperbound) {}
+    void Clamp(const T& lowerbound, const T& upperbound) {}
 
     // Overloaded functions
     //  Multiply (constant or other color)
     //  Add (constant or other color)
+   private:
+    std::array<T, N> m_components;
 };
 
 // Using int_fast8_t because its not worth risking wanting exactly 8 bits when

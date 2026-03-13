@@ -211,7 +211,7 @@ TEST_F(TimerTest, VeryShortDuration) {
     Timer timer;
     // Don't sleep, just measure immediately
 
-    float elapsed_ns = timer.StopAndCount("ns");
+    float elapsed_ns = timer.Elapsed<std::chrono::nanoseconds>();
     EXPECT_GE(elapsed_ns, 0.0f);  // Should be non-negative
 }
 
@@ -219,10 +219,10 @@ TEST_F(TimerTest, ConversionAccuracy) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    float elapsed_s = timer.StopAndCount("s");
+    float elapsed_s = timer.Elapsed<std::chrono::seconds>();
     timer.Start();  // Reset
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    float elapsed_ms = timer.StopAndCount("ms");
+    float elapsed_ms = timer.Elapsed<std::chrono::milliseconds>();
 
     // 100ms should be approximately 0.1s
     // Allow for some timing variance

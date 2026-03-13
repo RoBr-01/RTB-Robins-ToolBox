@@ -5,7 +5,6 @@
 
 #include "Colour.hpp"
 #include "Ellipsoid.hpp"
-#include "Line.hpp"
 #include "Math.hpp"
 #include "Plane.hpp"
 #include "Point.hpp"

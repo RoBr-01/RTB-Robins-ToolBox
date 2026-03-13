@@ -3,10 +3,10 @@
 
 // STL
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
-#include <stdexcept>
 #include <type_traits>
 
 // RTB
@@ -14,109 +14,95 @@
 
 namespace RTB {
 
-// Interface
+/**
+ * @brief A fixed-size point in N-dimensional space.
+ *
+ * @tparam T Scalar type. Must be arithmetic.
+ * @tparam N Dimension. Must be greater than zero.
+ */
 template <typename T, std::size_t N>
 class Point {
+    static_assert(std::is_arithmetic<T>::value,
+                  "Point<T, N>: T must be an arithmetic type.");
+    static_assert(N > 0, "Point<T, N>: N must be greater than zero.");
+
    public:
-    Point();
+    Point() : m_coords{} {}
 
-    Point(const std::initializer_list<T> &values);
+    Point(const std::initializer_list<T>& values) {
+        assert(values.size() == N);
+        std::copy(values.begin(), values.end(), m_coords.begin());
+    }
 
-    std::array<T, N> GetCoords() const;
+    std::array<T, N> GetCoords() const {
+        return m_coords;
+    }
 
-    void SetCoords(const std::array<T, N> &newCoords);
+    void SetCoords(const std::array<T, N>& newCoords) {
+        m_coords = newCoords;
+    }
 
-    T &operator[](std::size_t index);
-    const T &operator[](std::size_t index) const;
+    T& operator[](std::size_t index) {
+        assert(index < N);
+        return m_coords[index];
+    }
 
-    void Print() const;
+    const T& operator[](std::size_t index) const {
+        assert(index < N);
+        return m_coords[index];
+    }
+
+    void Print() const {
+        std::cout << "(";
+        for (std::size_t i = 0; i < N; ++i) {
+            std::cout << m_coords[i];
+            if (i < N - 1)
+                std::cout << ", ";
+        }
+        std::cout << ")\n";
+    }
 
    private:
     std::array<T, N> m_coords;
+};
 
-};  // Point
+// ==============================
+// Non-member functions
+// ==============================
 
-// Implementation
-template <typename T, std::size_t N>
-Point<T, N>::Point() {
-    m_coords.fill(static_cast<T>(0));
-}
-
-template <typename T, std::size_t N>
-Point<T, N>::Point(const std::initializer_list<T> &values) {
-    if (values.size() != N) {
-        std::cerr << "Point constructor : Initializer list size does not match "
-                     "point dimension.\n";
-    }
-    std::copy(values.begin(), values.end(), m_coords.begin());
-}
-template <typename T, std::size_t N>
-std::array<T, N> Point<T, N>::GetCoords() const {
-    return m_coords;
-}
-
-template <typename T, std::size_t N>
-void Point<T, N>::SetCoords(const std::array<T, N> &newCoords) {
-    m_coords = newCoords;
-}
-
-template <typename T, std::size_t N>
-T &Point<T, N>::operator[](std::size_t index) {
-    if (index >= N) {
-        std::cerr << "Index out of range\n";
-    }
-    return m_coords[index];
-}
-
-template <typename T, std::size_t N>
-const T &Point<T, N>::operator[](std::size_t index) const {
-    if (index >= N) {
-        std::cerr << "Index out of range\n";
-    }
-    return m_coords[index];
-}
-
-template <typename T, std::size_t N>
-void Point<T, N>::Print() const {
-    std::cout << "(";
-    for (std::size_t i = 0; i < N; i++) {
-        std::cout << m_coords[i];
-        if (i < N - 1) {
-            std::cout << ", ";
-        }
-    }
-    std::cout << ")" << std::endl;
-}
-
-// Template non-member functions
+/**
+ * @brief Returns the Euclidean distance between two points.
+ */
 template <typename T1, typename T2, std::size_t N>
-auto distance_2points(const Point<T1, N> &P1, const Point<T2, N> &P2) ->
+auto Distance(const Point<T1, N>& P1, const Point<T2, N>& P2) ->
     typename std::common_type<T1, T2>::type {
-    using CommonT = typename std::common_type<T1, T2>::type;
-    CommonT sum = CommonT{0};
-
+    using R = typename std::common_type<T1, T2>::type;
+    R sum = R{0};
     for (std::size_t i = 0; i < N; ++i) {
-        CommonT diff =
-            static_cast<CommonT>(P2[i]) - static_cast<CommonT>(P1[i]);
+        R diff = static_cast<R>(P2[i]) - static_cast<R>(P1[i]);
         sum += diff * diff;
     }
-
     return std::sqrt(sum);
 }
 
+/**
+ * @brief Returns the midpoint between two points.
+ */
 template <typename T1, typename T2, std::size_t N>
-auto midpoint(const Point<T1, N> &P1, const Point<T2, N> &P2)
+auto Midpoint(const Point<T1, N>& P1, const Point<T2, N>& P2)
     -> Point<typename std::common_type<T1, T2>::type, N> {
-    Point<typename std::common_type<T1, T2>::type, N> mid;
-    for (std::size_t i = 0; i < N; i++) {
-        mid[i] = (P1[i] + P2[i]) / 2.0;
-    }
-
+    using R = typename std::common_type<T1, T2>::type;
+    Point<R, N> mid;
+    for (std::size_t i = 0; i < N; ++i)
+        mid[i] =
+            (static_cast<R>(P1[i]) + static_cast<R>(P2[i])) / static_cast<R>(2);
     return mid;
 }
 
-// explicit instantiation
-template class Point<float, 3>;
+// ==============================
+// Convenience type aliases
+// ==============================
+
 using Point3f = Point<float, 3>;
 
 }  // namespace RTB
