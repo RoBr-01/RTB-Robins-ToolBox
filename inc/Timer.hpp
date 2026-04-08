@@ -57,7 +57,7 @@ class Timer {
      *   timer.Elapsed<std::chrono::microseconds>();
      *   timer.Elapsed<std::chrono::seconds>();
      */
-    template <typename Duration = std::chrono::milliseconds>
+    template <typename Duration = std::chrono::nanoseconds>
     double Elapsed() const {
         return std::chrono::duration<double, typename Duration::period>(
                    std::chrono::high_resolution_clock::now() - m_start)

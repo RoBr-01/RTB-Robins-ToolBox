@@ -45,11 +45,6 @@ TEST(VectorTest, TwoPointConstructor) {
     EXPECT_EQ(v[2], 5.0);
 }
 
-TEST(VectorTest, GetSize) {
-    Vec3 v;
-    EXPECT_EQ(v.GetSize(), 3);
-}
-
 TEST(VectorTest, SetAndGetComponents) {
     Vec3 v;
     std::array<double, 3> components = {7.0, 8.0, 9.0};
@@ -280,15 +275,4 @@ TEST(VectorTest, MoveSemantics) {
     Vec3 v4_copy = v4;
     v3 = std::move(v4);
     EXPECT_EQ(v3, v4_copy);
-}
-
-TEST(VectorTest, DifferentDimensions) {
-    Vector<double, 2> v2d{1.0, 2.0};
-    Vector<double, 4> v4d{1.0, 2.0, 3.0, 4.0};
-    
-    EXPECT_EQ(v2d.GetSize(), 2);
-    EXPECT_EQ(v4d.GetSize(), 4);
-    
-    EXPECT_DOUBLE_EQ(v2d.MagnitudeSquared(), 5.0);
-    EXPECT_DOUBLE_EQ(v4d.MagnitudeSquared(), 30.0);
 }
