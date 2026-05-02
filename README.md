@@ -29,7 +29,7 @@ Purely as an example, adapt to your own needs as necessary:
 ```cmake
 add_subdirectory(whereveritis/RTB)
 target_link_libraries(${PROJECT_NAME} PRIVATE RTB)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/whereveritis/RTB/inc)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/whereveritis/RTB/inc)
 ```
 
 ## Usage

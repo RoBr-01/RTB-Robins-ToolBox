@@ -12,15 +12,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Since we are header-only, expose as such
 add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_SOURCE_DIR}/inc)
+target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 # We do need Highway, so add that
 set(HWY_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
 set(HWY_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(HWY_ENABLE_CONTRIB OFF CACHE BOOL "" FORCE)
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/highway)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/highway)
 target_link_libraries(${PROJECT_NAME} INTERFACE hwy)
-target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_SOURCE_DIR}/lib/highway/hwy)
+target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/lib/highway/hwy)
 
 option(BUILD_TESTS "Build tests for RTB" OFF)
 
@@ -31,7 +31,7 @@ if(BUILD_TESTS)
     enable_testing()
 
     set(TEST_NAME ${PROJECT_NAME}_Tests)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 else()
     message("-- Not building tests for RTB")
 endif()
