@@ -466,8 +466,7 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
         // line
         const auto intersection_line = IntersectPlanes(polar_plane, STO_plane);
         assert(intersection_line.has_value() &&
-               "Polar plane and diffraction plane are parallel — degenerate "
-               "geometry.");
+               "Polar plane and diffraction plane are parallel — degenerate geometry.");
 
         const auto intersections = IntersectRay(intersection_line.value());
         assert(
