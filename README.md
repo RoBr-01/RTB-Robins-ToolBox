@@ -1,6 +1,6 @@
 # RTB - Robin's ToolBox
 
-A C++17 header-only templated library without external dependencies\* for basic utilities such as:
+A C++17 header-only templated library for things such as:
 
 - Vectors
 - Planes
@@ -10,32 +10,34 @@ A C++17 header-only templated library without external dependencies\* for basic 
 - Rays
 - and more to come
 
-\*googletest is not strictly a dependency, it is only used in case you want to do testing. For regular usage it is not needed.
+This library uses Google Highway for the SIMD optimisations.
 
 ## Installation
 
 Simply run:
 
 ```sh
-git clone https://github.com/RoBr-01/RTB-Robins-ToolBox.git
-```
-
-To get only the library and leave googletest out.
-
-Or use:
-
-```sh
 git clone --recurse-submodules https://github.com/RoBr-01/RTB-Robins-ToolBox.git
 ```
 
-To include googletest.
+Or add it to your project as a git submodule.
+
+## CMake Set-up
+
+Purely as an example, adapt to your own needs as necessary:
+
+```cmake
+add_subdirectory(whereveritis/RTB)
+target_link_libraries(${PROJECT_NAME} PRIVATE RTB)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/whereveritis/RTB/inc)
+```
 
 ## Usage
 
 To get started either include the specific module you need or use:
 
 ```cpp
-#include "RTB.hpp"
+#include <RTB.hpp>
 ```
 
 To include everything.
@@ -48,6 +50,14 @@ myvector.NormalizeInPlace();
 ```
 
 And so on.
+
+## Generating tests
+
+This project uses GoogleTest, you can enable the tests by passing
+
+```
+-DBUILD_TESTS=TRUE
+```
 
 ## Generating documentation
 
