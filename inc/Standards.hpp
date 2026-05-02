@@ -42,9 +42,9 @@ constexpr double SpeedOfLight = 299'792'458.0;
 // Enumerations
 // ==============================
 
-enum class Axes { X, Y, Z };
-enum class Directions { Left, Right, Front, Back, Up, Down };
-enum class Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
+enum Axes { X, Y, Z };
+enum Directions { Left, Right, Front, Back, Up, Down };
+enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
 
 }  // namespace RTB
 

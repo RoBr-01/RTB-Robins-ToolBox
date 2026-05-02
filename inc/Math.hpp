@@ -97,20 +97,18 @@ T atand(T value) {
  *
  * Azimuth and elevation are returned in degrees.
  */
-template <typename T>
-SphericalCoord<T> Cart2Sph(const CartesianCoord<T>& c) {
-    const double x = static_cast<double>(c.x);
-    const double y = static_cast<double>(c.y);
-    const double z = static_cast<double>(c.z);
+template <typename T, typename C>
+std::array<T, 3> Cart2Sph(const C& c) {
+    const double x = static_cast<double>(c[0]);
+    const double y = static_cast<double>(c[1]);
+    const double z = static_cast<double>(c[2]);
 
     const double rxy = std::sqrt(x * x + y * y);
 
-    SphericalCoord<T> s;
-    s.az = static_cast<T>(std::atan2(y, x) * static_cast<double>(R180_div_PI));
-    s.el =
-        static_cast<T>(std::atan2(z, rxy) * static_cast<double>(R180_div_PI));
-    s.r = static_cast<T>(std::sqrt(x * x + y * y + z * z));
-    return s;
+    return {
+        static_cast<T>(std::atan2(y, x) * static_cast<double>(R180_div_PI)),
+        static_cast<T>(std::atan2(z, rxy) * static_cast<double>(R180_div_PI)),
+        static_cast<T>(std::sqrt(x * x + y * y + z * z))};
 }
 
 /**
@@ -118,15 +116,15 @@ SphericalCoord<T> Cart2Sph(const CartesianCoord<T>& c) {
  *
  * Azimuth and elevation are expected in degrees.
  */
-template <typename T>
-CartesianCoord<T> Sph2Cart(const SphericalCoord<T>& s) {
-    const T cosEl = cosd(s.el);
+template <typename T, typename S>
+std::array<T, 3> Sph2Cart(const S& s) {
+    const T az = static_cast<T>(s[0]);
+    const T el = static_cast<T>(s[1]);
+    const T r = static_cast<T>(s[2]);
 
-    CartesianCoord<T> c;
-    c.x = s.r * cosEl * cosd(s.az);
-    c.y = s.r * cosEl * sind(s.az);
-    c.z = s.r * sind(s.el);
-    return c;
+    const T cosEl = cosd(el);
+
+    return {r * cosEl * cosd(az), r * cosEl * sind(az), r * sind(el)};
 }
 
 // ==============================
