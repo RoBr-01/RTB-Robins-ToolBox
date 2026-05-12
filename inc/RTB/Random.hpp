@@ -7,10 +7,9 @@
 #include <random>
 
 // RTB
-#include "Math.hpp"
-#include "Point.hpp"
-#include "Standards.hpp"
-#include "Vector.hpp"
+#include <RTB/Math.hpp>
+#include <RTB/Standards.hpp>
+#include <RTB/Vector.hpp>
 
 namespace RTB {
 

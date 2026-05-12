@@ -40,4 +40,4 @@ using Colour8_3 = Colour<int_fast8_t, 3>;  // RGB - 8 bits per channel
 using Colour8_4 = Colour<int_fast8_t, 4>;  // RGBA - 8 bits per channel
 
 }  // namespace RTB
-#endif  // COLOUR_HPP
+#endif/* COLOUR_HPP */

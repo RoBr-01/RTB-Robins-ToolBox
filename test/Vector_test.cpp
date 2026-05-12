@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "Vector.hpp"
-#include "Point.hpp"
+
+#include <RTB/Vector.hpp>
 
 using namespace RTB;
 
@@ -57,7 +57,7 @@ TEST(VectorTest, IndexOperator) {
     EXPECT_EQ(v[0], 1.0);
     EXPECT_EQ(v[1], 2.0);
     EXPECT_EQ(v[2], 3.0);
-    
+
     // Test modification through index
     v[1] = 10.0;
     EXPECT_EQ(v[1], 10.0);
@@ -114,15 +114,15 @@ TEST(VectorTest, CompoundAssignmentOperators) {
 
 TEST(VectorTest, ScalarOperatorsCommutative) {
     Vec3 v{1.0, 2.0, 3.0};
-    
+
     // Test scalar + vector
     EXPECT_EQ(2.0 + v, Vec3({3.0, 4.0, 5.0}));
     EXPECT_EQ(v + 2.0, 2.0 + v);
-    
+
     // Test scalar * vector
     EXPECT_EQ(3.0 * v, Vec3({3.0, 6.0, 9.0}));
     EXPECT_EQ(v * 3.0, 3.0 * v);
-    
+
     // Test scalar - vector (not commutative)
     EXPECT_EQ(5.0 - v, Vec3({4.0, 3.0, 2.0}));
 }
@@ -131,7 +131,7 @@ TEST(VectorTest, UnaryMinus) {
     Vec3 v{1.0, -2.0, 3.0};
     Vec3 negated = -v;
     EXPECT_EQ(negated, Vec3({-1.0, 2.0, -3.0}));
-    
+
     // Original should be unchanged
     EXPECT_EQ(v, Vec3({1.0, -2.0, 3.0}));
 }
@@ -145,39 +145,39 @@ TEST(VectorTest, LengthCalculations) {
 TEST(VectorTest, Normalize) {
     Vec3 v{0.0, 3.0, 4.0};
     Vec3 original = v;  // Keep copy of original
-    
+
     // Test Normalize() - returns new normalized vector, original unchanged
     Vec3 normalized = v.Normalize();
     EXPECT_NEAR(normalized[0], 0.0, 1e-9);
     EXPECT_NEAR(normalized[1], 0.6, 1e-9);
     EXPECT_NEAR(normalized[2], 0.8, 1e-9);
     EXPECT_NEAR(normalized.Magnitude(), 1.0, 1e-9);
-    
+
     // Original should be unchanged
     EXPECT_EQ(v, original);
 }
 
 TEST(VectorTest, NormalizeInPlace) {
     Vec3 v{0.0, 3.0, 4.0};
-    
+
     // Test NormalizeInPlace() - modifies original vector
     Vec3& result = v.NormalizeInPlace();
     EXPECT_NEAR(v[0], 0.0, 1e-9);
     EXPECT_NEAR(v[1], 0.6, 1e-9);
     EXPECT_NEAR(v[2], 0.8, 1e-9);
     EXPECT_NEAR(v.Magnitude(), 1.0, 1e-9);
-    
+
     // Should return reference to self for chaining
     EXPECT_EQ(&result, &v);
 }
 
 TEST(VectorTest, NormalizeZeroVector) {
     Vec3 zero{0.0, 0.0, 0.0};
-    
+
     // Normalize of zero vector should return zero vector
     Vec3 normalized = zero.Normalize();
     EXPECT_EQ(normalized, zero);
-    
+
     // NormalizeInPlace of zero vector should leave it unchanged
     Vec3 zero2{0.0, 0.0, 0.0};
     zero2.NormalizeInPlace();
@@ -188,14 +188,14 @@ TEST(VectorTest, Invert) {
     Vec3 v{1.0, -2.0, 3.0};
     Vec3& result = v.Invert();
     EXPECT_EQ(v, Vec3({-1.0, 2.0, -3.0}));
-    
+
     // Should return reference to self for chaining
     EXPECT_EQ(&result, &v);
 }
 
 TEST(VectorTest, ChainOperations) {
     Vec3 v{0.0, 6.0, 8.0};
-    
+
     // Test method chaining
     v.NormalizeInPlace().Invert();
     EXPECT_NEAR(v[0], 0.0, 1e-9);
@@ -207,7 +207,7 @@ TEST(VectorTest, DotProduct) {
     Vec3 v1{1.0, 2.0, 3.0};
     Vec3 v2{4.0, -5.0, 6.0};
     EXPECT_DOUBLE_EQ(DotProduct(v1, v2), 12.0);
-    
+
     // Test with different types
     Vector<float, 3> vf{1.0f, 2.0f, 3.0f};
     Vector<double, 3> vd{4.0, -5.0, 6.0};
@@ -220,11 +220,11 @@ TEST(VectorTest, CrossProduct) {
     Vec3 v2{0.0, 1.0, 0.0};
     auto cross = CrossProduct(v1, v2);
     EXPECT_EQ(cross, Vec3({0.0, 0.0, 1.0}));
-    
+
     // Test anti-commutativity: v1 × v2 = -(v2 × v1)
     auto cross_reverse = CrossProduct(v2, v1);
     EXPECT_EQ(cross_reverse, Vec3({0.0, 0.0, -1.0}));
-    
+
     // Test with different types
     Vector<float, 3> vf{1.0f, 0.0f, 0.0f};
     Vector<double, 3> vd{0.0, 1.0, 0.0};
@@ -245,16 +245,16 @@ TEST(VectorTest, EqualityOperators) {
 
 TEST(VectorTest, CopySemantics) {
     Vec3 v1{1.0, 2.0, 3.0};
-    
+
     // Copy constructor
     Vec3 v2 = v1;
     EXPECT_EQ(v1, v2);
-    
+
     // Copy assignment
     Vec3 v3;
     v3 = v1;
     EXPECT_EQ(v1, v3);
-    
+
     // Modify copy, original should be unchanged
     v2[0] = 999.0;
     EXPECT_NE(v1, v2);
@@ -264,11 +264,11 @@ TEST(VectorTest, CopySemantics) {
 TEST(VectorTest, MoveSemantics) {
     Vec3 v1{1.0, 2.0, 3.0};
     Vec3 original = v1;
-    
+
     // Move constructor
     Vec3 v2 = std::move(v1);
     EXPECT_EQ(v2, original);
-    
+
     // Move assignment
     Vec3 v3;
     Vec3 v4{4.0, 5.0, 6.0};

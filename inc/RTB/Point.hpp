@@ -9,9 +9,6 @@
 #include <iostream>
 #include <type_traits>
 
-// RTB
-#include "Standards.hpp"
-
 namespace RTB {
 
 /**

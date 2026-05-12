@@ -5,14 +5,15 @@
 #include <array>
 #include <cassert>
 #include <cmath>
-#include <iostream>
 #include <limits>
 #include <optional>
 
 // RTB
-#include "Math.hpp"
-#include "Plane.hpp"
-#include "Ray.hpp"
+#include <RTB/Plane.hpp>
+#include <RTB/Ray.hpp>
+#include <RTB/Math.hpp>
+#include <RTB/Point.hpp>
+#include <RTB/Vector.hpp>
 
 namespace RTB {
 

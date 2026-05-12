@@ -1,6 +1,7 @@
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
+// STL
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -11,8 +12,8 @@
 #include <numeric>
 #include <type_traits>
 
-#include "Point.hpp"
-#include "Standards.hpp"
+// LOCAL
+#include <RTB/Point.hpp>
 
 namespace RTB {
 

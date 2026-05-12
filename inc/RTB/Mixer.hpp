@@ -12,7 +12,7 @@
 // Google Highway — SIMD abstraction
 // https://github.com/google/highway
 // Requires: highway/highway.h on include path
-#include "highway/hwy/highway.h"
+#include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
 

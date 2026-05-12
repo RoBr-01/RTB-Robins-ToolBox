@@ -1,0 +1,17 @@
+CompileFlags:
+  CompilationDatabase: build/test-debug
+
+Diagnostics:
+  UnusedIncludes: Strict # warn on #includes you don't need
+  MissingIncludes: Strict # warn on symbols used but not directly included
+
+InlayHints:
+  Enabled: true
+  ParameterNames: true
+  DeducedTypes: true
+
+Index:
+  Background: Build # index the whole project in background
+
+Hover:
+  ShowAKA: true # shows what 'auto' actually resolves to

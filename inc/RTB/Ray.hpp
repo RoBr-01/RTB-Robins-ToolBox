@@ -3,9 +3,8 @@
 
 #include <iostream>
 
-#include "Point.hpp"
-#include "Standards.hpp"
-#include "Vector.hpp"
+#include <RTB/Point.hpp>
+#include <RTB/Vector.hpp>
 
 namespace RTB {
 

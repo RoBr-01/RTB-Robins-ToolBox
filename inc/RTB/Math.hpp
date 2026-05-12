@@ -5,8 +5,8 @@
 #include <cmath>
 
 // RTB
-#include "Standards.hpp"
-#include "Vector.hpp"
+#include <RTB/Standards.hpp>
+#include <RTB/Vector.hpp>
 
 namespace RTB {
 
