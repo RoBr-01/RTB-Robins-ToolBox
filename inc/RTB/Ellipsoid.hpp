@@ -9,10 +9,10 @@
 #include <optional>
 
 // RTB
-#include <RTB/Plane.hpp>
-#include <RTB/Ray.hpp>
 #include <RTB/Math.hpp>
+#include <RTB/Plane.hpp>
 #include <RTB/Point.hpp>
+#include <RTB/Ray.hpp>
 #include <RTB/Vector.hpp>
 
 namespace RTB {
@@ -74,7 +74,7 @@ struct EllipseParams {
 template <typename T>
 struct LocalCoords {
     T u, v;   // coordinates in ellipse's local 2D space
-    T theta;  // parametric angle [0, 2*PI)
+    T theta;  // parametric angle [0, 2*pi)
 };
 
 // ==============================
@@ -164,8 +164,8 @@ const std::array<T, 3>& Ellipsoid<T, Method>::GetDimensions() const {
 template <typename T, ArcLengthMethod Method>
 std::optional<std::array<T, 2>> Ellipsoid<T, Method>::IntersectRay(
     const Ray<T, 3>& ray) const {
-    const Vector<T, 3> dir = ray.GetDirection();
-    const Point<T, 3> origin = ray.GetOrigin();
+    const Vector<T, 3> dir = ray.getDirection();
+    const Point<T, 3> origin = ray.getOrigin();
 
     const T vx = dir[0], vy = dir[1], vz = dir[2];
     const T x0 = origin[0], y0 = origin[1], z0 = origin[2];
@@ -196,22 +196,22 @@ EllipseParams<T> Ellipsoid<T, Method>::IntersectPlane(
     const T A = m_dimensions[0], B = m_dimensions[1], C = m_dimensions[2];
     const T A_sq = A * A, B_sq = B * B, C_sq = C * C;
 
-    const auto coeffs = plane.GetCoefficients();
+    const auto coeffs = plane.getCoefficients();
     const T a = coeffs[0], b = coeffs[1], c = coeffs[2], d = coeffs[3];
     const T n_sq = a * a + b * b + c * c;
 
     result.center = Point<T, 3>{-a * d / n_sq, -b * d / n_sq, -c * d / n_sq};
-    result.normal = plane.GetNormalVector();
-    result.normal.NormalizeInPlace();
+    result.normal = plane.getNormalVector();
+    result.normal.normalizeInPlace();
 
     // Build orthonormal basis in the plane
     Vector<T, 3> u, v;
     if (std::abs(a) < static_cast<T>(0.9))
-        u = CrossProduct(Vector<T, 3>{1, 0, 0}, result.normal);
+        u = crossProduct(Vector<T, 3>{1, 0, 0}, result.normal);
     else
-        u = CrossProduct(Vector<T, 3>{0, 1, 0}, result.normal);
-    u.NormalizeInPlace();
-    v = CrossProduct(result.normal, u);
+        u = crossProduct(Vector<T, 3>{0, 1, 0}, result.normal);
+    u.normalizeInPlace();
+    v = crossProduct(result.normal, u);
 
     // Project ellipsoid metric onto the plane basis to get 2D quadratic form
     const T Q_uu = u[0] * u[0] / A_sq + u[1] * u[1] / B_sq + u[2] * u[2] / C_sq;
@@ -249,14 +249,14 @@ LocalCoords<T> TransformToLocalCoords(const Point<T, 3>& point,
                                   point[1] - ellipse.center[1],
                                   point[2] - ellipse.center[2]};
 
-    result.u = DotProduct(translated, ellipse.semi_axes[0]) /
+    result.u = dotProduct(translated, ellipse.semi_axes[0]) /
                ellipse.semi_axis_lengths[0];
-    result.v = DotProduct(translated, ellipse.semi_axes[1]) /
+    result.v = dotProduct(translated, ellipse.semi_axes[1]) /
                ellipse.semi_axis_lengths[1];
 
     result.theta = std::atan2(result.v, result.u);
     if (result.theta < static_cast<T>(0))
-        result.theta += static_cast<T>(2) * static_cast<T>(PI);
+        result.theta += static_cast<T>(2) * static_cast<T>(pi);
 
     return result;
 }
@@ -279,9 +279,9 @@ T Ellipsoid<T, Method>::ArcLength(const Point<T, 3>& p1,
     // Shortest arc
     T angle_diff = t2 - t1;
     if (angle_diff < static_cast<T>(0))
-        angle_diff += static_cast<T>(2) * static_cast<T>(PI);
-    if (angle_diff > static_cast<T>(PI)) {
-        angle_diff = static_cast<T>(2) * static_cast<T>(PI) - angle_diff;
+        angle_diff += static_cast<T>(2) * static_cast<T>(pi);
+    if (angle_diff > static_cast<T>(pi)) {
+        angle_diff = static_cast<T>(2) * static_cast<T>(pi) - angle_diff;
         std::swap(t1, t2);
     }
 
@@ -299,17 +299,17 @@ T Ellipsoid<T, Method>::ArcLength(const Point<T, 3>& p1,
                 static_cast<T>(0.0625) * ratio_qu);
     } else if constexpr (Method == ArcLengthMethod::Ramanujan) {
         // Ramanujan's second approximation for full ellipse perimeter,
-        // scaled by angle_diff / (2*PI) for a partial arc.
+        // scaled by angle_diff / (2*pi) for a partial arc.
         // Error ~0.0000003% for typical ellipses.
         const T h = ((a - b) * (a - b)) / ((a + b) * (a + b));
         const T perimeter =
-            static_cast<T>(PI) * (a + b) *
+            static_cast<T>(pi) * (a + b) *
             (static_cast<T>(1) +
              (static_cast<T>(3) * h) /
                  (static_cast<T>(10) +
                   std::sqrt(static_cast<T>(4) - static_cast<T>(3) * h)));
         return perimeter *
-               (angle_diff / (static_cast<T>(2) * static_cast<T>(PI)));
+               (angle_diff / (static_cast<T>(2) * static_cast<T>(pi)));
     } else {
         // 10-point Gauss-Legendre quadrature.
         // Integrates sqrt(a²sin²t + b²cos²t) over [t1, t1+angle_diff].
@@ -398,7 +398,7 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
     } else {
         polar_plane = Plane<T>(polar_a, polar_b, polar_c, static_cast<T>(-1));
     }
-    polar_plane.Normalize();
+    polar_plane.normalize();
 
     // Projects a point radially onto the ellipsoid surface.
     // Corrects for floating-point drift — ears are expected to lie on the
@@ -418,7 +418,7 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
         EarPath<T> path;
         path.tangent_point = tangent;
         path.direct_ray = Vector<T, 3>(source, tangent);
-        const T direct_length = path.direct_ray.Magnitude();
+        const T direct_length = path.direct_ray.magnitude();
         path.arclength = ArcLength(tangent, ear, sto_plane);
         path.pathlength = direct_length + path.arclength;
         return path;
@@ -450,7 +450,7 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
         if (path_clear) {
             // No occlusion — both path slots carry the direct path.
             EarPath<T> direct{};
-            direct.pathlength = to_ear.Magnitude();
+            direct.pathlength = to_ear.magnitude();
             direct.arclength = static_cast<T>(0);
             direct.tangent_point = ear;
             direct.direct_ray = to_ear;
@@ -461,13 +461,14 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
 
         // Diffraction plane through origin, ear, and source
         Plane<T> STO_plane(m_origin, ear, source);
-        STO_plane.Normalize();
+        STO_plane.normalize();
 
         // Intersection of polar plane and diffraction plane gives the tangent
         // line
-        const auto intersection_line = IntersectPlanes(polar_plane, STO_plane);
+        const auto intersection_line = intersectPlanes(polar_plane, STO_plane);
         assert(intersection_line.has_value() &&
-               "Polar plane and diffraction plane are parallel — degenerate geometry.");
+               "Polar plane and diffraction plane are parallel — degenerate "
+               "geometry.");
 
         const auto intersections = IntersectRay(intersection_line.value());
         assert(
@@ -475,9 +476,9 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
             "Tangent line does not intersect ellipsoid — degenerate geometry.");
 
         const Point<T, 3> tangent_one =
-            intersection_line->GetPosition(intersections.value()[0]);
+            intersection_line->getPosition(intersections.value()[0]);
         const Point<T, 3> tangent_two =
-            intersection_line->GetPosition(intersections.value()[1]);
+            intersection_line->getPosition(intersections.value()[1]);
 
         // Compute both paths and sort: [0] shorter, [1] longer
         EarPath<T> path_one = MakeEarPath(tangent_one, ear, STO_plane);

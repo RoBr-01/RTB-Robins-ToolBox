@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -25,33 +26,35 @@ template <typename T, std::size_t N>
 class Vector;
 
 template <typename T, typename T2, std::size_t N>
-auto CrossProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2)
-    -> Vector<typename std::common_type<T, T2>::type, N>;
+auto crossProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
+    -> Vector<std::common_type_t<T, T2>, N>;
 
 template <typename T, typename T2, std::size_t N>
-auto DotProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2) ->
-    typename std::common_type<T, T2>::type;
+auto dotProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
+    -> std::common_type_t<T, T2>;
 
 template <typename T, std::size_t N>
-std::ostream& operator<<(std::ostream& out, const Vector<T, N>& v);
+std::ostream& operator<<(std::ostream& out, const Vector<T, N>& vector);
 
 template <typename T, std::size_t N>
-Vector<T, N> operator+(const T& scalar, const Vector<T, N>& v);
+Vector<T, N> operator+(const T& scalar, const Vector<T, N>& vector);
 
 template <typename T, std::size_t N>
-Vector<T, N> operator-(const T& scalar, const Vector<T, N>& v);
+Vector<T, N> operator-(const T& scalar, const Vector<T, N>& vector);
 
 template <typename T, std::size_t N>
-Vector<T, N> operator*(const T& scalar, const Vector<T, N>& v);
+Vector<T, N> operator*(const T& scalar, const Vector<T, N>& vector);
 
 template <typename T, std::size_t N>
-Vector<T, N> operator-(const Vector<T, N>& v);
+Vector<T, N> operator-(const Vector<T, N>& vector);
 
 template <typename T, std::size_t N>
-bool operator==(const Vector<T, N>& lhs, const Vector<T, N>& rhs);
+bool operator==(const Vector<T, N>& left_vector,
+                const Vector<T, N>& right_vector);
 
 template <typename T, std::size_t N>
-bool operator!=(const Vector<T, N>& lhs, const Vector<T, N>& rhs);
+bool operator!=(const Vector<T, N>& left_vector,
+                const Vector<T, N>& right_vector);
 
 // ==============================
 // Vector Class
@@ -68,7 +71,7 @@ bool operator!=(const Vector<T, N>& lhs, const Vector<T, N>& rhs);
  */
 template <typename T, std::size_t N>
 class Vector {
-    static_assert(std::is_arithmetic<T>::value,
+    static_assert(std::is_arithmetic_v<T>,
                   "Vector<T, N>: T must be an arithmetic type.");
     static_assert(N > 0, "Vector<T, N>: N must be greater than zero.");
 
@@ -85,26 +88,28 @@ class Vector {
     explicit Vector(const std::array<T, N>& values) : m_components(values) {}
 
     Vector(const Point<T, N>& startPoint, const Point<T, N>& endPoint) {
-        for (std::size_t i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i) {
             m_components[i] = endPoint[i] - startPoint[i];
+        }
     }
 
     explicit Vector(const Point<T, N>& endPoint) {
-        for (std::size_t i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i) {
             m_components[i] = endPoint[i];
+        }
     }
 
     // ---- Accessors ----------------------------------------------------------
 
-    static constexpr std::size_t Size() {
+    static constexpr std::size_t size() {
         return N;
     }
 
-    [[nodiscard]] std::array<T, N> GetComponents() const {
+    [[nodiscard]] std::array<T, N> getComponents() const {
         return m_components;
     }
 
-    void SetComponents(const std::array<T, N>& values) {
+    void setComponents(const std::array<T, N>& values) {
         m_components = values;
     }
 
@@ -120,27 +125,27 @@ class Vector {
 
     // ---- Arithmetic operators (vector op scalar) ----------------------------
 
-    [[nodiscard]] Vector operator+(const T t) const {
+    [[nodiscard]] Vector operator+(const T scalar) const {
         Vector result = *this;
-        result += t;
+        result += scalar;
         return result;
     }
 
-    [[nodiscard]] Vector operator-(const T t) const {
+    [[nodiscard]] Vector operator-(const T scalar) const {
         Vector result = *this;
-        result -= t;
+        result -= scalar;
         return result;
     }
 
-    [[nodiscard]] Vector operator*(const T t) const {
+    [[nodiscard]] Vector operator*(const T scalar) const {
         Vector result = *this;
-        result *= t;
+        result *= scalar;
         return result;
     }
 
-    [[nodiscard]] Vector operator/(const T t) const {
+    [[nodiscard]] Vector operator/(const T scalar) const {
         Vector result = *this;
-        result /= t;
+        result /= scalar;
         return result;
     }
 
@@ -148,97 +153,104 @@ class Vector {
     //
     // Note: operator*(Vector) and operator/(Vector) perform element-wise
     // (Hadamard) multiplication/division. For the geometric dot product, use
-    // the free function DotProduct(); for the cross product, CrossProduct().
+    // the free function dotProduct(); for the cross product, crossProduct().
 
-    [[nodiscard]] Vector operator+(const Vector& v) const {
+    [[nodiscard]] Vector operator+(const Vector& vector) const {
         Vector result = *this;
-        result += v;
+        result += vector;
         return result;
     }
 
-    [[nodiscard]] Vector operator-(const Vector& v) const {
+    [[nodiscard]] Vector operator-(const Vector& vector) const {
         Vector result = *this;
-        result -= v;
+        result -= vector;
         return result;
     }
 
     /** @brief Element-wise (Hadamard) product. */
-    [[nodiscard]] Vector operator*(const Vector& v) const {
+    [[nodiscard]] Vector operator*(const Vector& vector) const {
         Vector result = *this;
-        result *= v;
+        result *= vector;
         return result;
     }
 
     /** @brief Element-wise (Hadamard) division. */
-    [[nodiscard]] Vector operator/(const Vector& v) const {
+    [[nodiscard]] Vector operator/(const Vector& vector) const {
         Vector result = *this;
-        result /= v;
+        result /= vector;
         return result;
     }
 
     // ---- Compound assignment (scalar) ---------------------------------------
 
-    Vector& operator+=(const T t) {
-        for (auto& c : m_components)
-            c += t;
+    Vector& operator+=(const T scalar) {
+        for (auto& component : m_components) {
+            component += scalar;
+        }
         return *this;
     }
 
-    Vector& operator-=(const T t) {
-        for (auto& c : m_components)
-            c -= t;
+    Vector& operator-=(const T scalar) {
+        for (auto& component : m_components) {
+            component -= scalar;
+        }
         return *this;
     }
 
-    Vector& operator*=(const T t) {
-        for (auto& c : m_components)
-            c *= t;
+    Vector& operator*=(const T scalar) {
+        for (auto& component : m_components) {
+            component *= scalar;
+        }
         return *this;
     }
 
-    Vector& operator/=(const T t) {
-        if constexpr (std::is_floating_point<T>::value) {
-            assert(std::abs(t) >
+    Vector& operator/=(const T scalar) {
+        if constexpr (std::is_floating_point_v<T>) {
+            assert(std::abs(scalar) >
                    std::numeric_limits<T>::epsilon() * static_cast<T>(10));
         } else {
-            assert(t != static_cast<T>(0));
+            assert(scalar != static_cast<T>(0));
         }
-        for (auto& c : m_components)
-            c /= t;
+        for (auto& component : m_components) {
+            component /= scalar;
+        }
         return *this;
     }
 
     // ---- Compound assignment (vector) ---------------------------------------
 
-    Vector& operator+=(const Vector& v) {
-        for (std::size_t i = 0; i < N; ++i)
-            m_components[i] += v[i];
+    Vector& operator+=(const Vector& vector) {
+        for (std::size_t i = 0; i < N; ++i) {
+            m_components[i] += vector[i];
+        }
         return *this;
     }
 
-    Vector& operator-=(const Vector& v) {
-        for (std::size_t i = 0; i < N; ++i)
-            m_components[i] -= v[i];
+    Vector& operator-=(const Vector& vector) {
+        for (std::size_t i = 0; i < N; ++i) {
+            m_components[i] -= vector[i];
+        }
         return *this;
     }
 
     /** @brief Element-wise (Hadamard) multiply-assign. */
-    Vector& operator*=(const Vector& v) {
-        for (std::size_t i = 0; i < N; ++i)
-            m_components[i] *= v[i];
+    Vector& operator*=(const Vector& vector) {
+        for (std::size_t i = 0; i < N; ++i) {
+            m_components[i] *= vector[i];
+        }
         return *this;
     }
 
     /** @brief Element-wise (Hadamard) divide-assign. */
-    Vector& operator/=(const Vector& v) {
+    Vector& operator/=(const Vector& vector) {
         for (std::size_t i = 0; i < N; ++i) {
-            if constexpr (std::is_floating_point<T>::value) {
-                assert(std::abs(v[i]) >
+            if constexpr (std::is_floating_point_v<T>) {
+                assert(std::abs(vector[i]) >
                        std::numeric_limits<T>::epsilon() * static_cast<T>(10));
             } else {
-                assert(v[i] != static_cast<T>(0));
+                assert(vector[i] != static_cast<T>(0));
             }
-            m_components[i] /= v[i];
+            m_components[i] /= vector[i];
         }
         return *this;
     }
@@ -246,7 +258,7 @@ class Vector {
     // ---- Geometric operations -----------------------------------------------
 
     /** @brief Returns the squared Euclidean length of the vector. */
-    [[nodiscard]] T MagnitudeSquared() const {
+    [[nodiscard]] T magnitudeSquared() const {
         return std::inner_product(m_components.begin(),
                                   m_components.end(),
                                   m_components.begin(),
@@ -254,8 +266,8 @@ class Vector {
     }
 
     /** @brief Returns the Euclidean length (magnitude) of the vector. */
-    [[nodiscard]] T Magnitude() const {
-        return std::sqrt(MagnitudeSquared());
+    [[nodiscard]] T magnitude() const {
+        return std::sqrt(magnitudeSquared());
     }
 
     /**
@@ -263,14 +275,16 @@ class Vector {
      *
      * If the vector is zero-length, returns it unchanged.
      */
-    [[nodiscard]] Vector Normalize() const {
-        const T len = Magnitude();
-        if constexpr (std::is_floating_point<T>::value) {
-            if (len > std::numeric_limits<T>::epsilon())
+    [[nodiscard]] Vector normalize() const {
+        const T len = magnitude();
+        if constexpr (std::is_floating_point_v<T>) {
+            if (len > std::numeric_limits<T>::epsilon()) {
                 return *this / len;
+            }
         } else {
-            if (len != static_cast<T>(0))
+            if (len != static_cast<T>(0)) {
                 return *this / len;
+            }
         }
         return *this;
     }
@@ -281,14 +295,16 @@ class Vector {
      * If the vector is zero-length, leaves it unchanged.
      * @return Reference to *this.
      */
-    Vector& NormalizeInPlace() {
-        const T len = Magnitude();
-        if constexpr (std::is_floating_point<T>::value) {
-            if (len > std::numeric_limits<T>::epsilon())
+    Vector& normalizeInPlace() {
+        const T len = magnitude();
+        if constexpr (std::is_floating_point_v<T>) {
+            if (len > std::numeric_limits<T>::epsilon()) {
                 *this /= len;
+            }
         } else {
-            if (len != static_cast<T>(0))
+            if (len != static_cast<T>(0)) {
                 *this /= len;
+            }
         }
         return *this;
     }
@@ -297,16 +313,17 @@ class Vector {
      * @brief Inverts (negates) every component in-place.
      * @return Reference to *this.
      */
-    Vector& Invert() {
-        for (auto& c : m_components)
-            c = -c;
+    Vector& invert() {
+        for (auto& component : m_components) {
+            component = -component;
+        }
         return *this;
     }
 
     // ---- Utilities ----------------------------------------------------------
 
     /** @brief Prints the vector to std::cout. */
-    void Print() const {
+    void print() const {
         std::cout << "[Vector] - " << *this << "\n";
     }
 
@@ -325,20 +342,23 @@ class Vector {
  * precision loss when T and T2 differ.
  */
 template <typename T, typename T2, std::size_t N>
-auto CrossProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2)
-    -> Vector<typename std::common_type<T, T2>::type, N> {
+auto crossProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
+    -> Vector<std::common_type_t<T, T2>, N> {
     static_assert(N == 3,
-                  "CrossProduct is only defined for 3-dimensional vectors.");
+                  "crossProduct is only defined for 3-dimensional vectors.");
     using R = typename std::common_type<T, T2>::type;
 
     // Cast individual components first so arithmetic is done in type R.
-    const R a0 = static_cast<R>(v1[0]), a1 = static_cast<R>(v1[1]),
-            a2 = static_cast<R>(v1[2]);
-    const R b0 = static_cast<R>(v2[0]), b1 = static_cast<R>(v2[1]),
-            b2 = static_cast<R>(v2[2]);
+    const R vector_1_1 = static_cast<R>(vector_1[0]);
+    const R vector_1_2 = static_cast<R>(vector_1[1]);
+    const R vector_1_3 = static_cast<R>(vector_1[2]);
+    const R vector_2_1 = static_cast<R>(vector_2[0]);
+    const R vector_2_2 = static_cast<R>(vector_2[1]);
+    const R vector_2_3 = static_cast<R>(vector_2[2]);
 
-    return Vector<R, N>{
-        a1 * b2 - a2 * b1, a2 * b0 - a0 * b2, a0 * b1 - a1 * b0};
+    return Vector<R, N>{vector_1_2 * vector_2_3 - vector_1_3 * vector_2_2,
+                        vector_1_3 * vector_2_1 - vector_1_1 * vector_2_3,
+                        vector_1_1 * vector_2_2 - vector_1_2 * vector_2_1};
 }
 
 /**
@@ -347,75 +367,66 @@ auto CrossProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2)
  * Operands are cast to the common type before multiplication.
  */
 template <typename T, typename T2, std::size_t N>
-auto DotProduct(const Vector<T, N>& v1, const Vector<T2, N>& v2) ->
-    typename std::common_type<T, T2>::type {
-    using R = typename std::common_type<T, T2>::type;
+auto dotProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
+    -> std::common_type_t<T, T2> {
+    using R = std::common_type_t<T, T2>;
     R result = static_cast<R>(0);
-    for (std::size_t i = 0; i < N; ++i)
-        result += static_cast<R>(v1[i]) * static_cast<R>(v2[i]);
+    for (std::size_t i = 0; i < N; ++i) {
+        result += static_cast<R>(vector_1[i]) * static_cast<R>(vector_2[i]);
+    }
     return result;
 }
 
 template <typename T, std::size_t N>
-std::ostream& operator<<(std::ostream& out, const Vector<T, N>& v) {
+std::ostream& operator<<(std::ostream& out, const Vector<T, N>& vector) {
     out << "(";
     for (std::size_t i = 0; i < N; ++i) {
-        out << v[i];
-        if (i < N - 1)
+        out << vector[i];
+        if (i < N - 1) {
             out << ", ";
+        }
     }
     out << ")";
     return out;
 }
 
 template <typename T, std::size_t N>
-Vector<T, N> operator+(const T& scalar, const Vector<T, N>& v) {
-    return v + scalar;
+Vector<T, N> operator+(const T& scalar, const Vector<T, N>& vector) {
+    return vector + scalar;
 }
 
 template <typename T, std::size_t N>
-Vector<T, N> operator-(const T& scalar, const Vector<T, N>& v) {
+Vector<T, N> operator-(const T& scalar, const Vector<T, N>& vector) {
     Vector<T, N> result;
-    for (std::size_t i = 0; i < N; ++i)
-        result[i] = scalar - v[i];
+    for (std::size_t i = 0; i < N; ++i) {
+        result[i] = scalar - vector[i];
+    }
     return result;
 }
 
 template <typename T, std::size_t N>
-Vector<T, N> operator*(const T& scalar, const Vector<T, N>& v) {
-    return v * scalar;
+Vector<T, N> operator*(const T& scalar, const Vector<T, N>& vector) {
+    return vector * scalar;
 }
 
 template <typename T, std::size_t N>
-Vector<T, N> operator-(const Vector<T, N>& v) {
-    Vector<T, N> result = v;
-    result.Invert();
+Vector<T, N> operator-(const Vector<T, N>& vector) {
+    Vector<T, N> result = vector;
+    result.invert();
     return result;
 }
 
 template <typename T, std::size_t N>
-bool operator==(const Vector<T, N>& lhs, const Vector<T, N>& rhs) {
-    return lhs.GetComponents() == rhs.GetComponents();
+bool operator==(const Vector<T, N>& left_vector,
+                const Vector<T, N>& right_vector) {
+    return left_vector.getComponents() == right_vector.getComponents();
 }
 
 template <typename T, std::size_t N>
-bool operator!=(const Vector<T, N>& lhs, const Vector<T, N>& rhs) {
-    return !(lhs == rhs);
+bool operator!=(const Vector<T, N>& left_vector,
+                const Vector<T, N>& right_vector) {
+    return !(left_vector == right_vector);
 }
-
-// ==============================
-// Convenience type aliases
-// ==============================
-//
-// Explicit instantiations belong in a .cpp file.
-// These aliases are the public API for common specializations.
-
-using Vec2f = Vector<float, 2>;
-using Vec3f = Vector<float, 3>;
-using Vec4f = Vector<float, 4>;
-using Vec2d = Vector<double, 2>;
-using Vec3d = Vector<double, 3>;
-using Vec4d = Vector<double, 4>;
 
 }  // namespace RTB
 

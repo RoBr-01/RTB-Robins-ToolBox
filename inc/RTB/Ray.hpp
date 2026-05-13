@@ -1,10 +1,13 @@
 #ifndef RAY_HPP
 #define RAY_HPP
 
-#include <iostream>
+// STL
+#include <cstddef>
 
+// LOCAL
 #include <RTB/Point.hpp>
 #include <RTB/Vector.hpp>
+#include <iostream>
 
 namespace RTB {
 
@@ -24,27 +27,28 @@ class Ray {
     /**
      * @brief Sets a new origin and direction in one call.
      */
-    void Set(const Point<T, N>& newOrigin, const Vector<T, N>& newDirection);
+    void set(const Point<T, N>& newOrigin, const Vector<T, N>& newDirection);
 
     /**
      * @brief Normalizes the direction vector in-place.
      */
-    void Normalize();
+    void normalize();
 
     /**
      * @brief Returns the point along the ray at parameter t: origin + t *
      * direction.
      */
-    Point<T, N> GetPosition(T t) const;
+    [[nodiscard]] Point<T, N> getPosition(T step) const;
 
-    const Point<T, N>& GetOrigin() const {
+    [[nodiscard]] const Point<T, N>& getOrigin() const {
         return m_origin;
     }
-    const Vector<T, N>& GetDirection() const {
+
+    [[nodiscard]] const Vector<T, N>& getDirection() const {
         return m_direction;
     }
 
-    void Print() const;
+    void print() const;
 
    private:
     Point<T, N> m_origin;
@@ -60,31 +64,32 @@ Ray<T, N>::Ray(const Point<T, N>& origin, const Vector<T, N>& direction)
     : m_origin(origin), m_direction(direction) {}
 
 template <typename T, std::size_t N>
-void Ray<T, N>::Set(const Point<T, N>& newOrigin,
+void Ray<T, N>::set(const Point<T, N>& newOrigin,
                     const Vector<T, N>& newDirection) {
     m_origin = newOrigin;
     m_direction = newDirection;
 }
 
 template <typename T, std::size_t N>
-void Ray<T, N>::Normalize() {
-    m_direction.NormalizeInPlace();
+void Ray<T, N>::normalize() {
+    m_direction.normalizeInPlace();
 }
 
 template <typename T, std::size_t N>
-Point<T, N> Ray<T, N>::GetPosition(T t) const {
+Point<T, N> Ray<T, N>::getPosition(T step) const {
     Point<T, N> position;
-    for (std::size_t i = 0; i < N; ++i)
-        position[i] = m_origin[i] + t * m_direction[i];
+    for (std::size_t i = 0; i < N; ++i) {
+        position[i] = m_origin[i] + step * m_direction[i];
+    }
     return position;
 }
 
 template <typename T, std::size_t N>
-void Ray<T, N>::Print() const {
+void Ray<T, N>::print() const {
     std::cout << "Origin:    ";
-    m_origin.Print();
+    m_origin.print();
     std::cout << "Direction: ";
-    m_direction.Print();
+    m_direction.print();
 }
 
 // ==============================

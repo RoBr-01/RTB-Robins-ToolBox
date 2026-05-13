@@ -21,22 +21,22 @@ namespace RTB {
 // Mathematical constants
 // ==============================
 
-constexpr double PI = 3.141592653589793238462643383279502884;
-constexpr double TAU = 2.0 * PI;
-constexpr double PI_div_2 = PI / 2.0;
-constexpr double PI_div_4 = PI / 4.0;
-constexpr double PI_div_180 = PI / 180.0;
-constexpr double R180_div_PI = 180.0 / PI;
+constexpr double pi = 3.141592653589793238462643383279502884;
+constexpr double tau = 2.0 * pi;
+constexpr double pi_div_2 = pi / 2.0;
+constexpr double pi_div_4 = pi / 4.0;
+constexpr double pi_div_180 = pi / 180.0;
+constexpr double r180_div_pi = 180.0 / pi;
 
 // ==============================
 // Physical constants
 // ==============================
 
 /** @brief Speed of sound in dry air at ~20°C (m/s). */
-constexpr double SpeedOfSound = 344.0;
+constexpr double speed_of_sound = 344.0;
 
 /** @brief Speed of light in vacuum (m/s). */
-constexpr double SpeedOfLight = 299'792'458.0;
+constexpr double speed_of_light = 299'792'458.0;
 
 // ==============================
 // Enumerations

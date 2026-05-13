@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <initializer_list>
 #include <iostream>
 #include <type_traits>
 
@@ -19,7 +20,7 @@ namespace RTB {
  */
 template <typename T, std::size_t N>
 class Point {
-    static_assert(std::is_arithmetic<T>::value,
+    static_assert(std::is_arithmetic_v<T>,
                   "Point<T, N>: T must be an arithmetic type.");
     static_assert(N > 0, "Point<T, N>: N must be greater than zero.");
 
@@ -31,11 +32,11 @@ class Point {
         std::copy(values.begin(), values.end(), m_coords.begin());
     }
 
-    std::array<T, N> GetCoords() const {
+    [[nodiscard]] std::array<T, N> getCoords() const {
         return m_coords;
     }
 
-    void SetCoords(const std::array<T, N>& newCoords) {
+    void setCoords(const std::array<T, N>& newCoords) {
         m_coords = newCoords;
     }
 
@@ -49,12 +50,13 @@ class Point {
         return m_coords[index];
     }
 
-    void Print() const {
+    void print() const {
         std::cout << "(";
         for (std::size_t i = 0; i < N; ++i) {
             std::cout << m_coords[i];
-            if (i < N - 1)
+            if (i < N - 1) {
                 std::cout << ", ";
+            }
         }
         std::cout << ")\n";
     }
@@ -71,12 +73,12 @@ class Point {
  * @brief Returns the Euclidean distance between two points.
  */
 template <typename T1, typename T2, std::size_t N>
-auto Distance(const Point<T1, N>& P1, const Point<T2, N>& P2) ->
-    typename std::common_type<T1, T2>::type {
-    using R = typename std::common_type<T1, T2>::type;
+auto distance2Points(const Point<T1, N>& Point1, const Point<T2, N>& Point2)
+    -> std::common_type_t<T1, T2> {
+    using R = std::common_type_t<T1, T2>;
     R sum = R{0};
     for (std::size_t i = 0; i < N; ++i) {
-        R diff = static_cast<R>(P2[i]) - static_cast<R>(P1[i]);
+        R diff = static_cast<R>(Point2[i]) - static_cast<R>(Point1[i]);
         sum += diff * diff;
     }
     return std::sqrt(sum);
@@ -86,21 +88,16 @@ auto Distance(const Point<T1, N>& P1, const Point<T2, N>& P2) ->
  * @brief Returns the midpoint between two points.
  */
 template <typename T1, typename T2, std::size_t N>
-auto Midpoint(const Point<T1, N>& P1, const Point<T2, N>& P2)
-    -> Point<typename std::common_type<T1, T2>::type, N> {
-    using R = typename std::common_type<T1, T2>::type;
+auto midpoint2Points(const Point<T1, N>& Point1, const Point<T2, N>& Point2)
+    -> Point<std::common_type_t<T1, T2>, N> {
+    using R = std::common_type_t<T1, T2>;
     Point<R, N> mid;
-    for (std::size_t i = 0; i < N; ++i)
-        mid[i] =
-            (static_cast<R>(P1[i]) + static_cast<R>(P2[i])) / static_cast<R>(2);
+    for (std::size_t i = 0; i < N; ++i) {
+        mid[i] = (static_cast<R>(Point1[i]) + static_cast<R>(Point2[i])) /
+                 static_cast<R>(2);
+    }
     return mid;
 }
-
-// ==============================
-// Convenience type aliases
-// ==============================
-
-using Point3f = Point<float, 3>;
 
 }  // namespace RTB
 

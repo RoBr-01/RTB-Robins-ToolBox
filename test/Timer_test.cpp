@@ -38,24 +38,24 @@ class TimerTest : public ::testing::Test {
 };
 
 // Test Timer basic functionality
-TEST_F(TimerTest, TimerStartsAutomatically) {
+TEST_F(TimerTest, TimerstartsAutomatically) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    float elapsed_ms = timer.Elapsed<std::chrono::milliseconds>();
+    float elapsed_ms = timer.elapsed<std::chrono::milliseconds>();
     EXPECT_GT(elapsed_ms, 5.0f);  // Should be at least 5ms
     EXPECT_LT(elapsed_ms,
               50.0f);  // Should be less than 50ms (generous upper bound)
 }
 
-TEST_F(TimerTest, ManualStartWorks) {
+TEST_F(TimerTest, ManualstartWorks) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    timer.Start();  // Reset the timer
+    timer.start();  // Reset the timer
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    float elapsed_ms = timer.Elapsed<std::chrono::milliseconds>();
+    float elapsed_ms = timer.elapsed<std::chrono::milliseconds>();
     EXPECT_GT(elapsed_ms, 5.0f);
     EXPECT_LT(elapsed_ms, 30.0f);
 }
@@ -64,7 +64,7 @@ TEST_F(TimerTest, SecondsResolution) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    float elapsed_s = timer.Elapsed<std::chrono::seconds>();;
+    float elapsed_s = timer.elapsed<std::chrono::seconds>();;
     EXPECT_GT(elapsed_s, 0.05f);  // Should be at least 0.05 seconds
     EXPECT_LT(elapsed_s, 0.5f);   // Should be less than 0.5 seconds
 }
@@ -73,7 +73,7 @@ TEST_F(TimerTest, MillisecondsResolution) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    float elapsed_ms = timer.Elapsed<std::chrono::milliseconds>();
+    float elapsed_ms = timer.elapsed<std::chrono::milliseconds>();
     EXPECT_GT(elapsed_ms, 25.0f);
     EXPECT_LT(elapsed_ms, 200.0f);
 }
@@ -82,7 +82,7 @@ TEST_F(TimerTest, MicrosecondsResolution) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    float elapsed_us = timer.Elapsed<std::chrono::microseconds>();
+    float elapsed_us = timer.elapsed<std::chrono::microseconds>();
     EXPECT_GT(elapsed_us, 5000.0f);   // Should be at least 5000 microseconds
     EXPECT_LT(elapsed_us, 50000.0f);  // Should be less than 50000 microseconds
 }
@@ -91,7 +91,7 @@ TEST_F(TimerTest, NanosecondsResolution) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    float elapsed_ns = timer.Elapsed<std::chrono::nanoseconds>();
+    float elapsed_ns = timer.elapsed<std::chrono::nanoseconds>();
     EXPECT_GT(elapsed_ns,
               1000000.0f);  // Should be at least 1,000,000 nanoseconds
 }
@@ -100,19 +100,19 @@ TEST_F(TimerTest, InvalidResolutionReturnsNanoseconds) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    float elapsed_invalid = timer.Elapsed();
-    float elapsed_ns = timer.Elapsed<std::chrono::nanoseconds>();
+    float elapsed_invalid = timer.elapsed();
+    float elapsed_ns = timer.elapsed<std::chrono::nanoseconds>();
 
     // Both should return nanoseconds when invalid resolution is used
     EXPECT_GT(elapsed_invalid, 1000000.0f);
     // Note: We can't directly compare them since time has passed between calls
 }
 
-TEST_F(TimerTest, StopAndPrintOutputsCorrectFormat) {
+TEST_F(TimerTest, StopAndprintOutputsCorrectFormat) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    timer.Print<std::chrono::milliseconds>();
+    timer.print<std::chrono::milliseconds>();
     std::string output = GetOutput();
 
     EXPECT_TRUE(output.find("[TIMER]") != std::string::npos);
@@ -124,16 +124,16 @@ TEST_F(TimerTest, MultipleStopAndCountCalls) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    float first_call = timer.Elapsed<std::chrono::milliseconds>();
+    float first_call = timer.elapsed<std::chrono::milliseconds>();
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    float second_call = timer.Elapsed<std::chrono::milliseconds>();
+    float second_call = timer.elapsed<std::chrono::milliseconds>();
 
     // Second call should be larger since more time has passed
     EXPECT_GT(second_call, first_call);
 }
 
 // Test ScopedTimer functionality
-TEST_F(TimerTest, ScopedTimerPrintsOnDestruction) {
+TEST_F(TimerTest, ScopedTimerprintsOnDestruction) {
     {
         ScopedTimer<std::chrono::milliseconds> scoped_timer("TestOperation");
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -211,7 +211,7 @@ TEST_F(TimerTest, VeryShortDuration) {
     Timer timer;
     // Don't sleep, just measure immediately
 
-    float elapsed_ns = timer.Elapsed<std::chrono::nanoseconds>();
+    float elapsed_ns = timer.elapsed<std::chrono::nanoseconds>();
     EXPECT_GE(elapsed_ns, 0.0f);  // Should be non-negative
 }
 
@@ -219,10 +219,10 @@ TEST_F(TimerTest, ConversionAccuracy) {
     Timer timer;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    float elapsed_s = timer.Elapsed<std::chrono::seconds>();
-    timer.Start();  // Reset
+    float elapsed_s = timer.elapsed<std::chrono::seconds>();
+    timer.start();  // Reset
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    float elapsed_ms = timer.Elapsed<std::chrono::milliseconds>();
+    float elapsed_ms = timer.elapsed<std::chrono::milliseconds>();
 
     // 100ms should be approximately 0.1s
     // Allow for some timing variance

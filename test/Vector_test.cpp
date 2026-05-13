@@ -25,7 +25,7 @@ TEST(VectorTest, InitializerListConstructor) {
 TEST(VectorTest, ArrayConstructor) {
     std::array<double, 3> arr = {4.0, 5.0, 6.0};
     Vec3 v(arr);
-    EXPECT_EQ(v.GetComponents(), arr);
+    EXPECT_EQ(v.getComponents(), arr);
 }
 
 TEST(VectorTest, PointConstructor) {
@@ -45,11 +45,11 @@ TEST(VectorTest, TwoPointConstructor) {
     EXPECT_EQ(v[2], 5.0);
 }
 
-TEST(VectorTest, SetAndGetComponents) {
+TEST(VectorTest, SetAndgetComponents) {
     Vec3 v;
     std::array<double, 3> components = {7.0, 8.0, 9.0};
-    v.SetComponents(components);
-    EXPECT_EQ(v.GetComponents(), components);
+    v.setComponents(components);
+    EXPECT_EQ(v.getComponents(), components);
 }
 
 TEST(VectorTest, IndexOperator) {
@@ -138,55 +138,55 @@ TEST(VectorTest, UnaryMinus) {
 
 TEST(VectorTest, LengthCalculations) {
     Vec3 v{3.0, 4.0, 0.0};
-    EXPECT_DOUBLE_EQ(v.MagnitudeSquared(), 25.0);
-    EXPECT_DOUBLE_EQ(v.Magnitude(), 5.0);
+    EXPECT_DOUBLE_EQ(v.magnitudeSquared(), 25.0);
+    EXPECT_DOUBLE_EQ(v.magnitude(), 5.0);
 }
 
-TEST(VectorTest, Normalize) {
+TEST(VectorTest, normalize) {
     Vec3 v{0.0, 3.0, 4.0};
     Vec3 original = v;  // Keep copy of original
 
-    // Test Normalize() - returns new normalized vector, original unchanged
-    Vec3 normalized = v.Normalize();
+    // Test normalize() - returns new normalized vector, original unchanged
+    Vec3 normalized = v.normalize();
     EXPECT_NEAR(normalized[0], 0.0, 1e-9);
     EXPECT_NEAR(normalized[1], 0.6, 1e-9);
     EXPECT_NEAR(normalized[2], 0.8, 1e-9);
-    EXPECT_NEAR(normalized.Magnitude(), 1.0, 1e-9);
+    EXPECT_NEAR(normalized.magnitude(), 1.0, 1e-9);
 
     // Original should be unchanged
     EXPECT_EQ(v, original);
 }
 
-TEST(VectorTest, NormalizeInPlace) {
+TEST(VectorTest, normalizeInPlace) {
     Vec3 v{0.0, 3.0, 4.0};
 
-    // Test NormalizeInPlace() - modifies original vector
-    Vec3& result = v.NormalizeInPlace();
+    // Test normalizeInPlace() - modifies original vector
+    Vec3& result = v.normalizeInPlace();
     EXPECT_NEAR(v[0], 0.0, 1e-9);
     EXPECT_NEAR(v[1], 0.6, 1e-9);
     EXPECT_NEAR(v[2], 0.8, 1e-9);
-    EXPECT_NEAR(v.Magnitude(), 1.0, 1e-9);
+    EXPECT_NEAR(v.magnitude(), 1.0, 1e-9);
 
     // Should return reference to self for chaining
     EXPECT_EQ(&result, &v);
 }
 
-TEST(VectorTest, NormalizeZeroVector) {
+TEST(VectorTest, normalizeZeroVector) {
     Vec3 zero{0.0, 0.0, 0.0};
 
-    // Normalize of zero vector should return zero vector
-    Vec3 normalized = zero.Normalize();
+    // normalize of zero vector should return zero vector
+    Vec3 normalized = zero.normalize();
     EXPECT_EQ(normalized, zero);
 
-    // NormalizeInPlace of zero vector should leave it unchanged
+    // normalizeInPlace of zero vector should leave it unchanged
     Vec3 zero2{0.0, 0.0, 0.0};
-    zero2.NormalizeInPlace();
+    zero2.normalizeInPlace();
     EXPECT_EQ(zero2, Vec3({0.0, 0.0, 0.0}));
 }
 
-TEST(VectorTest, Invert) {
+TEST(VectorTest, invert) {
     Vec3 v{1.0, -2.0, 3.0};
-    Vec3& result = v.Invert();
+    Vec3& result = v.invert();
     EXPECT_EQ(v, Vec3({-1.0, 2.0, -3.0}));
 
     // Should return reference to self for chaining
@@ -197,38 +197,38 @@ TEST(VectorTest, ChainOperations) {
     Vec3 v{0.0, 6.0, 8.0};
 
     // Test method chaining
-    v.NormalizeInPlace().Invert();
+    v.normalizeInPlace().invert();
     EXPECT_NEAR(v[0], 0.0, 1e-9);
     EXPECT_NEAR(v[1], -0.6, 1e-9);
     EXPECT_NEAR(v[2], -0.8, 1e-9);
 }
 
-TEST(VectorTest, DotProduct) {
+TEST(VectorTest, dotProduct) {
     Vec3 v1{1.0, 2.0, 3.0};
     Vec3 v2{4.0, -5.0, 6.0};
-    EXPECT_DOUBLE_EQ(DotProduct(v1, v2), 12.0);
+    EXPECT_DOUBLE_EQ(dotProduct(v1, v2), 12.0);
 
     // Test with different types
     Vector<float, 3> vf{1.0f, 2.0f, 3.0f};
     Vector<double, 3> vd{4.0, -5.0, 6.0};
-    auto result = DotProduct(vf, vd);
+    auto result = dotProduct(vf, vd);
     EXPECT_DOUBLE_EQ(result, 12.0);
 }
 
-TEST(VectorTest, CrossProduct) {
+TEST(VectorTest, crossProduct) {
     Vec3 v1{1.0, 0.0, 0.0};
     Vec3 v2{0.0, 1.0, 0.0};
-    auto cross = CrossProduct(v1, v2);
+    auto cross = crossProduct(v1, v2);
     EXPECT_EQ(cross, Vec3({0.0, 0.0, 1.0}));
 
     // Test anti-commutativity: v1 × v2 = -(v2 × v1)
-    auto cross_reverse = CrossProduct(v2, v1);
+    auto cross_reverse = crossProduct(v2, v1);
     EXPECT_EQ(cross_reverse, Vec3({0.0, 0.0, -1.0}));
 
     // Test with different types
     Vector<float, 3> vf{1.0f, 0.0f, 0.0f};
     Vector<double, 3> vd{0.0, 1.0, 0.0};
-    auto mixed_cross = CrossProduct(vf, vd);
+    auto mixed_cross = crossProduct(vf, vd);
     EXPECT_EQ(mixed_cross, Vec3({0.0, 0.0, 1.0}));
 }
 
