@@ -10,3 +10,4 @@ template class RTB::Point<double, 3>;
 template class RTB::Ray<double, 3>;
 template class RTB::Vector<double, 3>;
 
+int main() {}

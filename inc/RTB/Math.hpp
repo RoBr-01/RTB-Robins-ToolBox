@@ -4,6 +4,7 @@
 // STL
 #include <array>
 #include <cmath>
+#include <cstddef>
 
 // RTB
 #include <RTB/Standards.hpp>
@@ -127,6 +128,18 @@ T frac2dB(T frac) {
 template <typename T>
 T dB2frac(T decibel) {
     return static_cast<T>(std::pow(10.0, static_cast<double>(decibel) / 20.0));
+}
+
+// TODO: expand to be a template?
+inline size_t nextPowerOf2(const size_t number) {
+    if (number == 0) {
+        return 1;
+    }
+    size_t power = 1;
+    while (power < number) {
+        power <<= 1;
+    }
+    return power;
 }
 
 }  // namespace RTB

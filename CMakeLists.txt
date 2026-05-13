@@ -56,4 +56,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/examples)
     endif()
 
+    if(${PROJECT_NAME}_ENABLE_DEV)
+        message(STATUS "Building Dev")
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dev)
+    endif()
+
 endif()

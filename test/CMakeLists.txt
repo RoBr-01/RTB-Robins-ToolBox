@@ -2,7 +2,7 @@ set(TESTS
     Ellipsoid_test
     Timer_test
     Vector_test
-    Stupid
+    Math_test
 )
 
 include(GoogleTest)

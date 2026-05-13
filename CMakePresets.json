@@ -8,6 +8,14 @@
             "binaryDir": "${sourceDir}/build/${presetName}"
         },
         {
+            "name": "dev",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "RTB_ENABLE_DEV": "ON"
+            }
+        },
+        {
             "name": "lib-debug",
             "inherits": "base",
             "cacheVariables": {
@@ -71,6 +79,11 @@
         }
     ],
     "buildPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev",
+            "jobs": 0
+        },
         {
             "name": "lib-debug",
             "configurePreset": "lib-debug",
