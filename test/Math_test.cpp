@@ -8,22 +8,20 @@
 #include <cstddef>
 #include <random>
 
-using namespace RTB;
-
 namespace {
 
 constexpr double k_abs_tol = 1e-12;
 constexpr double k_rel_tol = 1e-12;
 
-bool near(double a,
-          double b,
+bool near(double value_a,
+          double value_b,
           double abs_tol = k_abs_tol,
           double rel_tol = k_rel_tol) {
-    const double diff = std::abs(a - b);
+    const double diff = std::abs(value_a - value_b);
     if (diff <= abs_tol) {
         return true;
     }
-    return diff <= rel_tol * std::max(std::abs(a), std::abs(b));
+    return diff <= rel_tol * std::max(std::abs(value_a), std::abs(value_b));
 }
 
 void expectNear(double actual,
@@ -45,14 +43,14 @@ void expectVecNear(const std::array<double, 3>& actual,
 
 // Normalize angle to [-180, 180)
 double normalizeDeg(double deg) {
-    double x = std::fmod(deg, 360.0);
-    if (x < -180.0) {
-        x += 360.0;
+    double remainder = std::fmod(deg, 360.0);
+    if (remainder < -180.0) {
+        remainder += 360.0;
     }
-    if (x >= 180.0) {
-        x -= 360.0;
+    if (remainder >= 180.0) {
+        remainder -= 360.0;
     }
-    return x;
+    return remainder;
 }
 
 void expectAngleNear(double actual, double expected, double tol = 1e-10) {
@@ -68,22 +66,22 @@ void expectAngleNear(double actual, double expected, double tol = 1e-10) {
 // -----------------------------------------------------------------------------
 
 TEST(Math, Deg2RadKnownValues) {
-    expectNear(deg2rad(0.0), 0.0);
-    expectNear(deg2rad(180.0), std::acos(-1.0));
-    expectNear(deg2rad(90.0), std::acos(-1.0) / 2.0);
-    expectNear(deg2rad(-45.0), -std::acos(-1.0) / 4.0);
+    expectNear(RTB::deg2rad(0.0), 0.0);
+    expectNear(RTB::deg2rad(180.0), std::acos(-1.0));
+    expectNear(RTB::deg2rad(90.0), std::acos(-1.0) / 2.0);
+    expectNear(RTB::deg2rad(-45.0), -std::acos(-1.0) / 4.0);
 }
 
 TEST(Math, Rad2DegKnownValues) {
-    expectNear(rad2deg(0.0), 0.0);
-    expectNear(rad2deg(pi), 180.0);
-    expectNear(rad2deg(pi / 2.0), 90.0);
-    expectNear(rad2deg(-pi / 4.0), -45.0);
+    expectNear(RTB::rad2deg(0.0), 0.0);
+    expectNear(RTB::rad2deg(RTB::pi), 180.0);
+    expectNear(RTB::rad2deg(RTB::pi / 2.0), 90.0);
+    expectNear(RTB::rad2deg(-RTB::pi / 4.0), -45.0);
 }
 
 TEST(Math, DegRadRoundTrip) {
-    for (double deg = -10000.0; deg <= 10000.0; deg += 0.125) {
-        expectNear(rad2deg(deg2rad(deg)), deg);
+    for (double deg = -10000.0; deg <= 10000.0; deg += 0.125) {  // NOLINT
+        expectNear(RTB::rad2deg(RTB::deg2rad(deg)), deg);
     }
 }
 
@@ -92,43 +90,46 @@ TEST(Math, DegRadRoundTrip) {
 // -----------------------------------------------------------------------------
 
 TEST(Math, SindKnownValues) {
-    expectNear(sind(0.0), 0.0);
-    expectNear(sind(30.0), 0.5);
-    expectNear(sind(90.0), 1.0);
-    expectNear(sind(-90.0), -1.0);
-    expectNear(sind(180.0), 0.0);
+    expectNear(RTB::sind(0.0), 0.0);
+    expectNear(RTB::sind(30.0), 0.5);
+    expectNear(RTB::sind(90.0), 1.0);
+    expectNear(RTB::sind(-90.0), -1.0);
+    expectNear(RTB::sind(180.0), 0.0);
 }
 
 TEST(Math, CosdKnownValues) {
-    expectNear(cosd(0.0), 1.0);
-    expectNear(cosd(60.0), 0.5);
-    expectNear(cosd(90.0), 0.0);
-    expectNear(cosd(180.0), -1.0);
+    expectNear(RTB::cosd(0.0), 1.0);
+    expectNear(RTB::cosd(60.0), 0.5);
+    expectNear(RTB::cosd(90.0), 0.0);
+    expectNear(RTB::cosd(180.0), -1.0);
 }
 
 TEST(Math, TandKnownValues) {
-    expectNear(tand(0.0), 0.0);
-    expectNear(tand(45.0), 1.0);
-    expectNear(tand(-45.0), -1.0);
+    expectNear(RTB::tand(0.0), 0.0);
+    expectNear(RTB::tand(45.0), 1.0);
+    expectNear(RTB::tand(-45.0), -1.0);
 }
 
 TEST(Math, TrigIdentities) {
-    for (double deg = -720.0; deg <= 720.0; deg += 0.25) {
-        const double s = sind(deg);
-        const double c = cosd(deg);
+    for (double deg = -720.0; deg <= 720.0; deg += 0.25) {  // NOLINT
+        const double angle_sin = RTB::sind(deg);
+        const double angle_cos = RTB::cosd(deg);
 
-        expectNear((s * s) + (c * c), 1.0, 1e-12, 1e-12);
+        expectNear((angle_sin * angle_sin) + (angle_cos * angle_cos),
+                   1.0,
+                   1e-12,
+                   1e-12);
     }
 }
 
 TEST(Math, InverseTrigRoundTrip) {
-    for (double x = -1.0; x <= 1.0; x += 0.001) {
-        expectNear(sind(asind(x)), x, 1e-12, 1e-12);
-        expectNear(cosd(acosd(x)), x, 1e-12, 1e-12);
+    for (double value = -1.0; value <= 1.0; value += 0.001) {  // NOLINT
+        expectNear(RTB::sind(RTB::asind(value)), value, 1e-12, 1e-12);
+        expectNear(RTB::cosd(RTB::acosd(value)), value, 1e-12, 1e-12);
     }
 
-    for (double x = -1000.0; x <= 1000.0; x += 0.25) {
-        expectNear(tand(atand(x)), x, 1e-10, 1e-10);
+    for (double value = -1000.0; value <= 1000.0; value += 0.25) {  // NOLINT
+        expectNear(RTB::tand(RTB::atand(value)), value, 1e-10, 1e-10);
     }
 }
 
@@ -138,68 +139,68 @@ TEST(Math, InverseTrigRoundTrip) {
 
 TEST(Math, Sph2CartPrincipalAxes) {
     // Front (+X)
-    expectVecNear(sph2cart<double>(std::array<double, 3>{0.0, 0.0, 1.0}),
+    expectVecNear(RTB::sph2cart<double>(std::array<double, 3>{0.0, 0.0, 1.0}),
                   {1.0, 0.0, 0.0});
 
     // Left (+Y)
-    expectVecNear(sph2cart<double>(std::array<double, 3>{90.0, 0.0, 1.0}),
+    expectVecNear(RTB::sph2cart<double>(std::array<double, 3>{90.0, 0.0, 1.0}),
                   {0.0, 1.0, 0.0});
 
     // Back (-X)
-    expectVecNear(sph2cart<double>(std::array<double, 3>{180.0, 0.0, 1.0}),
+    expectVecNear(RTB::sph2cart<double>(std::array<double, 3>{180.0, 0.0, 1.0}),
                   {-1.0, 0.0, 0.0});
 
     // Right (-Y)
-    expectVecNear(sph2cart<double>(std::array<double, 3>{-90.0, 0.0, 1.0}),
+    expectVecNear(RTB::sph2cart<double>(std::array<double, 3>{-90.0, 0.0, 1.0}),
                   {0.0, -1.0, 0.0});
 
     // Up (+Z)
-    expectVecNear(sph2cart<double>(std::array<double, 3>{0.0, 90.0, 1.0}),
+    expectVecNear(RTB::sph2cart<double>(std::array<double, 3>{0.0, 90.0, 1.0}),
                   {0.0, 0.0, 1.0});
 
     // Down (-Z)
-    expectVecNear(sph2cart<double>(std::array<double, 3>{0.0, -90.0, 1.0}),
+    expectVecNear(RTB::sph2cart<double>(std::array<double, 3>{0.0, -90.0, 1.0}),
                   {0.0, 0.0, -1.0});
 }
 
 TEST(Math, Cart2SphPrincipalAxes) {
     {
-        auto sph = cart2sph<double>(std::array<double, 3>{1.0, 0.0, 0.0});
+        auto sph = RTB::cart2sph<double>(std::array<double, 3>{1.0, 0.0, 0.0});
         expectAngleNear(sph[0], 0.0);
         expectAngleNear(sph[1], 0.0);
         expectNear(sph[2], 1.0);
     }
 
     {
-        auto sph = cart2sph<double>(std::array<double, 3>{0.0, 1.0, 0.0});
+        auto sph = RTB::cart2sph<double>(std::array<double, 3>{0.0, 1.0, 0.0});
         expectAngleNear(sph[0], 90.0);
         expectAngleNear(sph[1], 0.0);
         expectNear(sph[2], 1.0);
     }
 
     {
-        auto sph = cart2sph<double>(std::array<double, 3>{-1.0, 0.0, 0.0});
+        auto sph = RTB::cart2sph<double>(std::array<double, 3>{-1.0, 0.0, 0.0});
         expectAngleNear(sph[0], 180.0);
         expectAngleNear(sph[1], 0.0);
         expectNear(sph[2], 1.0);
     }
 
     {
-        auto sph = cart2sph<double>(std::array<double, 3>{0.0, -1.0, 0.0});
+        auto sph = RTB::cart2sph<double>(std::array<double, 3>{0.0, -1.0, 0.0});
         expectAngleNear(sph[0], -90.0);
         expectAngleNear(sph[1], 0.0);
         expectNear(sph[2], 1.0);
     }
 
     {
-        auto sph = cart2sph<double>(std::array<double, 3>{0.0, 0.0, 1.0});
+        auto sph = RTB::cart2sph<double>(std::array<double, 3>{0.0, 0.0, 1.0});
         expectAngleNear(sph[0], 0.0);  // atan2(0,0) -> 0 by convention
         expectAngleNear(sph[1], 90.0);
         expectNear(sph[2], 1.0);
     }
 
     {
-        auto sph = cart2sph<double>(std::array<double, 3>{0.0, 0.0, -1.0});
+        auto sph = RTB::cart2sph<double>(std::array<double, 3>{0.0, 0.0, -1.0});
         expectAngleNear(sph[0], 0.0);
         expectAngleNear(sph[1], -90.0);
         expectNear(sph[2], 1.0);
@@ -207,13 +208,13 @@ TEST(Math, Cart2SphPrincipalAxes) {
 }
 
 TEST(Math, SphCartRoundTrip) {
-    for (double az = -180.0; az <= 180.0; az += 5.0) {
-        for (double el = -90.0; el <= 90.0; el += 5.0) {
-            for (double r = 0.0; r <= 10.0; r += 0.5) {
+    for (double az = -180.0; az <= 180.0; az += 5.0) {    // NOLINT
+        for (double el = -90.0; el <= 90.0; el += 5.0) {  // NOLINT
+            for (double r = 0.0; r <= 10.0; r += 0.5) {   // NOLINT
                 const std::array<double, 3> sph{az, el, r};
 
-                const auto cart = sph2cart<double>(sph);
-                const auto sph2 = cart2sph<double>(cart);
+                const auto cart = RTB::sph2cart<double>(sph);
+                const auto sph2 = RTB::cart2sph<double>(cart);
 
                 expectNear(sph2[2], r, 1e-10, 1e-10);
 
@@ -234,21 +235,21 @@ TEST(Math, SphCartRoundTrip) {
 }
 
 TEST(Math, CartSphRoundTripRandomized) {
-    std::mt19937 rng(0x5EED1234U);
+    std::mt19937 rng(0x5EED1234U);  // NOLINT
     std::uniform_real_distribution<double> dist(-1.0e6, 1.0e6);
 
     for (int i = 0; i < 10000; ++i) {
         const std::array<double, 3> cart{dist(rng), dist(rng), dist(rng)};
 
-        const auto sph = cart2sph<double>(cart);
-        const auto cart2 = sph2cart<double>(sph);
+        const auto sph = RTB::cart2sph<double>(cart);
+        const auto cart2 = RTB::sph2cart<double>(sph);
 
         expectVecNear(cart2, cart, 1e-8, 1e-10);
     }
 }
 
 TEST(Math, Cart2SphOrigin) {
-    const auto sph = cart2sph<double>(std::array<double, 3>{0.0, 0.0, 0.0});
+    const auto sph = RTB::cart2sph<double>(std::array<double, 3>{0.0, 0.0, 0.0});
 
     expectNear(sph[0], 0.0);
     expectNear(sph[1], 0.0);
@@ -260,57 +261,57 @@ TEST(Math, Cart2SphOrigin) {
 // -----------------------------------------------------------------------------
 
 TEST(Math, Frac2dBKnownValues) {
-    expectNear(frac2dB(1.0), 0.0);
-    expectNear(frac2dB(10.0), 20.0);
-    expectNear(frac2dB(0.1), -20.0);
-    expectNear(frac2dB(2.0), 20.0 * std::log10(2.0));
+    expectNear(RTB::frac2dB(1.0), 0.0);
+    expectNear(RTB::frac2dB(10.0), 20.0);
+    expectNear(RTB::frac2dB(0.1), -20.0);
+    expectNear(RTB::frac2dB(2.0), 20.0 * std::log10(2.0));
 }
 
 TEST(Math, dB2FracKnownValues) {
-    expectNear(dB2frac(0.0), 1.0);
-    expectNear(dB2frac(20.0), 10.0);
-    expectNear(dB2frac(-20.0), 0.1);
+    expectNear(RTB::dB2frac(0.0), 1.0);
+    expectNear(RTB::dB2frac(20.0), 10.0);
+    expectNear(RTB::dB2frac(-20.0), 0.1);
 }
 
 TEST(Math, dBRoundTrip) {
-    for (double frac = 1e-12; frac <= 1e12; frac *= 1.25) {
-        expectNear(dB2frac(frac2dB(frac)), frac, 1e-10, 1e-10);
+    for (double frac = 1e-12; frac <= 1e12; frac *= 1.25) {  // NOLINT
+        expectNear(RTB::dB2frac(RTB::frac2dB(frac)), frac, 1e-10, 1e-10);
     }
 
-    for (double db = -300.0; db <= 300.0; db += 0.25) {
-        expectNear(frac2dB(dB2frac(db)), db, 1e-10, 1e-10);
+    for (double db = -300.0; db <= 300.0; db += 0.25) {  // NOLINT
+        expectNear(RTB::frac2dB(RTB::dB2frac(db)), db, 1e-10, 1e-10);
     }
 }
 
 // -----------------------------------------------------------------------------
-// nextPowerOf2
+// RTB::nextPowerOf2
 // -----------------------------------------------------------------------------
 
 TEST(Math, NextPowerOf2KnownValues) {
-    EXPECT_EQ(nextPowerOf2(0U), 1U);
-    EXPECT_EQ(nextPowerOf2(1U), 1U);
-    EXPECT_EQ(nextPowerOf2(2U), 2U);
-    EXPECT_EQ(nextPowerOf2(3U), 4U);
-    EXPECT_EQ(nextPowerOf2(4U), 4U);
-    EXPECT_EQ(nextPowerOf2(5U), 8U);
-    EXPECT_EQ(nextPowerOf2(15U), 16U);
-    EXPECT_EQ(nextPowerOf2(16U), 16U);
-    EXPECT_EQ(nextPowerOf2(17U), 32U);
+    EXPECT_EQ(RTB::nextPowerOf2(0U), 1U);
+    EXPECT_EQ(RTB::nextPowerOf2(1U), 1U);
+    EXPECT_EQ(RTB::nextPowerOf2(2U), 2U);
+    EXPECT_EQ(RTB::nextPowerOf2(3U), 4U);
+    EXPECT_EQ(RTB::nextPowerOf2(4U), 4U);
+    EXPECT_EQ(RTB::nextPowerOf2(5U), 8U);
+    EXPECT_EQ(RTB::nextPowerOf2(15U), 16U);
+    EXPECT_EQ(RTB::nextPowerOf2(16U), 16U);
+    EXPECT_EQ(RTB::nextPowerOf2(17U), 32U);
 }
 
 TEST(Math, NextPowerOf2ExhaustiveSmallRange) {
-    for (std::size_t n = 0; n < 1'000'000; ++n) {
-        const std::size_t p = nextPowerOf2(n);
+    for (std::size_t number = 0; number < 1'000'000; ++number) {
+        const std::size_t power = RTB::nextPowerOf2(number);
 
-        // p is power of two
-        EXPECT_EQ((p & (p - 1)), 0U);
+        // power is power of two
+        EXPECT_EQ((power & (power - 1)), 0U);
 
-        // p covers n
-        EXPECT_GE(p, n);
+        // power covers number
+        EXPECT_GE(power, number);
 
-        // p is minimal
-        if (p > 1) {
-            EXPECT_LT(p >> 1, n);
+        // power is minimal
+        if (power > 1) {
+            EXPECT_LT(power >> 1, number);
         }
     }
 }
