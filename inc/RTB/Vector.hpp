@@ -26,11 +26,13 @@ template <typename T, std::size_t N>
 class Vector;
 
 template <typename T, typename T2, std::size_t N>
-auto crossProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
+[[nodiscard]] auto crossProduct(const Vector<T, N>& vector_1,
+                                const Vector<T2, N>& vector_2)
     -> Vector<std::common_type_t<T, T2>, N>;
 
 template <typename T, typename T2, std::size_t N>
-auto dotProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
+[[nodiscard]] auto dotProduct(const Vector<T, N>& vector_1,
+                              const Vector<T2, N>& vector_2)
     -> std::common_type_t<T, T2>;
 
 template <typename T, std::size_t N>
@@ -125,25 +127,25 @@ class Vector {
 
     // ---- Arithmetic operators (vector op scalar) ----------------------------
 
-    [[nodiscard]] Vector operator+(const T scalar) const {
+    Vector operator+(const T scalar) const {
         Vector result = *this;
         result += scalar;
         return result;
     }
 
-    [[nodiscard]] Vector operator-(const T scalar) const {
+    Vector operator-(const T scalar) const {
         Vector result = *this;
         result -= scalar;
         return result;
     }
 
-    [[nodiscard]] Vector operator*(const T scalar) const {
+    Vector operator*(const T scalar) const {
         Vector result = *this;
         result *= scalar;
         return result;
     }
 
-    [[nodiscard]] Vector operator/(const T scalar) const {
+    Vector operator/(const T scalar) const {
         Vector result = *this;
         result /= scalar;
         return result;
@@ -155,27 +157,27 @@ class Vector {
     // (Hadamard) multiplication/division. For the geometric dot product, use
     // the free function dotProduct(); for the cross product, crossProduct().
 
-    [[nodiscard]] Vector operator+(const Vector& vector) const {
+    Vector operator+(const Vector& vector) const {
         Vector result = *this;
         result += vector;
         return result;
     }
 
-    [[nodiscard]] Vector operator-(const Vector& vector) const {
+    Vector operator-(const Vector& vector) const {
         Vector result = *this;
         result -= vector;
         return result;
     }
 
     /** @brief Element-wise (Hadamard) product. */
-    [[nodiscard]] Vector operator*(const Vector& vector) const {
+    Vector operator*(const Vector& vector) const {
         Vector result = *this;
         result *= vector;
         return result;
     }
 
     /** @brief Element-wise (Hadamard) division. */
-    [[nodiscard]] Vector operator/(const Vector& vector) const {
+    Vector operator/(const Vector& vector) const {
         Vector result = *this;
         result /= vector;
         return result;
@@ -346,7 +348,7 @@ auto crossProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
     -> Vector<std::common_type_t<T, T2>, N> {
     static_assert(N == 3,
                   "crossProduct is only defined for 3-dimensional vectors.");
-    using R = typename std::common_type<T, T2>::type;
+    using R = typename std::common_type_t<T, T2>;
 
     // Cast individual components first so arithmetic is done in type R.
     const R vector_1_1 = static_cast<R>(vector_1[0]);

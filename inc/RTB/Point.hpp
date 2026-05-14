@@ -73,12 +73,13 @@ class Point {
  * @brief Returns the Euclidean distance between two points.
  */
 template <typename T1, typename T2, std::size_t N>
-auto distance2Points(const Point<T1, N>& Point1, const Point<T2, N>& Point2)
+[[nodiscard]] auto distance2Points(const Point<T1, N>& Point1,
+                                   const Point<T2, N>& Point2)
     -> std::common_type_t<T1, T2> {
     using R = std::common_type_t<T1, T2>;
     R sum = R{0};
     for (std::size_t i = 0; i < N; ++i) {
-        R diff = static_cast<R>(Point2[i]) - static_cast<R>(Point1[i]);
+        const R diff = static_cast<R>(Point2[i]) - static_cast<R>(Point1[i]);
         sum += diff * diff;
     }
     return std::sqrt(sum);
@@ -88,7 +89,8 @@ auto distance2Points(const Point<T1, N>& Point1, const Point<T2, N>& Point2)
  * @brief Returns the midpoint between two points.
  */
 template <typename T1, typename T2, std::size_t N>
-auto midpoint2Points(const Point<T1, N>& Point1, const Point<T2, N>& Point2)
+[[nodiscard]] auto midpoint2Points(const Point<T1, N>& Point1,
+                                   const Point<T2, N>& Point2)
     -> Point<std::common_type_t<T1, T2>, N> {
     using R = std::common_type_t<T1, T2>;
     Point<R, N> mid;

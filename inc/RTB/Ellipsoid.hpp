@@ -93,7 +93,7 @@ class Ellipsoid {
    public:
     Ellipsoid();
     Ellipsoid(T length, T width, T height);
-    explicit Ellipsoid(std::initializer_list<T> sizes);
+    Ellipsoid(std::initializer_list<T> sizes);
     explicit Ellipsoid(const std::array<T, 3>& sizes);
 
     const std::array<T, 3>& GetDimensions() const;

@@ -91,7 +91,7 @@ class Timer {
 template <typename Duration = std::chrono::milliseconds>
 class ScopedTimer {
    public:
-    explicit ScopedTimer(const std::string& name) : m_name(name) {}
+    explicit ScopedTimer(std::string name) : m_name(std::move(name)) {}
 
     ~ScopedTimer() {
         m_timer.print<Duration>(m_name);

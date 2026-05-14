@@ -27,11 +27,14 @@ if(NOT TARGET hwy)
     set(HWY_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
     set(HWY_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(HWY_ENABLE_CONTRIB OFF CACHE BOOL "" FORCE)
+    cmake_policy(PUSH)
+    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/highway)
+    cmake_policy(POP)
 endif()
 
 target_link_libraries(${PROJECT_NAME} INTERFACE hwy)
-target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/lib/highway/hwy)
+target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/lib/highway/hwy)
 
 
 # Only build tests/bench/examples when we are the top-level project
