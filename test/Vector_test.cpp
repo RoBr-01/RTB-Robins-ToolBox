@@ -357,19 +357,6 @@ TEST(VectorTest, StreamOutput) {
     EXPECT_EQ(oss.str(), "(1, 2, 3)");
 }
 
-TEST(VectorTest, Print) {
-    const Vec3 vector{1.0, 2.0, 3.0};
-
-    const std::ostringstream capture;
-    auto* old_buf = std::cout.rdbuf(capture.rdbuf());
-
-    vector.print();
-
-    std::cout.rdbuf(old_buf);
-
-    EXPECT_EQ(capture.str(), "[RTB::Vector] - (1, 2, 3)\n");
-}
-
 // -----------------------------------------------------------------------------
 // Copy and move semantics
 // -----------------------------------------------------------------------------

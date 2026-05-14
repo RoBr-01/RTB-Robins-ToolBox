@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/build/test-debug/bin/Vector_test",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb"
@@ -20,7 +20,7 @@
             "program": "${workspaceFolder}/build/test-debug/bin/Ellipsoid_test",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb"
