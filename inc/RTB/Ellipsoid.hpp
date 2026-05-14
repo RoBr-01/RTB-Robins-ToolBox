@@ -96,7 +96,7 @@ class Ellipsoid {
     Ellipsoid(std::initializer_list<T> sizes);
     explicit Ellipsoid(const std::array<T, 3>& sizes);
 
-    const std::array<T, 3>& GetDimensions() const;
+    const std::array<T, 3>& getDimensions() const;
 
     /**
      * @brief Ray-ellipsoid intersection.
@@ -105,7 +105,7 @@ class Ellipsoid {
      * or std::nullopt if there is no intersection.
      * For a tangent intersection t1 == t2.
      */
-    std::optional<std::array<T, 2>> IntersectRay(const Ray<T, 3>& ray) const;
+    std::optional<std::array<T, 2>> intersectRay(const Ray<T, 3>& ray) const;
 
     /**
      * @brief Plane-ellipsoid intersection.
@@ -113,13 +113,13 @@ class Ellipsoid {
      * Returns the ellipse formed by the intersection.
      * Assumes the plane is normalized.
      */
-    EllipseParams<T> IntersectPlane(const Plane<T>& plane) const;
+    EllipseParams<T> intersectPlane(const Plane<T>& plane) const;
 
     /**
      * @brief Traces the diffraction path from a source point to two ear points
      *        around the ellipsoid surface.
      */
-    TraceResults<T> TracePath(const Point<T, 3>& source,
+    TraceResults<T> tracePath(const Point<T, 3>& source,
                               const std::array<Point<T, 3>, 2>& ears) const;
 
    private:
@@ -127,7 +127,7 @@ class Ellipsoid {
      * @brief Returns the arc length along the ellipse cross-section between
      *        p1 and p2, using the compile-time selected Method.
      */
-    T ArcLength(const Point<T, 3>& p1,
+    T arcLength(const Point<T, 3>& p1,
                 const Point<T, 3>& p2,
                 const Plane<T>& plane) const;
 
@@ -157,12 +157,12 @@ Ellipsoid<T, Method>::Ellipsoid(const std::array<T, 3>& sizes)
     : m_dimensions(sizes) {}
 
 template <typename T, ArcLengthMethod Method>
-const std::array<T, 3>& Ellipsoid<T, Method>::GetDimensions() const {
+const std::array<T, 3>& Ellipsoid<T, Method>::getDimensions() const {
     return m_dimensions;
 }
 
 template <typename T, ArcLengthMethod Method>
-std::optional<std::array<T, 2>> Ellipsoid<T, Method>::IntersectRay(
+std::optional<std::array<T, 2>> Ellipsoid<T, Method>::intersectRay(
     const Ray<T, 3>& ray) const {
     const Vector<T, 3> dir = ray.getDirection();
     const Point<T, 3> origin = ray.getOrigin();
@@ -189,7 +189,7 @@ std::optional<std::array<T, 2>> Ellipsoid<T, Method>::IntersectRay(
 }
 
 template <typename T, ArcLengthMethod Method>
-EllipseParams<T> Ellipsoid<T, Method>::IntersectPlane(
+EllipseParams<T> Ellipsoid<T, Method>::intersectPlane(
     const Plane<T>& plane) const {
     EllipseParams<T> result;
 
@@ -214,13 +214,13 @@ EllipseParams<T> Ellipsoid<T, Method>::IntersectPlane(
     v = crossProduct(result.normal, u);
 
     // Project ellipsoid metric onto the plane basis to get 2D quadratic form
-    const T Q_uu = u[0] * u[0] / A_sq + u[1] * u[1] / B_sq + u[2] * u[2] / C_sq;
-    const T Q_vv = v[0] * v[0] / A_sq + v[1] * v[1] / B_sq + v[2] * v[2] / C_sq;
-    const T Q_uv = u[0] * v[0] / A_sq + u[1] * v[1] / B_sq + u[2] * v[2] / C_sq;
+    const T q_uu = u[0] * u[0] / A_sq + u[1] * u[1] / B_sq + u[2] * u[2] / C_sq;
+    const T q_vv = v[0] * v[0] / A_sq + v[1] * v[1] / B_sq + v[2] * v[2] / C_sq;
+    const T q_uv = u[0] * v[0] / A_sq + u[1] * v[1] / B_sq + u[2] * v[2] / C_sq;
 
     // Eigendecomposition of the 2x2 quadratic form
-    const T trace = Q_uu + Q_vv;
-    const T det = Q_uu * Q_vv - Q_uv * Q_uv;
+    const T trace = q_uu + q_vv;
+    const T det = q_uu * q_vv - q_uv * q_uv;
     const T discriminant = std::sqrt(trace * trace - static_cast<T>(4) * det);
     const T lambda1 = (trace + discriminant) / static_cast<T>(2);
     const T lambda2 = (trace - discriminant) / static_cast<T>(2);
@@ -229,7 +229,7 @@ EllipseParams<T> Ellipsoid<T, Method>::IntersectPlane(
     result.semi_axis_lengths[1] = static_cast<T>(1) / std::sqrt(lambda2);
 
     const T angle =
-        static_cast<T>(0.5) * std::atan2(static_cast<T>(2) * Q_uv, Q_uu - Q_vv);
+        static_cast<T>(0.5) * std::atan2(static_cast<T>(2) * q_uv, q_uu - q_vv);
     result.semi_axes[0] = std::cos(angle) * u + std::sin(angle) * v;
     result.semi_axes[1] = -std::sin(angle) * u + std::cos(angle) * v;
 
@@ -241,7 +241,7 @@ EllipseParams<T> Ellipsoid<T, Method>::IntersectPlane(
 // ==============================
 
 template <typename T>
-LocalCoords<T> TransformToLocalCoords(const Point<T, 3>& point,
+LocalCoords<T> transformToLocalCoords(const Point<T, 3>& point,
                                       const EllipseParams<T>& ellipse) {
     LocalCoords<T> result;
 
@@ -262,13 +262,13 @@ LocalCoords<T> TransformToLocalCoords(const Point<T, 3>& point,
 }
 
 template <typename T, ArcLengthMethod Method>
-T Ellipsoid<T, Method>::ArcLength(const Point<T, 3>& p1,
+T Ellipsoid<T, Method>::arcLength(const Point<T, 3>& p1,
                                   const Point<T, 3>& p2,
                                   const Plane<T>& plane) const {
-    const EllipseParams<T> ellipse = IntersectPlane(plane);
+    const EllipseParams<T> ellipse = intersectPlane(plane);
 
-    const LocalCoords<T> local1 = TransformToLocalCoords(p1, ellipse);
-    const LocalCoords<T> local2 = TransformToLocalCoords(p2, ellipse);
+    const LocalCoords<T> local1 = transformToLocalCoords(p1, ellipse);
+    const LocalCoords<T> local2 = transformToLocalCoords(p2, ellipse);
 
     const T a = ellipse.semi_axis_lengths[0];
     const T b = ellipse.semi_axis_lengths[1];
@@ -360,7 +360,7 @@ T Ellipsoid<T, Method>::ArcLength(const Point<T, 3>& p1,
 // ==============================
 
 template <typename T, ArcLengthMethod Method>
-TraceResults<T> Ellipsoid<T, Method>::TracePath(
+TraceResults<T> Ellipsoid<T, Method>::tracePath(
     const Point<T, 3>& source, const std::array<Point<T, 3>, 2>& ears) const {
     TraceResults<T> results{};
 
@@ -405,29 +405,29 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
     // surface, so we enforce it exactly before using them geometrically.
     // Note: radial projection from origin, not closest-point (quartic).
     // For points already near the surface the difference is negligible.
-    auto ProjectOntoSurface = [&](const Point<T, 3>& p) -> Point<T, 3> {
+    auto project_onto_surface = [&](const Point<T, 3>& p) -> Point<T, 3> {
         const T scale = std::sqrt(p[0] * p[0] / A_sq + p[1] * p[1] / B_sq +
                                   p[2] * p[2] / C_sq);
         return Point<T, 3>{p[0] / scale, p[1] / scale, p[2] / scale};
     };
 
     // Computes a single EarPath given a tangent point and ear.
-    auto MakeEarPath = [&](const Point<T, 3>& tangent,
-                           const Point<T, 3>& ear,
-                           const Plane<T>& sto_plane) -> EarPath<T> {
+    auto make_ear_path = [&](const Point<T, 3>& tangent,
+                             const Point<T, 3>& ear,
+                             const Plane<T>& sto_plane) -> EarPath<T> {
         EarPath<T> path;
         path.tangent_point = tangent;
         path.direct_ray = Vector<T, 3>(source, tangent);
         const T direct_length = path.direct_ray.magnitude();
-        path.arclength = ArcLength(tangent, ear, sto_plane);
+        path.arclength = arcLength(tangent, ear, sto_plane);
         path.pathlength = direct_length + path.arclength;
         return path;
     };
 
-    for (std::size_t earIdx = 0; earIdx < 2; ++earIdx) {
-        const Point<T, 3> ear = ProjectOntoSurface(ears[earIdx]);
+    for (std::size_t ear_idx = 0; ear_idx < 2; ++ear_idx) {
+        const Point<T, 3> ear = project_onto_surface(ears[ear_idx]);
         std::array<EarPath<T>, 2>& ear_paths =
-            (earIdx == 0) ? results.left_ear_paths : results.right_ear_paths;
+            (ear_idx == 0) ? results.left_ear_paths : results.right_ear_paths;
 
         // Check if the straight source-to-ear path is occluded.
         // to_ear is unnormalised — t=1 corresponds exactly to the ear position,
@@ -436,7 +436,7 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
         const Vector<T, 3> to_ear(source, ear);
         const Ray<T, 3> source_to_ear(source, to_ear);
 
-        const auto straight_intersections = IntersectRay(source_to_ear);
+        const auto straight_intersections = intersectRay(source_to_ear);
         bool path_clear = true;
         if (straight_intersections.has_value()) {
             for (const T t : straight_intersections.value()) {
@@ -460,17 +460,17 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
         }
 
         // Diffraction plane through origin, ear, and source
-        Plane<T> STO_plane(m_origin, ear, source);
-        STO_plane.normalize();
+        Plane<T> sto_plane(m_origin, ear, source);
+        sto_plane.normalize();
 
         // Intersection of polar plane and diffraction plane gives the tangent
         // line
-        const auto intersection_line = intersectPlanes(polar_plane, STO_plane);
+        const auto intersection_line = intersectPlanes(polar_plane, sto_plane);
         assert(intersection_line.has_value() &&
                "Polar plane and diffraction plane are parallel — degenerate "
                "geometry.");
 
-        const auto intersections = IntersectRay(intersection_line.value());
+        const auto intersections = intersectRay(intersection_line.value());
         assert(
             intersections.has_value() &&
             "Tangent line does not intersect ellipsoid — degenerate geometry.");
@@ -481,8 +481,8 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
             intersection_line->getPosition(intersections.value()[1]);
 
         // Compute both paths and sort: [0] shorter, [1] longer
-        const EarPath<T> path_one = MakeEarPath(tangent_one, ear, STO_plane);
-        const EarPath<T> path_two = MakeEarPath(tangent_two, ear, STO_plane);
+        const EarPath<T> path_one = make_ear_path(tangent_one, ear, sto_plane);
+        const EarPath<T> path_two = make_ear_path(tangent_two, ear, sto_plane);
 
         if (path_one.pathlength <= path_two.pathlength) {
             ear_paths[0] = path_one;

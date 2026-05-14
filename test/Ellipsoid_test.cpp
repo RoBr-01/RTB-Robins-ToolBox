@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <RTB/RTB.hpp>
+#include <RTB/Ellipsoid.hpp>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -17,11 +17,11 @@ using namespace RTB;
 // Helpers
 // ============================================================
 
-static constexpr double kTight = 1e-9;  // tight double tolerance
-static constexpr double kMed = 1e-6;    // medium tolerance
+static constexpr double k_tight = 1e-9;  // tight double tolerance
+static constexpr double k_med = 1e-6;    // medium tolerance
 
 /** True if a point lies on the ellipsoid surface (within tol). */
-static bool OnSurface(const Point<double, 3>& p,
+static bool onSurface(const Point<double, 3>& p,
                       double A,
                       double B,
                       double C,
@@ -89,8 +89,8 @@ TEST_F(EllipsoidRayTest, UnitSphereAlongX) {
     // Sort for deterministic comparison
     if (t1 > t2)
         std::swap(t1, t2);
-    EXPECT_NEAR(t1, 2.0, kTight);
-    EXPECT_NEAR(t2, 4.0, kTight);
+    EXPECT_NEAR(t1, 2.0, k_tight);
+    EXPECT_NEAR(t2, 4.0, k_tight);
 }
 
 // Intersection points lie on the sphere surface
@@ -105,7 +105,7 @@ TEST_F(EllipsoidRayTest, IntersectionPointsOnSurface) {
     for (const double t : *result) {
         const Point<double, 3> pt{
             orig[0] + t * dir[0], orig[1] + t * dir[1], orig[2] + t * dir[2]};
-        EXPECT_TRUE(OnSurface(pt, 1.0, 1.0, 1.0))
+        EXPECT_TRUE(onSurface(pt, 1.0, 1.0, 1.0))
             << "Point at t=" << t << " not on sphere surface";
     }
 }
@@ -145,8 +145,8 @@ TEST_F(EllipsoidRayTest, ProlateAlongMajorAxis) {
     double t1 = result->at(0), t2 = result->at(1);
     if (t1 > t2)
         std::swap(t1, t2);
-    EXPECT_NEAR(t1, 3.0, kTight);  // hits x = +2 at t=3
-    EXPECT_NEAR(t2, 7.0, kTight);  // hits x = -2 at t=7
+    EXPECT_NEAR(t1, 3.0, k_tight);  // hits x = +2 at t=3
+    EXPECT_NEAR(t2, 7.0, k_tight);  // hits x = -2 at t=7
 }
 
 // Prolate spheroid: along minor axis intersection is at y = ±1
@@ -158,8 +158,8 @@ TEST_F(EllipsoidRayTest, ProlateAlongMinorAxis) {
     double t1 = result->at(0), t2 = result->at(1);
     if (t1 > t2)
         std::swap(t1, t2);
-    EXPECT_NEAR(t1, 4.0, kTight);
-    EXPECT_NEAR(t2, 6.0, kTight);
+    EXPECT_NEAR(t1, 4.0, k_tight);
+    EXPECT_NEAR(t2, 6.0, k_tight);
 }
 
 // float specialization compiles and returns reasonable results
@@ -193,13 +193,13 @@ TEST_F(EllipsoidPlaneTest, UnitSphereXYPlaneIsCircle) {
     xy.normalize();
     EllipseParams<double> ep = sphere.IntersectPlane(xy);
 
-    EXPECT_NEAR(ep.semi_axis_lengths[0], 1.0, kMed);
-    EXPECT_NEAR(ep.semi_axis_lengths[1], 1.0, kMed);
+    EXPECT_NEAR(ep.semi_axis_lengths[0], 1.0, k_med);
+    EXPECT_NEAR(ep.semi_axis_lengths[1], 1.0, k_med);
 
     // Center should be at origin for z=0 plane
-    EXPECT_NEAR(ep.center[0], 0.0, kMed);
-    EXPECT_NEAR(ep.center[1], 0.0, kMed);
-    EXPECT_NEAR(ep.center[2], 0.0, kMed);
+    EXPECT_NEAR(ep.center[0], 0.0, k_med);
+    EXPECT_NEAR(ep.center[1], 0.0, k_med);
+    EXPECT_NEAR(ep.center[2], 0.0, k_med);
 }
 
 // XY plane through prolate 2:1:1 → ellipse with semi-axes 2 and 1
@@ -211,8 +211,8 @@ TEST_F(EllipsoidPlaneTest, ProlateXYPlaneSemiAxes) {
     double sa0 = ep.semi_axis_lengths[0], sa1 = ep.semi_axis_lengths[1];
     // Larger semi-axis should be ~2, smaller ~1
     double sa_max = std::max(sa0, sa1), sa_min = std::min(sa0, sa1);
-    EXPECT_NEAR(sa_max, 2.0, kMed);
-    EXPECT_NEAR(sa_min, 1.0, kMed);
+    EXPECT_NEAR(sa_max, 2.0, k_med);
+    EXPECT_NEAR(sa_min, 1.0, k_med);
 }
 
 // YZ plane (x=0) through prolate 2:1:1 → circle with semi-axes both = 1
@@ -221,8 +221,8 @@ TEST_F(EllipsoidPlaneTest, ProlateYZPlaneIsCircle) {
     yz.normalize();
     EllipseParams<double> ep = prolate.IntersectPlane(yz);
 
-    EXPECT_NEAR(ep.semi_axis_lengths[0], 1.0, kMed);
-    EXPECT_NEAR(ep.semi_axis_lengths[1], 1.0, kMed);
+    EXPECT_NEAR(ep.semi_axis_lengths[0], 1.0, k_med);
+    EXPECT_NEAR(ep.semi_axis_lengths[1], 1.0, k_med);
 }
 
 // Normal vector of returned ellipse matches plane normal
@@ -232,9 +232,9 @@ TEST_F(EllipsoidPlaneTest, NormalVectorMatchesPlane) {
     EllipseParams<double> ep = sphere.IntersectPlane(xy);
 
     // Normal should be (0, 0, ±1)
-    EXPECT_NEAR(std::abs(ep.normal[2]), 1.0, kTight);
-    EXPECT_NEAR(ep.normal[0], 0.0, kTight);
-    EXPECT_NEAR(ep.normal[1], 0.0, kTight);
+    EXPECT_NEAR(std::abs(ep.normal[2]), 1.0, k_tight);
+    EXPECT_NEAR(ep.normal[0], 0.0, k_tight);
+    EXPECT_NEAR(ep.normal[1], 0.0, k_tight);
 }
 
 // Semi-axis vectors are orthogonal to each other and to the normal
@@ -244,12 +244,12 @@ TEST_F(EllipsoidPlaneTest, SemiAxesOrthogonality) {
     EllipseParams<double> ep = prolate.IntersectPlane(xy);
 
     const double dot_axes = dotProduct(ep.semi_axes[0], ep.semi_axes[1]);
-    EXPECT_NEAR(dot_axes, 0.0, kMed);
+    EXPECT_NEAR(dot_axes, 0.0, k_med);
 
     const double dot_ax0_n = dotProduct(ep.semi_axes[0], ep.normal);
     const double dot_ax1_n = dotProduct(ep.semi_axes[1], ep.normal);
-    EXPECT_NEAR(dot_ax0_n, 0.0, kMed);
-    EXPECT_NEAR(dot_ax1_n, 0.0, kMed);
+    EXPECT_NEAR(dot_ax0_n, 0.0, k_med);
+    EXPECT_NEAR(dot_ax1_n, 0.0, k_med);
 }
 
 // Off-center plane: x=0 offset. Center should shift accordingly.
@@ -261,9 +261,9 @@ TEST_F(EllipsoidPlaneTest, OffCenterPlane) {
     px.normalize();
     EllipseParams<double> ep = prolate.IntersectPlane(px);
 
-    EXPECT_NEAR(ep.center[0], 0.5, kMed);
-    EXPECT_NEAR(ep.center[1], 0.0, kMed);
-    EXPECT_NEAR(ep.center[2], 0.0, kMed);
+    EXPECT_NEAR(ep.center[0], 0.5, k_med);
+    EXPECT_NEAR(ep.center[1], 0.0, k_med);
+    EXPECT_NEAR(ep.center[2], 0.0, k_med);
 }
 
 // ============================================================
@@ -434,8 +434,8 @@ TEST(EllipsoidTracePath, UnoccludedPathHasZeroArcLength) {
 
     auto res = sphere.TracePath(source, ears);
 
-    EXPECT_NEAR(res.left_ear_paths[0].arclength, 0.0, kMed);
-    EXPECT_NEAR(res.right_ear_paths[0].arclength, 0.0, kMed);
+    EXPECT_NEAR(res.left_ear_paths[0].arclength, 0.0, k_med);
+    EXPECT_NEAR(res.right_ear_paths[0].arclength, 0.0, k_med);
 }
 
 TEST(EllipsoidTracePath, UnoccludedPathlengthEqualsDirectDistance) {
@@ -449,7 +449,7 @@ TEST(EllipsoidTracePath, UnoccludedPathlengthEqualsDirectDistance) {
 
     // Direct distance from source to ear = 2.0
     const double expected = distance2Points(source, near_ear);
-    EXPECT_NEAR(res.left_ear_paths[0].pathlength, expected, kMed);
+    EXPECT_NEAR(res.left_ear_paths[0].pathlength, expected, k_med);
 }
 
 // ============================================================
@@ -478,7 +478,7 @@ TEST(EllipsoidTracePath, TangentPointLiesOnSurface) {
     auto res = sphere.TracePath(source, ears);
 
     for (const auto& path : res.left_ear_paths) {
-        EXPECT_TRUE(OnSurface(path.tangent_point, 1.0, 1.0, 1.0))
+        EXPECT_TRUE(onSurface(path.tangent_point, 1.0, 1.0, 1.0))
             << "Tangent point is not on the ellipsoid surface";
     }
 }
@@ -493,7 +493,7 @@ TEST(EllipsoidTracePath, PathlengthIsDirectPlusArc) {
 
     for (const auto& path : res.left_ear_paths) {
         const double direct_len = path.direct_ray.magnitude();
-        EXPECT_NEAR(path.pathlength, direct_len + path.arclength, kMed);
+        EXPECT_NEAR(path.pathlength, direct_len + path.arclength, k_med);
     }
 }
 
@@ -513,7 +513,7 @@ TEST(EllipsoidTracePath, LeftAndRightEarsAreIndependent) {
     EXPECT_GT(res.left_ear_paths[0].arclength, 0.0);
 
     // Right ear — direct: arclength = 0
-    EXPECT_NEAR(res.right_ear_paths[0].arclength, 0.0, kMed);
+    EXPECT_NEAR(res.right_ear_paths[0].arclength, 0.0, k_med);
 }
 
 // ============================================================
