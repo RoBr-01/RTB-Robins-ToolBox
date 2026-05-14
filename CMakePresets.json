@@ -2,53 +2,127 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "default",
-            "description": "Base configuration for all builds",
+            "name": "base",
             "hidden": true,
-            "generator": "Ninja"
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}"
         },
         {
-            "name": "debug",
-            "description": "Debug build with no optimizations",
-            "inherits": "default",
+            "name": "dev",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "RTB_ENABLE_DEV": "ON"
+            }
+        },
+        {
+            "name": "lib-debug",
+            "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
-            "name": "release",
-            "description": "Release build with optimizations and LTO",
-            "inherits": "default",
+            "name": "lib-release",
+            "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
-            "name": "test",
-            "description": "Debug build with testing enabled",
-            "inherits": "debug",
+            "name": "test-debug",
+            "inherits": "base",
             "cacheVariables": {
-                "BUILD_TESTS": "ON"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "RTB_ENABLE_TESTING": "ON"
+            }
+        },
+        {
+            "name": "test-release",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "RTB_ENABLE_TESTING": "ON"
+            }
+        },
+        {
+            "name": "bench-debug",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "RTB_ENABLE_BENCHMARK": "ON"
+            }
+        },
+        {
+            "name": "bench-release",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "RTB_ENABLE_BENCHMARK": "ON"
+            }
+        },
+        {
+            "name": "examples-debug",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "RTB_ENABLE_EXAMPLES": "ON"
+            }
+        },
+        {
+            "name": "examples-release",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "RTB_ENABLE_EXAMPLES": "ON"
             }
         }
     ],
     "buildPresets": [
         {
-            "name": "build-debug",
-            "description": "Build the Debug preset",
-            "configurePreset": "debug",
-            "configuration": "Debug"
+            "name": "dev",
+            "configurePreset": "dev",
+            "jobs": 0
         },
         {
-            "name": "build-release",
-            "description": "Build the Release preset",
-            "configurePreset": "release",
-            "configuration": "Release"
+            "name": "lib-debug",
+            "configurePreset": "lib-debug",
+            "jobs": 0
         },
         {
-            "name": "build-test",
-            "description": "Build the Test preset",
-            "configurePreset": "test"
+            "name": "lib-release",
+            "configurePreset": "lib-release",
+            "jobs": 0
+        },
+        {
+            "name": "test-debug",
+            "configurePreset": "test-debug",
+            "jobs": 0
+        },
+        {
+            "name": "test-release",
+            "configurePreset": "test-release",
+            "jobs": 0
+        },
+        {
+            "name": "bench-debug",
+            "configurePreset": "bench-debug",
+            "jobs": 0
+        },
+        {
+            "name": "bench-release",
+            "configurePreset": "bench-release",
+            "jobs": 0
+        },
+        {
+            "name": "examples-debug",
+            "configurePreset": "examples-debug",
+            "jobs": 0
+        },
+        {
+            "name": "examples-release",
+            "configurePreset": "examples-release",
+            "jobs": 0
         }
     ]
 }

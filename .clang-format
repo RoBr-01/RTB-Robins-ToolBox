@@ -1,0 +1,10 @@
+IndentWidth: 4
+ColumnLimit: 80
+BasedOnStyle: Google
+AllowShortCaseExpressionOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: false
+BinPackParameters: false
+QualifierAlignment: Left

@@ -7,10 +7,9 @@
 #include <random>
 
 // RTB
-#include "Math.hpp"
-#include "Point.hpp"
-#include "Standards.hpp"
-#include "Vector.hpp"
+#include <RTB/Math.hpp>
+#include <RTB/Standards.hpp>
+#include <RTB/Vector.hpp>
 
 namespace RTB {
 
@@ -25,11 +24,11 @@ namespace RTB {
  * Uses a PCG generator — good statistical quality and cheap to compute.
  * Suitable for sequential sampling in hot paths.
  */
-inline float RandomValue(uint32_t& state) {
-    state = state * 747796405u + 2891336453u;
-    uint32_t result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737u;
+inline float randomValue(uint32_t& state) {
+    state = (state * 747796405U) + 2891336453U;
+    uint32_t result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737U;
     result = (result >> 22) ^ result;
-    return static_cast<float>(result) / 4294967295.0f;
+    return static_cast<float>(result) / 4294967295.0F;
 }
 
 /**
@@ -39,9 +38,9 @@ inline float RandomValue(uint32_t& state) {
  * or sequential inputs. Use RandomValue() with a persistent state for anything
  * requiring good distribution. Only suitable for non-critical one-off hashing.
  */
-inline float RandomHashValue(uint32_t state) {
-    state *= (state + 195439u) * (state + 124395u) * (state + 845921u);
-    return static_cast<float>(state) / 4294967295.0f;
+inline float randomHashValue(uint32_t state) {
+    state *= (state + 195439U) * (state + 124395U) * (state + 845921U);
+    return static_cast<float>(state) / 4294967295.0F;
 }
 
 // ==============================
@@ -55,18 +54,18 @@ inline float RandomHashValue(uint32_t state) {
  * The generator is advanced by two samples per call.
  */
 template <typename T>
-Vector<T, 3> RandSampleSphere(std::mt19937& generator) {
+Vector<T, 3> randSampleSphere(std::mt19937& generator) {
     static std::uniform_real_distribution<T> uniform01(static_cast<T>(0),
                                                        static_cast<T>(1));
 
     const T theta =
-        static_cast<T>(2) * static_cast<T>(PI) * uniform01(generator);
+        static_cast<T>(2) * static_cast<T>(pi) * uniform01(generator);
     const T phi =
         std::acos(static_cast<T>(1) - static_cast<T>(2) * uniform01(generator));
-    const T sinPhi = std::sin(phi);
+    const T sinphi = std::sin(phi);
 
     return Vector<T, 3>{
-        sinPhi * std::cos(theta), sinPhi * std::sin(theta), std::cos(phi)};
+        sinphi * std::cos(theta), sinphi * std::sin(theta), std::cos(phi)};
 }
 
 /**
@@ -76,12 +75,12 @@ Vector<T, 3> RandSampleSphere(std::mt19937& generator) {
  * The generator is advanced by two samples per call.
  */
 template <typename T>
-SphericalCoord<T> RandSampleSpherePoint(std::mt19937& generator) {
+SphericalCoord<T> randSampleSpherePoint(std::mt19937& generator) {
     static std::uniform_real_distribution<T> uniform01(static_cast<T>(0),
                                                        static_cast<T>(1));
 
     const T theta =
-        static_cast<T>(2) * static_cast<T>(PI) * uniform01(generator);
+        static_cast<T>(2) * static_cast<T>(pi) * uniform01(generator);
     const T phi =
         std::acos(static_cast<T>(2) * uniform01(generator) - static_cast<T>(1));
 

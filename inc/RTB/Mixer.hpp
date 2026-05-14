@@ -9,10 +9,8 @@
 #include <cstring>
 #include <type_traits>
 
-// Google Highway — SIMD abstraction
-// https://github.com/google/highway
-// Requires: highway/highway.h on include path
-#include "highway/hwy/highway.h"
+// LIB
+#include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
 

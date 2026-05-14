@@ -1,9 +1,5 @@
-main.cpp
 build/
-out/
-Commands.txt
-*.icloud
-.DS_Store
-.vscode
 docs/
+.icloud
+.DS_Store
 RTB_LOGO.txt

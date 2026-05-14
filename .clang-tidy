@@ -1,0 +1,41 @@
+Checks: >
+  bugprone-*,
+  google-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -google-objc-*,
+  -readability-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -bugprone-easily-swappable-parameters,
+  -performance-enum-size,
+  -bugprone-branch-clone,
+  -readability-redundant-access-specifiers,
+  -readability-const-return-type,
+  -google-readability-todo
+
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: modernize-use-emplace.ContainersWithPushBack
+    value: "::std::vector;::std::deque;::std::list"
+  - key: misc-const-correctness.AnalyzeValues
+    value: true
+  - key: misc-const-correctness.AnalyzeReferences
+    value: true
+  - key: misc-const-correctness.WarnPointersAsValues
+    value: false
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: 2
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: 2
+
+WarningsAsErrors: ""
+HeaderFilterRegex: ".*"
+FormatStyle: file
