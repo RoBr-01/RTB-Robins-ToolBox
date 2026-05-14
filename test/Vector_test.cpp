@@ -1,7 +1,7 @@
+// GOOGLETEST
 #include <gtest/gtest.h>
 
-#include <RTB/Point.hpp>
-#include <RTB/Vector.hpp>
+// STL
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -9,6 +9,10 @@
 #include <random>
 #include <sstream>
 #include <utility>
+
+// LOCAL
+#include <RTB/Point.hpp>
+#include <RTB/Vector.hpp>
 
 using Vec3 = RTB::Vector<double, 3>;
 using Point3 = RTB::Point<double, 3>;

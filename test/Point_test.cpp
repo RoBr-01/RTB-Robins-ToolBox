@@ -1,11 +1,15 @@
+// GOOGLETEST
 #include <gtest/gtest.h>
 
-#include <RTB/Point.hpp>
+// STL
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <type_traits>
 #include <utility>
+
+// LOCAL
+#include <RTB/Point.hpp>
 
 namespace {
 
@@ -262,7 +266,7 @@ TEST(PointTest, OutOfBoundsAccessTriggersAssert) {
                      RTB::Point<double, 3> point{1.0, 2.0, 3.0};
                      [[maybe_unused]] auto value = point[3];
                  }()),
-                 "");  
+                 "");
 }
 // NOLINTEND
 

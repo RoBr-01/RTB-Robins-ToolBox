@@ -374,7 +374,7 @@ T Ellipsoid<T, Method>::arcLength(const Point<T, 3>& p1,
         const T mid = t1 + half_range;
 
         T integral = static_cast<T>(0);
-        for (int i = 0; i < 10; ++i) {
+        for (std::size_t i = 0; i < 10; ++i) {
             const T angle = mid + half_range * static_cast<T>(gl_x[i]);
             const T sin_t = std::sin(angle);
             const T cos_t = std::cos(angle);

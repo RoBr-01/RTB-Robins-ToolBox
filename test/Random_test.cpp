@@ -1,22 +1,15 @@
-// Random_test.cpp
-//
-// GoogleTest suite for RTB/Random.hpp
-//
-// Covered functionality:
-// - randomValue(uint32_t&)
-// - randomHashValue(uint32_t)
-// - randSampleSphere<T>(std::mt19937&)
-// - randSampleSpherePoint<T>(std::mt19937&)
-
+// GOOGLETEST
 #include <gtest/gtest.h>
 
-#include <RTB/Random.hpp>
-#include <RTB/Vector.hpp>
+// STL
 #include <cstddef>
 #include <cstdint>
 #include <random>
 #include <type_traits>
 
+// LOCAL
+#include <RTB/Random.hpp>
+#include <RTB/Vector.hpp>
 #include "RTB/Math.hpp"
 
 namespace {

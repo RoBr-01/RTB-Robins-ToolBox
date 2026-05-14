@@ -1,12 +1,15 @@
-#include "RTB/Math.hpp"
-
+// GOOGLETEST
 #include <gtest/gtest.h>
 
+// STL
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <random>
+
+// LOCAL
+#include "RTB/Math.hpp"
 
 namespace {
 
@@ -249,7 +252,8 @@ TEST(Math, CartSphRoundTripRandomized) {
 }
 
 TEST(Math, Cart2SphOrigin) {
-    const auto sph = RTB::cart2sph<double>(std::array<double, 3>{0.0, 0.0, 0.0});
+    const auto sph =
+        RTB::cart2sph<double>(std::array<double, 3>{0.0, 0.0, 0.0});
 
     expectNear(sph[0], 0.0);
     expectNear(sph[1], 0.0);

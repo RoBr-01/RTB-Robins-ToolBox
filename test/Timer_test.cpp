@@ -1,6 +1,7 @@
+// GOOGLETEST
 #include <gtest/gtest.h>
 
-#include <RTB/Timer.hpp>
+// STL
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -10,6 +11,9 @@
 #include <streambuf>
 #include <string>
 #include <thread>
+
+// LOCAL
+#include <RTB/Timer.hpp>
 
 namespace {
 

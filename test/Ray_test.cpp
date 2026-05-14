@@ -1,9 +1,13 @@
+// GOOGLETEST
 #include <gtest/gtest.h>
 
+// STL
+#include <cmath>
+
+// LOCAL
 #include <RTB/Point.hpp>
 #include <RTB/Ray.hpp>
 #include <RTB/Vector.hpp>
-#include <cmath>
 
 namespace {
 
