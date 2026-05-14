@@ -9,25 +9,18 @@
 
 // LOCAL
 #include <RTB/Ellipsoid.hpp>
-
-#include "RTB/Math.hpp"
-#include "RTB/Plane.hpp"
-#include "RTB/Point.hpp"
-#include "RTB/Ray.hpp"
-#include "RTB/Vector.hpp"
-
-using namespace RTB;
-
-// ============================================================
-// Helpers
-// ============================================================
+#include <RTB/Math.hpp>
+#include <RTB/Plane.hpp>
+#include <RTB/Point.hpp>
+#include <RTB/Ray.hpp>
+#include <RTB/Vector.hpp>
 
 static constexpr double k_tight = 1e-9;  // tight double tolerance
 static constexpr double k_med = 1e-6;    // medium tolerance
 
 /** True if a point lies on the ellipsoid surface (within tol). */
 namespace {
-bool onSurface(const Point<double, 3>& point,
+bool onSurface(const RTB::Point<double, 3>& point,
                double axis_A,
                double axis_B,
                double axis_C,
@@ -44,7 +37,7 @@ bool onSurface(const Point<double, 3>& point,
 // ============================================================
 
 TEST(EllipsoidTest, DefaultConstructorZeroDims) {
-    const Ellipsoid<double> ellipsoid;
+    const RTB::Ellipsoid<double> ellipsoid;
     const auto& dimensions = ellipsoid.getDimensions();
     EXPECT_EQ(dimensions[0], 0.0);
     EXPECT_EQ(dimensions[1], 0.0);
@@ -52,7 +45,7 @@ TEST(EllipsoidTest, DefaultConstructorZeroDims) {
 }
 
 TEST(EllipsoidTest, ThreeArgConstructor) {
-    const Ellipsoid<double> ellipsoid(1.0, 2.0, 3.0);
+    const RTB::Ellipsoid<double> ellipsoid(1.0, 2.0, 3.0);
     const auto& dimensions = ellipsoid.getDimensions();
     EXPECT_EQ(dimensions[0], 1.0);
     EXPECT_EQ(dimensions[1], 2.0);
@@ -60,7 +53,7 @@ TEST(EllipsoidTest, ThreeArgConstructor) {
 }
 
 TEST(EllipsoidTest, InitializerListConstructor) {
-    const Ellipsoid<double> ellipsoid({4.0, 5.0, 6.0});
+    const RTB::Ellipsoid<double> ellipsoid({4.0, 5.0, 6.0});
     const auto& dimensions = ellipsoid.getDimensions();
     EXPECT_EQ(dimensions[0], 4.0);
     EXPECT_EQ(dimensions[1], 5.0);
@@ -69,7 +62,7 @@ TEST(EllipsoidTest, InitializerListConstructor) {
 
 TEST(EllipsoidTest, ArrayConstructor) {
     const std::array<double, 3> dims = {7.0, 8.0, 9.0};
-    const Ellipsoid<double> ellipsoid(dims);
+    const RTB::Ellipsoid<double> ellipsoid(dims);
     EXPECT_EQ(ellipsoid.getDimensions(), dims);
 }
 
@@ -81,22 +74,28 @@ namespace {
 class EllipsoidRayTest : public ::testing::Test {
    protected:
     // Unit sphere — ground truth for all sphere cases
-    Ellipsoid<double> sphere{1.0, 1.0, 1.0};
+    RTB::Ellipsoid<double> sphere{1.0, 1.0, 1.0};
     // 2:1:1 prolate spheroid
-    Ellipsoid<double> prolate{2.0, 1.0, 1.0};
+    RTB::Ellipsoid<double> prolate{2.0, 1.0, 1.0};
 };
 }  // namespace
 
 // Ray along +X from outside → two intersections on unit sphere at x = ±1
 TEST_F(EllipsoidRayTest, UnitSphereAlongX) {
-    const Ray<double, 3> ray({3.0, 0.0, 0.0},
-                             {-1.0, 0.0, 0.0});  // pointing inward
-    auto result = sphere.intersectRay(ray);
+    const RTB::Ray<double, 3> ray({3.0, 0.0, 0.0},
+                                  {-1.0, 0.0, 0.0});  // pointing inward
+    const auto result = sphere.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
 
     // t values should give intersection at x = 1 (t=2) and x = -1 (t=4)
-    double t1 = result->at(0);
-    double t2 = result->at(1);
+    double t1{};
+    double t2{};
+    if (result.has_value()) {
+        const auto& hits = *result;
+        t1 = hits.at(0);
+        t2 = hits.at(1);
+    }
+
     // Sort for deterministic comparison
     if (t1 > t2) {
         std::swap(t1, t2);
@@ -107,91 +106,110 @@ TEST_F(EllipsoidRayTest, UnitSphereAlongX) {
 
 // Intersection points lie on the sphere surface
 TEST_F(EllipsoidRayTest, IntersectionPointsOnSurface) {
-    const Ray<double, 3> ray({0.0, 0.0, 5.0}, {0.0, 0.3, -1.0});
-    auto result = sphere.intersectRay(ray);
+    const RTB::Ray<double, 3> ray({0.0, 0.0, 5.0}, {0.0, 0.3, -1.0});
+    const auto result = sphere.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
 
     const auto dir = ray.getDirection();
     const auto orig = ray.getOrigin();
 
-    for (const double step : *result) {
-        const Point<double, 3> pt{orig[0] + (step * dir[0]),
-                                  orig[1] + (step * dir[1]),
-                                  orig[2] + (step * dir[2])};
-        EXPECT_TRUE(onSurface(pt, 1.0, 1.0, 1.0))
-            << "Point at t=" << step << " not on sphere surface";
+    if (result.has_value()) {
+        for (const double step : *result) {
+            const RTB::Point<double, 3> pt{orig[0] + (step * dir[0]),
+                                           orig[1] + (step * dir[1]),
+                                           orig[2] + (step * dir[2])};
+            EXPECT_TRUE(onSurface(pt, 1.0, 1.0, 1.0))
+                << "Point at t=" << step << " not on sphere surface";
+        }
     }
 }
 
 // Ray that misses entirely
 TEST_F(EllipsoidRayTest, MissReturnsNullopt) {
     // Aimed well clear of the unit sphere
-    const Ray<double, 3> ray({3.0, 0.0, 0.0}, {0.0, 0.0, 1.0});
+    const RTB::Ray<double, 3> ray({3.0, 0.0, 0.0}, {0.0, 0.0, 1.0});
     EXPECT_FALSE(sphere.intersectRay(ray).has_value());
 }
 
 // Tangent ray — discriminant == 0, both t values equal
 TEST_F(EllipsoidRayTest, TangentRayBothTEqual) {
     // Ray along z-axis at x=1 is tangent to unit sphere
-    const Ray<double, 3> ray({1.0, 0.0, -5.0}, {0.0, 0.0, 1.0});
-    auto result = sphere.intersectRay(ray);
+    const RTB::Ray<double, 3> ray({1.0, 0.0, -5.0}, {0.0, 0.0, 1.0});
+    const auto result = sphere.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
-    EXPECT_NEAR(result->at(0), result->at(1), 1e-6);
+
+    if (result.has_value()) {
+        const auto& hits = *result;
+        EXPECT_NEAR(hits.at(0), hits.at(1), 1e-6);
+    }
 }
 
 // Ray from inside the ellipsoid still returns two t values (one negative)
 TEST_F(EllipsoidRayTest, RayFromInsideSphere) {
-    const Ray<double, 3> ray({0.0, 0.0, 0.0}, {1.0, 0.0, 0.0});
-    auto result = sphere.intersectRay(ray);
+    const RTB::Ray<double, 3> ray({0.0, 0.0, 0.0}, {1.0, 0.0, 0.0});
+    const auto result = sphere.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
-    // One t positive (forward), one negative (behind)
-    EXPECT_GT(std::max(result->at(0), result->at(1)), 0.0);
-    EXPECT_LT(std::min(result->at(0), result->at(1)), 0.0);
+    if (result.has_value()) {
+        const auto& hits = *result;
+        // One t positive (forward), one negative (behind)
+        EXPECT_GT(std::max(hits.at(0), hits.at(1)), 0.0);
+        EXPECT_LT(std::min(hits.at(0), hits.at(1)), 0.0);
+    }
 }
 
 // Prolate spheroid: along major axis the intersection distance equals A=2
 TEST_F(EllipsoidRayTest, ProlateAlongMajorAxis) {
-    const Ray<double, 3> ray({5.0, 0.0, 0.0}, {-1.0, 0.0, 0.0});
-    auto result = prolate.intersectRay(ray);
+    const RTB::Ray<double, 3> ray({5.0, 0.0, 0.0}, {-1.0, 0.0, 0.0});
+    const auto result = prolate.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
 
-    double t1 = result->at(0);
-    double t2 = result->at(1);
-    if (t1 > t2) {
-        std::swap(t1, t2);
+    if (result.has_value()) {
+        const auto& hits = *result;
+        double t1 = hits.at(0);
+        double t2 = hits.at(1);
+        if (t1 > t2) {
+            std::swap(t1, t2);
+        }
+        EXPECT_NEAR(t1, 3.0, k_tight);  // hits x = +2 at t=3
+        EXPECT_NEAR(t2, 7.0, k_tight);  // hits x = -2 at t=7
     }
-    EXPECT_NEAR(t1, 3.0, k_tight);  // hits x = +2 at t=3
-    EXPECT_NEAR(t2, 7.0, k_tight);  // hits x = -2 at t=7
 }
 
 // Prolate spheroid: along minor axis intersection is at y = ±1
 TEST_F(EllipsoidRayTest, ProlateAlongMinorAxis) {
-    const Ray<double, 3> ray({0.0, 5.0, 0.0}, {0.0, -1.0, 0.0});
-    auto result = prolate.intersectRay(ray);
+    const RTB::Ray<double, 3> ray({0.0, 5.0, 0.0}, {0.0, -1.0, 0.0});
+    const auto result = prolate.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
 
-    double t1 = result->at(0);
-    double t2 = result->at(1);
-    if (t1 > t2) {
-        std::swap(t1, t2);
+    if (result.has_value()) {
+        const auto& hits = *result;
+        double t1 = hits.at(0);
+        double t2 = hits.at(1);
+        if (t1 > t2) {
+            std::swap(t1, t2);
+        }
+        EXPECT_NEAR(t1, 4.0, k_tight);
+        EXPECT_NEAR(t2, 6.0, k_tight);
     }
-    EXPECT_NEAR(t1, 4.0, k_tight);
-    EXPECT_NEAR(t2, 6.0, k_tight);
 }
 
 // float specialization compiles and returns reasonable results
 TEST(EllipsoidFloatTest, FloatSpecializationWorks) {
-    const Ellipsoid<float> ellipsoid(1.0F, 1.0F, 1.0F);
-    const Ray<float, 3> ray({3.0F, 0.0F, 0.0F}, {-1.0F, 0.0F, 0.0F});
-    auto result = ellipsoid.intersectRay(ray);
+    const RTB::Ellipsoid<float> ellipsoid(1.0F, 1.0F, 1.0F);
+    const RTB::Ray<float, 3> ray({3.0F, 0.0F, 0.0F}, {-1.0F, 0.0F, 0.0F});
+    const auto result = ellipsoid.intersectRay(ray);
     ASSERT_TRUE(result.has_value());
-    float t1 = result->at(0);
-    float t2 = result->at(1);
-    if (t1 > t2) {
-        std::swap(t1, t2);
+
+    if (result.has_value()) {
+        const auto& hits = *result;
+        float t1 = hits.at(0);
+        float t2 = hits.at(1);
+        if (t1 > t2) {
+            std::swap(t1, t2);
+        }
+        EXPECT_NEAR(t1, 2.0F, 1e-5F);
+        EXPECT_NEAR(t2, 4.0F, 1e-5F);
     }
-    EXPECT_NEAR(t1, 2.0F, 1e-5F);
-    EXPECT_NEAR(t2, 4.0F, 1e-5F);
 }
 
 // ============================================================
@@ -202,17 +220,17 @@ namespace {
 class EllipsoidPlaneTest : public ::testing::Test {
    protected:
     // Unit sphere — cross-section through origin is a unit circle
-    Ellipsoid<double> sphere{1.0, 1.0, 1.0};
+    RTB::Ellipsoid<double> sphere{1.0, 1.0, 1.0};
     // 2:1:1 — XY cross-section is an ellipse with semi-axes 2 and 1
-    Ellipsoid<double> prolate{2.0, 1.0, 1.0};
+    RTB::Ellipsoid<double> prolate{2.0, 1.0, 1.0};
 };
 }  // namespace
 
 // XY plane (z=0) through unit sphere → circle with semi-axes both = 1
 TEST_F(EllipsoidPlaneTest, UnitSphereXYPlaneIsCircle) {
-    Plane<double> xy(0.0, 0.0, 1.0, 0.0);  // z = 0
+    RTB::Plane<double> xy(0.0, 0.0, 1.0, 0.0);  // z = 0
     xy.normalize();
-    EllipseParams<double> ep = sphere.intersectPlane(xy);
+    RTB::EllipseParams<double> ep = sphere.intersectPlane(xy);
 
     EXPECT_NEAR(ep.semi_axis_lengths[0], 1.0, k_med);
     EXPECT_NEAR(ep.semi_axis_lengths[1], 1.0, k_med);
@@ -225,9 +243,9 @@ TEST_F(EllipsoidPlaneTest, UnitSphereXYPlaneIsCircle) {
 
 // XY plane through prolate 2:1:1 → ellipse with semi-axes 2 and 1
 TEST_F(EllipsoidPlaneTest, ProlateXYPlaneSemiAxes) {
-    Plane<double> xy(0.0, 0.0, 1.0, 0.0);
+    RTB::Plane<double> xy(0.0, 0.0, 1.0, 0.0);
     xy.normalize();
-    EllipseParams<double> ep = prolate.intersectPlane(xy);
+    RTB::EllipseParams<double> ep = prolate.intersectPlane(xy);
 
     const double sa0 = ep.semi_axis_lengths[0];
     const double sa1 = ep.semi_axis_lengths[1];
@@ -240,9 +258,9 @@ TEST_F(EllipsoidPlaneTest, ProlateXYPlaneSemiAxes) {
 
 // YZ plane (x=0) through prolate 2:1:1 → circle with semi-axes both = 1
 TEST_F(EllipsoidPlaneTest, ProlateYZPlaneIsCircle) {
-    Plane<double> yz(1.0, 0.0, 0.0, 0.0);
+    RTB::Plane<double> yz(1.0, 0.0, 0.0, 0.0);
     yz.normalize();
-    EllipseParams<double> ep = prolate.intersectPlane(yz);
+    RTB::EllipseParams<double> ep = prolate.intersectPlane(yz);
 
     EXPECT_NEAR(ep.semi_axis_lengths[0], 1.0, k_med);
     EXPECT_NEAR(ep.semi_axis_lengths[1], 1.0, k_med);
@@ -250,9 +268,9 @@ TEST_F(EllipsoidPlaneTest, ProlateYZPlaneIsCircle) {
 
 // Normal vector of returned ellipse matches plane normal
 TEST_F(EllipsoidPlaneTest, NormalVectorMatchesPlane) {
-    Plane<double> xy(0.0, 0.0, 1.0, 0.0);
+    RTB::Plane<double> xy(0.0, 0.0, 1.0, 0.0);
     xy.normalize();
-    EllipseParams<double> ep = sphere.intersectPlane(xy);
+    RTB::EllipseParams<double> ep = sphere.intersectPlane(xy);
 
     // Normal should be (0, 0, ±1)
     EXPECT_NEAR(std::abs(ep.normal[2]), 1.0, k_tight);
@@ -262,15 +280,15 @@ TEST_F(EllipsoidPlaneTest, NormalVectorMatchesPlane) {
 
 // Semi-axis vectors are orthogonal to each other and to the normal
 TEST_F(EllipsoidPlaneTest, SemiAxesOrthogonality) {
-    Plane<double> xy(0.0, 0.0, 1.0, 0.0);
+    RTB::Plane<double> xy(0.0, 0.0, 1.0, 0.0);
     xy.normalize();
-    EllipseParams<double> ep = prolate.intersectPlane(xy);
+    RTB::EllipseParams<double> ep = prolate.intersectPlane(xy);
 
-    const double dot_axes = dotProduct(ep.semi_axes[0], ep.semi_axes[1]);
+    const double dot_axes = RTB::dotProduct(ep.semi_axes[0], ep.semi_axes[1]);
     EXPECT_NEAR(dot_axes, 0.0, k_med);
 
-    const double dot_ax0_n = dotProduct(ep.semi_axes[0], ep.normal);
-    const double dot_ax1_n = dotProduct(ep.semi_axes[1], ep.normal);
+    const double dot_ax0_n = RTB::dotProduct(ep.semi_axes[0], ep.normal);
+    const double dot_ax1_n = RTB::dotProduct(ep.semi_axes[1], ep.normal);
     EXPECT_NEAR(dot_ax0_n, 0.0, k_med);
     EXPECT_NEAR(dot_ax1_n, 0.0, k_med);
 }
@@ -280,9 +298,9 @@ TEST_F(EllipsoidPlaneTest, OffCenterPlane) {
     // Plane x = 0.5  →  1*x + 0*y + 0*z - 0.5 = 0  ⟹  (1,0,0,-0.5)
     // but Plane stores ax+by+cz+dimensions=0, so dimensions = -0.5
     // x=0 offset means the center of the cross-section sits at (0.5, 0, 0)
-    Plane<double> px(1.0, 0.0, 0.0, -0.5);
+    RTB::Plane<double> px(1.0, 0.0, 0.0, -0.5);
     px.normalize();
-    EllipseParams<double> ep = prolate.intersectPlane(px);
+    RTB::EllipseParams<double> ep = prolate.intersectPlane(px);
 
     EXPECT_NEAR(ep.center[0], 0.5, k_med);
     EXPECT_NEAR(ep.center[1], 0.0, k_med);
@@ -311,12 +329,14 @@ class ArcLengthMethodTest : public ::testing::Test {
     }
 
    private:
-    Ellipsoid<double, ArcLengthMethod::GaussianQuadrature> gq{1.0, 1.0, 1.0};
-    Ellipsoid<double, ArcLengthMethod::Ramanujan> ram{1.0, 1.0, 1.0};
-    Ellipsoid<double, ArcLengthMethod::Polynomial> poly{1.0, 1.0, 1.0};
-    Point<double, 3> p1{1.0, 0.0, 0.0};
-    Point<double, 3> p2{0.0, 1.0, 0.0};
-    Plane<double> xy_plane{0.0, 0.0, 1.0, 0.0};
+    RTB::Ellipsoid<double, RTB::ArcLengthMethod::GaussianQuadrature> gq{
+        1.0, 1.0, 1.0};
+    RTB::Ellipsoid<double, RTB::ArcLengthMethod::Ramanujan> ram{1.0, 1.0, 1.0};
+    RTB::Ellipsoid<double, RTB::ArcLengthMethod::Polynomial> poly{
+        1.0, 1.0, 1.0};
+    RTB::Point<double, 3> p1{1.0, 0.0, 0.0};
+    RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
+    RTB::Plane<double> xy_plane{0.0, 0.0, 1.0, 0.0};
 };
 }  // namespace
 
@@ -346,12 +366,13 @@ TEST(EllipsoidArcLength, SphereQuarterArcGaussianQuadrature) {
     // (-1,0,0), so arclength should be pi/2 ≈ 1.5708 for both paths
     // (symmetrical in XZ plane, or XY plane depending on tracePath internals).
     // We just check that arclength > 0 and pathlength is self-consistent.
-    const Ellipsoid<double, ArcLengthMethod::GaussianQuadrature> sphere(
-        1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double, RTB::ArcLengthMethod::GaussianQuadrature>
+        sphere(1.0, 1.0, 1.0);
 
-    const Point<double, 3> source{2.0, 0.0, 0.0};
-    const Point<double, 3> left_ear{-1.0, 0.0, 0.0};  // antipodal — occluded
-    const std::array<Point<double, 3>, 2> ears = {left_ear, left_ear};
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> left_ear{
+        -1.0, 0.0, 0.0};  // antipodal — occluded
+    const std::array<RTB::Point<double, 3>, 2> ears = {left_ear, left_ear};
 
     auto res = sphere.tracePath(source, ears);
 
@@ -362,7 +383,7 @@ TEST(EllipsoidArcLength, SphereQuarterArcGaussianQuadrature) {
     }
 
     // Both paths around antipodal point are symmetric: arc = pi/2 each
-    const double expected_arc = pi / 2.0;
+    const double expected_arc = RTB::pi / 2.0;
     EXPECT_NEAR(res.left_ear_paths[0].arclength, expected_arc, 1e-4);
     EXPECT_NEAR(res.left_ear_paths[1].arclength, expected_arc, 1e-4);
 }
@@ -373,19 +394,19 @@ TEST(EllipsoidArcLength, SphereHalfArcGaussianQuadrature) {
     // Ear at (0, -1, 0) — antipodal on Y axis. Occluded.
     // The shortest arc around the sphere from tangent point to ear = pi/2,
     // and the total arc (tangent_point is at (0,1,0)) to ear at (0,-1,0) = pi.
-    const Ellipsoid<double, ArcLengthMethod::GaussianQuadrature> sphere(
-        1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double, RTB::ArcLengthMethod::GaussianQuadrature>
+        sphere(1.0, 1.0, 1.0);
 
-    const Point<double, 3> source{0.0, 2.0, 0.0};
-    const Point<double, 3> ear{0.0, -1.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {ear, ear};
+    const RTB::Point<double, 3> source{0.0, 2.0, 0.0};
+    const RTB::Point<double, 3> ear{0.0, -1.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
 
     auto res = sphere.tracePath(source, ears);
 
     // Shorter path arc should be pi/2, longer arc should also be pi/2
     // (by symmetry the two tangent paths are equal for antipodal ear)
     for (const auto& path : res.left_ear_paths) {
-        EXPECT_NEAR(path.arclength, pi / 2.0, 1e-4);
+        EXPECT_NEAR(path.arclength, RTB::pi / 2.0, 1e-4);
     }
 }
 
@@ -395,20 +416,21 @@ TEST(EllipsoidArcLength, SphereHalfArcGaussianQuadrature) {
 
 // On a near-circular ellipse, Ramanujan should agree with GQ within 0.01%.
 TEST(EllipsoidArcLength, RamanujanVsGQNearCircle) {
-    const Ellipsoid<double, ArcLengthMethod::GaussianQuadrature> gq(
+    const RTB::Ellipsoid<double, RTB::ArcLengthMethod::GaussianQuadrature> gq(
         1.0, 1.0, 1.0);
-    const Ellipsoid<double, ArcLengthMethod::Ramanujan> ram(1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double, RTB::ArcLengthMethod::Ramanujan> ram(
+        1.0, 1.0, 1.0);
 
-    const Point<double, 3> source{2.0, 0.0, 0.0};
-    const Point<double, 3> ear{-1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {ear, ear};
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> ear{-1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
 
     auto res_gq = gq.tracePath(source, ears);
     auto res_ram = ram.tracePath(source, ears);
 
-    for (size_t i = 0; i < 2; ++i) {
-        const double gq_arc = res_gq.left_ear_paths[i].arclength;
-        const double ram_arc = res_ram.left_ear_paths[i].arclength;
+    for (size_t ii = 0; ii < 2; ++ii) {
+        const double gq_arc = res_gq.left_ear_paths[ii].arclength;
+        const double ram_arc = res_ram.left_ear_paths[ii].arclength;
         EXPECT_NEAR(ram_arc, gq_arc, gq_arc * 1e-4)
             << "Ramanujan and GQ disagree by more than 0.01% on sphere";
     }
@@ -419,13 +441,14 @@ TEST(EllipsoidArcLength, RamanujanVsGQNearCircle) {
 // within its documented limits (near-circular).
 TEST(EllipsoidArcLength, PolynomialDegradeHighEccentricity) {
     // Very eccentric: 3:1 ratio — Polynomial is documented to degrade here
-    const Ellipsoid<double, ArcLengthMethod::GaussianQuadrature> gq(
+    const RTB::Ellipsoid<double, RTB::ArcLengthMethod::GaussianQuadrature> gq(
         3.0, 1.0, 1.0);
-    const Ellipsoid<double, ArcLengthMethod::Polynomial> poly(3.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double, RTB::ArcLengthMethod::Polynomial> poly(
+        3.0, 1.0, 1.0);
 
-    const Point<double, 3> source{4.0, 0.0, 0.0};
-    const Point<double, 3> ear{-3.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {ear, ear};
+    const RTB::Point<double, 3> source{4.0, 0.0, 0.0};
+    const RTB::Point<double, 3> ear{-3.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
 
     auto res_gq = gq.tracePath(source, ears);
     auto res_poly = poly.tracePath(source, ears);
@@ -451,12 +474,12 @@ TEST(EllipsoidArcLength, PolynomialDegradeHighEccentricity) {
 
 TEST(EllipsoidTracePath, UnoccludedPathHasZeroArcLength) {
     // Source and ear both on same hemisphere — no occlusion.
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
 
-    const Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
     // Ear on the near side of the sphere
-    const Point<double, 3> near_ear{1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {near_ear, near_ear};
+    const RTB::Point<double, 3> near_ear{1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {near_ear, near_ear};
 
     auto res = sphere.tracePath(source, ears);
 
@@ -465,16 +488,16 @@ TEST(EllipsoidTracePath, UnoccludedPathHasZeroArcLength) {
 }
 
 TEST(EllipsoidTracePath, UnoccludedPathlengthEqualsDirectDistance) {
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
 
-    const Point<double, 3> source{3.0, 0.0, 0.0};
-    const Point<double, 3> near_ear{1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {near_ear, near_ear};
+    const RTB::Point<double, 3> source{3.0, 0.0, 0.0};
+    const RTB::Point<double, 3> near_ear{1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {near_ear, near_ear};
 
     auto res = sphere.tracePath(source, ears);
 
     // Direct distance from source to ear = 2.0
-    const double expected = distance2Points(source, near_ear);
+    const double expected = RTB::distance2Points(source, near_ear);
     EXPECT_NEAR(res.left_ear_paths[0].pathlength, expected, k_med);
 }
 
@@ -483,10 +506,10 @@ TEST(EllipsoidTracePath, UnoccludedPathlengthEqualsDirectDistance) {
 // ============================================================
 
 TEST(EllipsoidTracePath, OccludedPathShorterThanLonger) {
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
-    const Point<double, 3> source{2.0, 0.0, 0.0};
-    const Point<double, 3> ear{-1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {ear, ear};
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> ear{-1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
 
     auto res = sphere.tracePath(source, ears);
 
@@ -496,10 +519,10 @@ TEST(EllipsoidTracePath, OccludedPathShorterThanLonger) {
 }
 
 TEST(EllipsoidTracePath, TangentPointLiesOnSurface) {
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
-    const Point<double, 3> source{2.0, 0.0, 0.0};
-    const Point<double, 3> ear{-1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {ear, ear};
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> ear{-1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
 
     auto res = sphere.tracePath(source, ears);
 
@@ -510,10 +533,10 @@ TEST(EllipsoidTracePath, TangentPointLiesOnSurface) {
 }
 
 TEST(EllipsoidTracePath, PathlengthIsDirectPlusArc) {
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
-    const Point<double, 3> source{2.0, 0.0, 0.0};
-    const Point<double, 3> ear{-1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {ear, ear};
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> ear{-1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
 
     auto res = sphere.tracePath(source, ears);
 
@@ -525,13 +548,13 @@ TEST(EllipsoidTracePath, PathlengthIsDirectPlusArc) {
 
 // Both ears independent — left and right results should be consistent
 TEST(EllipsoidTracePath, LeftAndRightEarsAreIndependent) {
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
-    const Point<double, 3> source{2.0, 0.0, 0.0};
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Point<double, 3> source{2.0, 0.0, 0.0};
 
     // Left ear occluded, right ear unoccluded
-    const Point<double, 3> left_ear{-1.0, 0.0, 0.0};
-    const Point<double, 3> right_ear{1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears = {left_ear, right_ear};
+    const RTB::Point<double, 3> left_ear{-1.0, 0.0, 0.0};
+    const RTB::Point<double, 3> right_ear{1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears = {left_ear, right_ear};
 
     auto res = sphere.tracePath(source, ears);
 
@@ -549,20 +572,20 @@ TEST(EllipsoidTracePath, LeftAndRightEarsAreIndependent) {
 // For a sphere, rotating source and ears by 90° about Z should give
 // identical path lengths (rotational symmetry).
 TEST(EllipsoidTracePath, RotationalSymmetryOnSphere) {
-    const Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
 
     // Config A: source along +X
     {
-        const Point<double, 3> src{2.0, 0.0, 0.0};
-        const Point<double, 3> ear{-1.0, 0.0, 0.0};
-        const std::array<Point<double, 3>, 2> ears = {ear, ear};
+        const RTB::Point<double, 3> src{2.0, 0.0, 0.0};
+        const RTB::Point<double, 3> ear{-1.0, 0.0, 0.0};
+        const std::array<RTB::Point<double, 3>, 2> ears = {ear, ear};
         auto res = sphere.tracePath(src, ears);
         const double pl_a = res.left_ear_paths[0].pathlength;
 
         // Config B: source along +Y (90° rotation)
-        const Point<double, 3> src2{0.0, 2.0, 0.0};
-        const Point<double, 3> ear2{0.0, -1.0, 0.0};
-        const std::array<Point<double, 3>, 2> ears2 = {ear2, ear2};
+        const RTB::Point<double, 3> src2{0.0, 2.0, 0.0};
+        const RTB::Point<double, 3> ear2{0.0, -1.0, 0.0};
+        const std::array<RTB::Point<double, 3>, 2> ears2 = {ear2, ear2};
         auto res2 = sphere.tracePath(src2, ears2);
         const double pl_b = res2.left_ear_paths[0].pathlength;
 
@@ -578,16 +601,16 @@ TEST(EllipsoidTracePath, RotationalSymmetryOnSphere) {
 // Path lengths should scale linearly with ellipsoid dimensions
 TEST(EllipsoidTracePath, LinearScaling) {
     const double scale = 10.0;
-    const Ellipsoid<double> sphere_small(1.0, 1.0, 1.0);
-    const Ellipsoid<double> sphere_large(scale, scale, scale);
+    const RTB::Ellipsoid<double> sphere_small(1.0, 1.0, 1.0);
+    const RTB::Ellipsoid<double> sphere_large(scale, scale, scale);
 
-    const Point<double, 3> src_s{2.0, 0.0, 0.0};
-    const Point<double, 3> ear_s{-1.0, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears_s = {ear_s, ear_s};
+    const RTB::Point<double, 3> src_s{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> ear_s{-1.0, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears_s = {ear_s, ear_s};
 
-    const Point<double, 3> src_l{2.0 * scale, 0.0, 0.0};
-    const Point<double, 3> ear_l{-1.0 * scale, 0.0, 0.0};
-    const std::array<Point<double, 3>, 2> ears_l = {ear_l, ear_l};
+    const RTB::Point<double, 3> src_l{2.0 * scale, 0.0, 0.0};
+    const RTB::Point<double, 3> ear_l{-1.0 * scale, 0.0, 0.0};
+    const std::array<RTB::Point<double, 3>, 2> ears_l = {ear_l, ear_l};
 
     auto res_s = sphere_small.tracePath(src_s, ears_s);
     auto res_l = sphere_large.tracePath(src_l, ears_l);
@@ -604,7 +627,7 @@ TEST(EllipsoidTracePath, LinearScaling) {
 // ============================================================
 
 TEST(EllipsoidAliasTest, EllipsoidfCompiles) {
-    const Ellipsoidf ellipsoid(1.0F, 2.0F, 3.0F);
+    const RTB::Ellipsoidf ellipsoid(1.0F, 2.0F, 3.0F);
     const auto& dimensions = ellipsoid.getDimensions();
     EXPECT_FLOAT_EQ(dimensions[0], 1.0F);
     EXPECT_FLOAT_EQ(dimensions[1], 2.0F);
@@ -612,7 +635,7 @@ TEST(EllipsoidAliasTest, EllipsoidfCompiles) {
 }
 
 TEST(EllipsoidAliasTest, EllipsoiddRamanujanCompiles) {
-    const EllipsoiddRamanujan ellipsoid(1.0, 1.0, 1.0);
-    const Ray<double, 3> ray({3.0, 0.0, 0.0}, {-1.0, 0.0, 0.0});
+    const RTB::EllipsoiddRamanujan ellipsoid(1.0, 1.0, 1.0);
+    const RTB::Ray<double, 3> ray({3.0, 0.0, 0.0}, {-1.0, 0.0, 0.0});
     EXPECT_TRUE(ellipsoid.intersectRay(ray).has_value());
 }
