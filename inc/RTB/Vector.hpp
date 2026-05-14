@@ -267,7 +267,7 @@ class Vector {
 
     /** @brief Returns the Euclidean length (magnitude) of the vector. */
     [[nodiscard]] T magnitude() const {
-        return std::sqrt(magnitudeSquared());
+        return static_cast<T>(std::sqrt(magnitudeSquared()));
     }
 
     /**

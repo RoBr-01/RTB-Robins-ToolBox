@@ -92,12 +92,6 @@ void Ray<T, N>::print() const {
     m_direction.print();
 }
 
-// ==============================
-// Convenience type aliases
-// ==============================
-
-using Ray3f = Ray<float, 3>;
-
 }  // namespace RTB
 
 #endif  // RAY_HPP

@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/homebrew/opt/llvm/bin/clang",
+            "intelliSenseMode": "macos-clang-arm64",
+            "compileCommands": [
+                "${workspaceFolder}/build/dev/compile_commands.json",
+                "${workspaceFolder}/build/test-debug/compile_commands.json",
+                "${workspaceFolder}/build/test-release/compile_commands.json"
+            ]
+        }
+    ],
+    "version": 4
+}

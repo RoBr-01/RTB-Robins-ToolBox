@@ -1,8 +1,12 @@
 set(TESTS
     Ellipsoid_test
+    Math_test
+    Plane_test
+    Point_test
+    Random_test
+    Ray_test
     Timer_test
     Vector_test
-    Math_test
 )
 
 include(GoogleTest)

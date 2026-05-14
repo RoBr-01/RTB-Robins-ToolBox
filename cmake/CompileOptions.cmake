@@ -4,6 +4,7 @@ target_compile_options(compile_options INTERFACE
     -O0
     -g
     -Wall
+    -Werror
     -Wextra
     -Wpedantic
     -Wshadow
