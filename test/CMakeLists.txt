@@ -1,4 +1,5 @@
 set(TESTS
+    Ellipse_test
     Ellipsoid_test
     Math_test
     Plane_test

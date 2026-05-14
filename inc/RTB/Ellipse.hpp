@@ -140,18 +140,22 @@ T Ellipse<T>::arcLength(const Point<T, 3>& p1, const Point<T, 3>& p2) const {
     T t2 = parameterOf(p2);
 
     // forward direction
-    T forward_t0 = t1;
-    T forward_t1 = t2;
+    T f0 = t1;
+    T f1 = t2;
+    if (f1 < f0)
+        f1 += two_pi;
 
-    if (forward_t1 < forward_t0) {
-        forward_t1 += two_pi;
-    }
+    T forward = gaussLegendre16(f0, f1, a, b);
 
-    T forward = gaussLegendre16(forward_t0, forward_t1, a, b);
+    // backward direction (explicit recomputation)
+    T b0 = t2;
+    T b1 = t1;
+    if (b1 < b0)
+        b1 += two_pi;
 
-    // backward direction
-    T backward = circumference() - forward;
+    T backward = gaussLegendre16(b0, b1, a, b);
 
+    // choose shorter
     return std::min(forward, backward);
 }
 
