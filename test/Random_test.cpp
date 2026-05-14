@@ -21,8 +21,8 @@
 
 namespace {
 
-constexpr double kEps = 1e-9;
-constexpr float kFloatEps = 1e-6F;
+constexpr double epsilon = 1e-9;
+constexpr float float_epsilon = 1e-6F;
 
 // ------------------------------------------------------------
 // randomValue(uint32_t&)
@@ -40,11 +40,11 @@ TEST(RandomTest, RandomValueReturnsValueInUnitInterval) {
 
 TEST(RandomTest, RandomValueAdvancesState) {
     uint32_t state = 42U;
-    const uint32_t originalState = state;
+    const uint32_t original_state = state;
 
     [[maybe_unused]] const float value = RTB::randomValue(state);
 
-    EXPECT_NE(state, originalState);
+    EXPECT_NE(state, original_state);
 }
 
 TEST(RandomTest, RandomValueIsDeterministicForSameSeed) {
@@ -60,10 +60,10 @@ TEST(RandomTest, RandomValueIsDeterministicForSameSeed) {
 TEST(RandomTest, RandomValueDifferentSequentialCallsUsuallyDiffer) {
     uint32_t state = 98765U;
 
-    const float a = RTB::randomValue(state);
-    const float b = RTB::randomValue(state);
+    const float random_a = RTB::randomValue(state);
+    const float random_b = RTB::randomValue(state);
 
-    EXPECT_NE(a, b);
+    EXPECT_NE(random_a, random_b);
 }
 
 // ------------------------------------------------------------
@@ -85,10 +85,10 @@ TEST(RandomTest, RandomHashValueIsDeterministic) {
 }
 
 TEST(RandomTest, RandomHashValueDifferentInputsUsuallyDiffer) {
-    const float a = RTB::randomHashValue(123U);
-    const float b = RTB::randomHashValue(124U);
+    const float random_a = RTB::randomHashValue(123U);
+    const float random_b = RTB::randomHashValue(124U);
 
-    EXPECT_NE(a, b);
+    EXPECT_NE(random_a, random_b);
 }
 
 // ------------------------------------------------------------
@@ -96,48 +96,48 @@ TEST(RandomTest, RandomHashValueDifferentInputsUsuallyDiffer) {
 // ------------------------------------------------------------
 
 TEST(RandomTest, RandSampleSphereReturnsUnitVector) {
-    std::mt19937 generator(12345U);
+    std::mt19937 generator(12345U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto v = RTB::randSampleSphere<double>(generator);
-        EXPECT_NEAR(v.magnitude(), 1.0, kEps);
+        auto vector = RTB::randSampleSphere<double>(generator);
+        EXPECT_NEAR(vector.magnitude(), 1.0, epsilon);
     }
 }
 
 TEST(RandomTest, RandSampleSphereComponentsWithinBounds) {
-    std::mt19937 generator(42U);
+    std::mt19937 generator(42U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto v = RTB::randSampleSphere<double>(generator);
+        auto vector = RTB::randSampleSphere<double>(generator);
 
         for (size_t j = 0; j < 3; ++j) {
-            EXPECT_GE(v[j], -1.0);
-            EXPECT_LE(v[j], 1.0);
+            EXPECT_GE(vector[j], -1.0);
+            EXPECT_LE(vector[j], 1.0);
         }
     }
 }
 
 TEST(RandomTest, RandSampleSphereIsDeterministicForSameSeed) {
-    std::mt19937 gen1(12345U);
-    std::mt19937 gen2(12345U);
+    std::mt19937 gen1(12345U);  // NOLINT
+    std::mt19937 gen2(12345U);  // NOLINT
 
     for (int i = 0; i < 100; ++i) {
         auto v1 = RTB::randSampleSphere<double>(gen1);
         auto v2 = RTB::randSampleSphere<double>(gen2);
 
         for (size_t j = 0; j < 3; ++j) {
-            EXPECT_NEAR(v1[j], v2[j], kEps);
+            EXPECT_NEAR(v1[j], v2[j], epsilon);
         }
     }
 }
 
 TEST(RandomTest, RandSampleSphereSupportsFloat) {
-    std::mt19937 generator(123U);
+    std::mt19937 generator(123U);  // NOLINT
 
-    auto v = RTB::randSampleSphere<float>(generator);
+    auto vector = RTB::randSampleSphere<float>(generator);
 
-    static_assert(std::is_same_v<decltype(v), RTB::Vector<float, 3>>);
-    EXPECT_NEAR(v.magnitude(), 1.0F, kFloatEps);
+    static_assert(std::is_same_v<decltype(vector), RTB::Vector<float, 3>>);
+    EXPECT_NEAR(vector.magnitude(), 1.0F, float_epsilon);
 }
 
 // ------------------------------------------------------------
@@ -145,7 +145,7 @@ TEST(RandomTest, RandSampleSphereSupportsFloat) {
 // ------------------------------------------------------------
 
 TEST(RandomTest, RandSampleSpherePointReturnsRadiusOne) {
-    std::mt19937 generator(12345U);
+    std::mt19937 generator(12345U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
         auto point = RTB::randSampleSpherePoint<double>(generator);
@@ -154,7 +154,7 @@ TEST(RandomTest, RandSampleSpherePointReturnsRadiusOne) {
 }
 
 TEST(RandomTest, RandSampleSpherePointAzimuthInRange) {
-    std::mt19937 generator(42U);
+    std::mt19937 generator(42U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
         auto point = RTB::randSampleSpherePoint<double>(generator);
@@ -165,7 +165,7 @@ TEST(RandomTest, RandSampleSpherePointAzimuthInRange) {
 }
 
 TEST(RandomTest, RandSampleSpherePointElevationInRange) {
-    std::mt19937 generator(42U);
+    std::mt19937 generator(42U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
         auto point = RTB::randSampleSpherePoint<double>(generator);
@@ -176,26 +176,26 @@ TEST(RandomTest, RandSampleSpherePointElevationInRange) {
 }
 
 TEST(RandomTest, RandSampleSpherePointIsDeterministicForSameSeed) {
-    std::mt19937 gen1(12345U);
-    std::mt19937 gen2(12345U);
+    std::mt19937 gen1(12345U);  // NOLINT
+    std::mt19937 gen2(12345U);  // NOLINT
 
     for (int i = 0; i < 100; ++i) {
         auto p1 = RTB::randSampleSpherePoint<double>(gen1);
         auto p2 = RTB::randSampleSpherePoint<double>(gen2);
 
-        EXPECT_NEAR(p1.azimuth, p2.azimuth, kEps);
-        EXPECT_NEAR(p1.elevation, p2.elevation, kEps);
-        EXPECT_NEAR(p1.radius, p2.radius, kEps);
+        EXPECT_NEAR(p1.azimuth, p2.azimuth, epsilon);
+        EXPECT_NEAR(p1.elevation, p2.elevation, epsilon);
+        EXPECT_NEAR(p1.radius, p2.radius, epsilon);
     }
 }
 
 TEST(RandomTest, RandSampleSpherePointSupportsFloat) {
-    std::mt19937 generator(123U);
+    std::mt19937 generator(123U);  // NOLINT
 
     auto point = RTB::randSampleSpherePoint<float>(generator);
 
     static_assert(std::is_same_v<decltype(point), RTB::SphericalCoord<float>>);
-    EXPECT_NEAR(point.radius, 1.0F, kFloatEps);
+    EXPECT_NEAR(point.radius, 1.0F, float_epsilon);
 }
 
 }  // namespace

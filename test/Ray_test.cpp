@@ -53,7 +53,7 @@ TEST(RayTest, SetReplacesOriginAndDirection) {
     Ray3d ray;
 
     const Point3d origin{1.0, 2.0, 3.0};
-    Vector3d dir{4.0, 5.0, 6.0};
+    const Vector3d dir{4.0, 5.0, 6.0};
 
     ray.set(origin, dir);
 
@@ -70,10 +70,13 @@ TEST(RayTest, NormalizeNormalizesDirection) {
 
     ray.normalize();
 
-    const auto& d = ray.getDirection();
+    const auto& direction = ray.getDirection();
 
-    EXPECT_NEAR(
-        std::sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]), 1.0, epsilon);
+    EXPECT_NEAR(std::sqrt((direction[0] * direction[0]) +
+                          (direction[1] * direction[1]) +
+                          (direction[2] * direction[2])),
+                1.0,
+                epsilon);
 }
 
 // ------------------------------------------------------------
@@ -81,34 +84,34 @@ TEST(RayTest, NormalizeNormalizesDirection) {
 // ------------------------------------------------------------
 
 TEST(RayTest, GetPositionAtZeroReturnsOrigin) {
-    Ray3d ray(Point3d{1.0, 2.0, 3.0}, Vector3d{4.0, 5.0, 6.0});
+    const Ray3d ray(Point3d{1.0, 2.0, 3.0}, Vector3d{4.0, 5.0, 6.0});
 
-    auto p = ray.getPosition(0.0);
+    auto position = ray.getPosition(0.0);
 
-    EXPECT_DOUBLE_EQ(p[0], 1.0);
-    EXPECT_DOUBLE_EQ(p[1], 2.0);
-    EXPECT_DOUBLE_EQ(p[2], 3.0);
+    EXPECT_DOUBLE_EQ(position[0], 1.0);
+    EXPECT_DOUBLE_EQ(position[1], 2.0);
+    EXPECT_DOUBLE_EQ(position[2], 3.0);
 }
 
 TEST(RayTest, GetPositionLinearInterpolation) {
-    Ray3d ray(Point3d{1.0, 2.0, 3.0}, Vector3d{1.0, 0.0, -1.0});
+    const Ray3d ray(Point3d{1.0, 2.0, 3.0}, Vector3d{1.0, 0.0, -1.0});
 
-    auto p = ray.getPosition(2.0);
+    auto position = ray.getPosition(2.0);
 
     // origin + 2 * direction = (3, 2, 1)
-    EXPECT_DOUBLE_EQ(p[0], 3.0);
-    EXPECT_DOUBLE_EQ(p[1], 2.0);
-    EXPECT_DOUBLE_EQ(p[2], 1.0);
+    EXPECT_DOUBLE_EQ(position[0], 3.0);
+    EXPECT_DOUBLE_EQ(position[1], 2.0);
+    EXPECT_DOUBLE_EQ(position[2], 1.0);
 }
 
 TEST(RayTest, GetPositionNegativeStepMovesBackward) {
-    Ray3d ray(Point3d{0.0, 0.0, 0.0}, Vector3d{1.0, 0.0, 0.0});
+    const Ray3d ray(Point3d{0.0, 0.0, 0.0}, Vector3d{1.0, 0.0, 0.0});
 
-    auto p = ray.getPosition(-3.0);
+    auto position = ray.getPosition(-3.0);
 
-    EXPECT_DOUBLE_EQ(p[0], -3.0);
-    EXPECT_DOUBLE_EQ(p[1], 0.0);
-    EXPECT_DOUBLE_EQ(p[2], 0.0);
+    EXPECT_DOUBLE_EQ(position[0], -3.0);
+    EXPECT_DOUBLE_EQ(position[1], 0.0);
+    EXPECT_DOUBLE_EQ(position[2], 0.0);
 }
 
 // ------------------------------------------------------------
@@ -118,13 +121,13 @@ TEST(RayTest, GetPositionNegativeStepMovesBackward) {
 TEST(RayTest, SetThenGetIsConsistent) {
     Ray3d ray;
 
-    Point3d o{5.0, 6.0, 7.0};
-    Vector3d d{1.0, 2.0, 3.0};
+    Point3d origin{5.0, 6.0, 7.0};
+    Vector3d direction{1.0, 2.0, 3.0};
 
-    ray.set(o, d);
+    ray.set(origin, direction);
 
-    EXPECT_EQ(ray.getOrigin()[0], o[0]);
-    EXPECT_EQ(ray.getDirection()[1], d[1]);
+    EXPECT_EQ(ray.getOrigin()[0], origin[0]);
+    EXPECT_EQ(ray.getDirection()[1], direction[1]);
 }
 
 }  // namespace
