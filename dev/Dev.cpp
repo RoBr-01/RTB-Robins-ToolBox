@@ -1,4 +1,9 @@
-#include <RTB/RTB.hpp>
+#include <RTB/Colour.hpp>
+#include <RTB/Ellipsoid.hpp>
+#include <RTB/Plane.hpp>
+#include <RTB/Point.hpp>
+#include <RTB/Ray.hpp>
+#include <RTB/Vector.hpp>
 
 template class RTB::Colour<float, 4>;
 template class RTB::Colour<double, 4>;

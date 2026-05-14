@@ -481,8 +481,8 @@ TraceResults<T> Ellipsoid<T, Method>::TracePath(
             intersection_line->getPosition(intersections.value()[1]);
 
         // Compute both paths and sort: [0] shorter, [1] longer
-        EarPath<T> path_one = MakeEarPath(tangent_one, ear, STO_plane);
-        EarPath<T> path_two = MakeEarPath(tangent_two, ear, STO_plane);
+        const EarPath<T> path_one = MakeEarPath(tangent_one, ear, STO_plane);
+        const EarPath<T> path_two = MakeEarPath(tangent_two, ear, STO_plane);
 
         if (path_one.pathlength <= path_two.pathlength) {
             ear_paths[0] = path_one;

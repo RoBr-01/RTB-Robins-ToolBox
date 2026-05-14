@@ -1,22 +1,25 @@
 #include <gtest/gtest.h>
 
-#include <RTB/RTB.hpp>
+#include <RTB/Point.hpp>
+#include <RTB/Vector.hpp>
+#include <array>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <random>
+#include <sstream>
+#include <utility>
 
-using namespace RTB;
-
-using Vec3 = Vector<double, 3>;
-using Point3 = Point<double, 3>;
+using Vec3 = RTB::Vector<double, 3>;
+using Point3 = RTB::Point<double, 3>;
 
 namespace {
 
-constexpr double kTol = 1e-12;
+constexpr double epsilon = 1e-12;
 
-void ExpectVecNear(const Vec3& actual,
+void expectVecNear(const Vec3& actual,
                    const Vec3& expected,
-                   double tol = kTol) {
+                   double tol = epsilon) {
     for (std::size_t i = 0; i < 3; ++i) {
         EXPECT_NEAR(actual[i], expected[i], tol) << "Mismatch at index " << i;
     }
@@ -29,41 +32,41 @@ void ExpectVecNear(const Vec3& actual,
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, DefaultConstructor) {
-    Vec3 v;
+    Vec3 vector;
     for (std::size_t i = 0; i < 3; ++i) {
-        EXPECT_EQ(v[i], 0.0);
+        EXPECT_EQ(vector[i], 0.0);
     }
 }
 
 TEST(VectorTest, InitializerListConstructor) {
-    Vec3 v{1.0, 2.0, 3.0};
+    Vec3 vector{1.0, 2.0, 3.0};
 
-    EXPECT_EQ(v[0], 1.0);
-    EXPECT_EQ(v[1], 2.0);
-    EXPECT_EQ(v[2], 3.0);
+    EXPECT_EQ(vector[0], 1.0);
+    EXPECT_EQ(vector[1], 2.0);
+    EXPECT_EQ(vector[2], 3.0);
 }
 
 TEST(VectorTest, ArrayConstructor) {
-    std::array<double, 3> arr{4.0, 5.0, 6.0};
-    Vec3 v(arr);
+    const std::array<double, 3> arr{4.0, 5.0, 6.0};
+    const Vec3 vector(arr);
 
-    EXPECT_EQ(v.getComponents(), arr);
+    EXPECT_EQ(vector.getComponents(), arr);
 }
 
 TEST(VectorTest, PointConstructor) {
-    Point3 p{1.0, 2.0, 3.0};
-    Vec3 v(p);
+    const Point3 point{1.0, 2.0, 3.0};
+    const Vec3 vector(point);
 
-    EXPECT_EQ(v, Vec3({1.0, 2.0, 3.0}));
+    EXPECT_EQ(vector, Vec3({1.0, 2.0, 3.0}));
 }
 
 TEST(VectorTest, TwoPointConstructor) {
-    Point3 p1{1.0, 1.0, 1.0};
-    Point3 p2{4.0, 5.0, 6.0};
+    const Point3 p1{1.0, 1.0, 1.0};
+    const Point3 p2{4.0, 5.0, 6.0};
 
-    Vec3 v(p1, p2);
+    const Vec3 vector(p1, p2);
 
-    EXPECT_EQ(v, Vec3({3.0, 4.0, 5.0}));
+    EXPECT_EQ(vector, Vec3({3.0, 4.0, 5.0}));
 }
 
 // -----------------------------------------------------------------------------
@@ -71,27 +74,27 @@ TEST(VectorTest, TwoPointConstructor) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, Size) {
-    EXPECT_EQ(Vec3::size(), 3u);
+    EXPECT_EQ(Vec3::size(), 3U);
 }
 
 TEST(VectorTest, SetAndGetComponents) {
-    Vec3 v;
-    std::array<double, 3> components{7.0, 8.0, 9.0};
+    Vec3 vector;
+    const std::array<double, 3> components{7.0, 8.0, 9.0};
 
-    v.setComponents(components);
+    vector.setComponents(components);
 
-    EXPECT_EQ(v.getComponents(), components);
+    EXPECT_EQ(vector.getComponents(), components);
 }
 
 TEST(VectorTest, IndexOperator) {
-    Vec3 v{1.0, 2.0, 3.0};
+    Vec3 vector{1.0, 2.0, 3.0};
 
-    EXPECT_EQ(v[0], 1.0);
-    EXPECT_EQ(v[1], 2.0);
-    EXPECT_EQ(v[2], 3.0);
+    EXPECT_EQ(vector[0], 1.0);
+    EXPECT_EQ(vector[1], 2.0);
+    EXPECT_EQ(vector[2], 3.0);
 
-    v[1] = 10.0;
-    EXPECT_EQ(v[1], 10.0);
+    vector[1] = 10.0;
+    EXPECT_EQ(vector[1], 10.0);
 }
 
 // -----------------------------------------------------------------------------
@@ -99,33 +102,33 @@ TEST(VectorTest, IndexOperator) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, ArithmeticOperatorsScalar) {
-    Vec3 v{1.0, 2.0, 3.0};
+    const Vec3 vector{1.0, 2.0, 3.0};
 
-    EXPECT_EQ(v + 2.0, Vec3({3.0, 4.0, 5.0}));
-    EXPECT_EQ(v - 1.0, Vec3({0.0, 1.0, 2.0}));
-    EXPECT_EQ(v * 2.0, Vec3({2.0, 4.0, 6.0}));
-    EXPECT_EQ(v / 2.0, Vec3({0.5, 1.0, 1.5}));
+    EXPECT_EQ(vector + 2.0, Vec3({3.0, 4.0, 5.0}));
+    EXPECT_EQ(vector - 1.0, Vec3({0.0, 1.0, 2.0}));
+    EXPECT_EQ(vector * 2.0, Vec3({2.0, 4.0, 6.0}));
+    EXPECT_EQ(vector / 2.0, Vec3({0.5, 1.0, 1.5}));
 }
 
 TEST(VectorTest, ScalarOperatorsCommutative) {
-    Vec3 v{1.0, 2.0, 3.0};
+    const Vec3 vector{1.0, 2.0, 3.0};
 
-    EXPECT_EQ(2.0 + v, Vec3({3.0, 4.0, 5.0}));
-    EXPECT_EQ(v + 2.0, 2.0 + v);
+    EXPECT_EQ(2.0 + vector, Vec3({3.0, 4.0, 5.0}));
+    EXPECT_EQ(vector + 2.0, 2.0 + vector);
 
-    EXPECT_EQ(3.0 * v, Vec3({3.0, 6.0, 9.0}));
-    EXPECT_EQ(v * 3.0, 3.0 * v);
+    EXPECT_EQ(3.0 * vector, Vec3({3.0, 6.0, 9.0}));
+    EXPECT_EQ(vector * 3.0, 3.0 * vector);
 
-    EXPECT_EQ(5.0 - v, Vec3({4.0, 3.0, 2.0}));
+    EXPECT_EQ(5.0 - vector, Vec3({4.0, 3.0, 2.0}));
 }
 
 // -----------------------------------------------------------------------------
-// Vector arithmetic
+// RTB::Vector arithmetic
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, ArithmeticOperatorsVector) {
-    Vec3 v1{1.0, 2.0, 3.0};
-    Vec3 v2{4.0, 5.0, 6.0};
+    const Vec3 v1{1.0, 2.0, 3.0};
+    const Vec3 v2{4.0, 5.0, 6.0};
 
     EXPECT_EQ(v1 + v2, Vec3({5.0, 7.0, 9.0}));
     EXPECT_EQ(v2 - v1, Vec3({3.0, 3.0, 3.0}));
@@ -133,13 +136,13 @@ TEST(VectorTest, ArithmeticOperatorsVector) {
 }
 
 TEST(VectorTest, ElementWiseDivision) {
-    Vec3 a{6.0, 8.0, 10.0};
-    Vec3 b{2.0, 4.0, 5.0};
+    Vec3 vector_a{6.0, 8.0, 10.0};
+    const Vec3 vector_b{2.0, 4.0, 5.0};
 
-    EXPECT_EQ(a / b, Vec3({3.0, 2.0, 2.0}));
+    EXPECT_EQ(vector_a / vector_b, Vec3({3.0, 2.0, 2.0}));
 
-    a /= b;
-    EXPECT_EQ(a, Vec3({3.0, 2.0, 2.0}));
+    vector_a /= vector_b;
+    EXPECT_EQ(vector_a, Vec3({3.0, 2.0, 2.0}));
 }
 
 // -----------------------------------------------------------------------------
@@ -147,33 +150,33 @@ TEST(VectorTest, ElementWiseDivision) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, CompoundAssignmentOperators) {
-    Vec3 v{1.0, 2.0, 3.0};
+    Vec3 vector{1.0, 2.0, 3.0};
 
-    v += 1.0;
-    EXPECT_EQ(v, Vec3({2.0, 3.0, 4.0}));
+    vector += 1.0;
+    EXPECT_EQ(vector, Vec3({2.0, 3.0, 4.0}));
 
-    v -= 1.0;
-    EXPECT_EQ(v, Vec3({1.0, 2.0, 3.0}));
+    vector -= 1.0;
+    EXPECT_EQ(vector, Vec3({1.0, 2.0, 3.0}));
 
-    v *= 2.0;
-    EXPECT_EQ(v, Vec3({2.0, 4.0, 6.0}));
+    vector *= 2.0;
+    EXPECT_EQ(vector, Vec3({2.0, 4.0, 6.0}));
 
-    v /= 2.0;
-    EXPECT_EQ(v, Vec3({1.0, 2.0, 3.0}));
+    vector /= 2.0;
+    EXPECT_EQ(vector, Vec3({1.0, 2.0, 3.0}));
 
-    Vec3 other{1.0, 1.0, 1.0};
+    const Vec3 other{1.0, 1.0, 1.0};
 
-    v += other;
-    EXPECT_EQ(v, Vec3({2.0, 3.0, 4.0}));
+    vector += other;
+    EXPECT_EQ(vector, Vec3({2.0, 3.0, 4.0}));
 
-    v -= other;
-    EXPECT_EQ(v, Vec3({1.0, 2.0, 3.0}));
+    vector -= other;
+    EXPECT_EQ(vector, Vec3({1.0, 2.0, 3.0}));
 
-    v *= other;
-    EXPECT_EQ(v, Vec3({1.0, 2.0, 3.0}));
+    vector *= other;
+    EXPECT_EQ(vector, Vec3({1.0, 2.0, 3.0}));
 
-    v /= other;
-    EXPECT_EQ(v, Vec3({1.0, 2.0, 3.0}));
+    vector /= other;
+    EXPECT_EQ(vector, Vec3({1.0, 2.0, 3.0}));
 }
 
 // -----------------------------------------------------------------------------
@@ -181,21 +184,21 @@ TEST(VectorTest, CompoundAssignmentOperators) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, UnaryMinus) {
-    Vec3 v{1.0, -2.0, 3.0};
+    const Vec3 vector{1.0, -2.0, 3.0};
 
-    Vec3 negated = -v;
+    const Vec3 negated = -vector;
 
     EXPECT_EQ(negated, Vec3({-1.0, 2.0, -3.0}));
-    EXPECT_EQ(v, Vec3({1.0, -2.0, 3.0}));
+    EXPECT_EQ(vector, Vec3({1.0, -2.0, 3.0}));
 }
 
 TEST(VectorTest, Invert) {
-    Vec3 v{1.0, -2.0, 3.0};
+    Vec3 vector{1.0, -2.0, 3.0};
 
-    Vec3& result = v.invert();
+    const Vec3& result = vector.invert();
 
-    EXPECT_EQ(v, Vec3({-1.0, 2.0, -3.0}));
-    EXPECT_EQ(&result, &v);
+    EXPECT_EQ(vector, Vec3({-1.0, 2.0, -3.0}));
+    EXPECT_EQ(&result, &vector);
 }
 
 // -----------------------------------------------------------------------------
@@ -203,32 +206,32 @@ TEST(VectorTest, Invert) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, LengthCalculations) {
-    Vec3 v{3.0, 4.0, 0.0};
+    const Vec3 vector{3.0, 4.0, 0.0};
 
-    EXPECT_DOUBLE_EQ(v.magnitudeSquared(), 25.0);
-    EXPECT_DOUBLE_EQ(v.magnitude(), 5.0);
+    EXPECT_DOUBLE_EQ(vector.magnitudeSquared(), 25.0);
+    EXPECT_DOUBLE_EQ(vector.magnitude(), 5.0);
 }
 
 TEST(VectorTest, Normalize) {
-    Vec3 v{0.0, 3.0, 4.0};
-    Vec3 original = v;
+    const Vec3 vector{0.0, 3.0, 4.0};
+    const Vec3 original = vector;
 
-    Vec3 normalized = v.normalize();
+    const Vec3 normalized = vector.normalize();
 
-    ExpectVecNear(normalized, Vec3({0.0, 0.6, 0.8}));
-    EXPECT_NEAR(normalized.magnitude(), 1.0, kTol);
+    expectVecNear(normalized, Vec3({0.0, 0.6, 0.8}));
+    EXPECT_NEAR(normalized.magnitude(), 1.0, epsilon);
 
-    EXPECT_EQ(v, original);
+    EXPECT_EQ(vector, original);
 }
 
 TEST(VectorTest, NormalizeInPlace) {
-    Vec3 v{0.0, 3.0, 4.0};
+    Vec3 vector{0.0, 3.0, 4.0};
 
-    Vec3& result = v.normalizeInPlace();
+    const Vec3& result = vector.normalizeInPlace();
 
-    ExpectVecNear(v, Vec3({0.0, 0.6, 0.8}));
-    EXPECT_NEAR(v.magnitude(), 1.0, kTol);
-    EXPECT_EQ(&result, &v);
+    expectVecNear(vector, Vec3({0.0, 0.6, 0.8}));
+    EXPECT_NEAR(vector.magnitude(), 1.0, epsilon);
+    EXPECT_EQ(&result, &vector);
 }
 
 TEST(VectorTest, NormalizeZeroVector) {
@@ -241,11 +244,11 @@ TEST(VectorTest, NormalizeZeroVector) {
 }
 
 TEST(VectorTest, ChainOperations) {
-    Vec3 v{0.0, 6.0, 8.0};
+    Vec3 vector{0.0, 6.0, 8.0};
 
-    v.normalizeInPlace().invert();
+    vector.normalizeInPlace().invert();
 
-    ExpectVecNear(v, Vec3({0.0, -0.6, -0.8}));
+    expectVecNear(vector, Vec3({0.0, -0.6, -0.8}));
 }
 
 // -----------------------------------------------------------------------------
@@ -253,15 +256,15 @@ TEST(VectorTest, ChainOperations) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, DotProduct) {
-    Vec3 v1{1.0, 2.0, 3.0};
-    Vec3 v2{4.0, -5.0, 6.0};
+    const Vec3 v1{1.0, 2.0, 3.0};
+    const Vec3 v2{4.0, -5.0, 6.0};
 
     EXPECT_DOUBLE_EQ(dotProduct(v1, v2), 12.0);
 }
 
 TEST(VectorTest, DotProductMixedTypes) {
-    Vector<float, 3> vf{1.0f, 2.0f, 3.0f};
-    Vector<double, 3> vd{4.0, -5.0, 6.0};
+    const RTB::Vector<float, 3> vf{1.0F, 2.0F, 3.0F};
+    const RTB::Vector<double, 3> vd{4.0, -5.0, 6.0};
 
     auto result = dotProduct(vf, vd);
 
@@ -269,12 +272,13 @@ TEST(VectorTest, DotProductMixedTypes) {
 }
 
 TEST(VectorTest, DotProductDistributive) {
-    Vec3 a{1.0, 2.0, 3.0};
-    Vec3 b{4.0, 5.0, 6.0};
-    Vec3 c{7.0, 8.0, 9.0};
+    const Vec3 vector_a{1.0, 2.0, 3.0};
+    const Vec3 vector_b{4.0, 5.0, 6.0};
+    const Vec3 vector_c{7.0, 8.0, 9.0};
 
-    EXPECT_NEAR(
-        dotProduct(a, b + c), dotProduct(a, b) + dotProduct(a, c), kTol);
+    EXPECT_NEAR(dotProduct(vector_a, vector_b + vector_c),
+                dotProduct(vector_a, vector_b) + dotProduct(vector_a, vector_c),
+                epsilon);
 }
 
 // -----------------------------------------------------------------------------
@@ -282,41 +286,42 @@ TEST(VectorTest, DotProductDistributive) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, CrossProduct) {
-    Vec3 v1{1.0, 0.0, 0.0};
-    Vec3 v2{0.0, 1.0, 0.0};
+    const Vec3 v1{1.0, 0.0, 0.0};
+    const Vec3 v2{0.0, 1.0, 0.0};
 
     EXPECT_EQ(crossProduct(v1, v2), Vec3({0.0, 0.0, 1.0}));
     EXPECT_EQ(crossProduct(v2, v1), Vec3({0.0, 0.0, -1.0}));
 }
 
 TEST(VectorTest, CrossProductMixedTypes) {
-    Vector<float, 3> vf{1.0f, 0.0f, 0.0f};
-    Vector<double, 3> vd{0.0, 1.0, 0.0};
+    const RTB::Vector<float, 3> vf{1.0F, 0.0F, 0.0F};
+    const RTB::Vector<double, 3> vd{0.0, 1.0, 0.0};
 
     EXPECT_EQ(crossProduct(vf, vd), Vec3({0.0, 0.0, 1.0}));
 }
 
 TEST(VectorTest, CrossProductOrthogonality) {
-    Vec3 a{1.0, 2.0, 3.0};
-    Vec3 b{4.0, 5.0, 6.0};
+    const Vec3 vector_a{1.0, 2.0, 3.0};
+    const Vec3 vector_b{4.0, 5.0, 6.0};
 
-    Vec3 c = crossProduct(a, b);
+    const Vec3 vector_c = crossProduct(vector_a, vector_b);
 
-    EXPECT_NEAR(dotProduct(a, c), 0.0, kTol);
-    EXPECT_NEAR(dotProduct(b, c), 0.0, kTol);
+    EXPECT_NEAR(dotProduct(vector_a, vector_c), 0.0, epsilon);
+    EXPECT_NEAR(dotProduct(vector_b, vector_c), 0.0, epsilon);
 }
 
 TEST(VectorTest, CrossProductLagrangeIdentity) {
-    Vec3 a{1.0, 2.0, 3.0};
-    Vec3 b{4.0, 5.0, 6.0};
+    const Vec3 vector_a{1.0, 2.0, 3.0};
+    const Vec3 vector_b{4.0, 5.0, 6.0};
 
-    Vec3 c = crossProduct(a, b);
+    const Vec3 vector_c = crossProduct(vector_a, vector_b);
 
-    const double lhs = c.magnitudeSquared();
-    const double rhs = a.magnitudeSquared() * b.magnitudeSquared() -
-                       std::pow(dotProduct(a, b), 2.0);
+    const double lhs = vector_c.magnitudeSquared();
+    const double rhs =
+        (vector_a.magnitudeSquared() * vector_b.magnitudeSquared()) -
+        std::pow(dotProduct(vector_a, vector_b), 2.0);
 
-    EXPECT_NEAR(lhs, rhs, kTol);
+    EXPECT_NEAR(lhs, rhs, epsilon);
 }
 
 // -----------------------------------------------------------------------------
@@ -324,9 +329,9 @@ TEST(VectorTest, CrossProductLagrangeIdentity) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, EqualityOperators) {
-    Vec3 v1{1.0, 2.0, 3.0};
-    Vec3 v2{1.0, 2.0, 3.0};
-    Vec3 v3{3.0, 2.0, 1.0};
+    const Vec3 v1{1.0, 2.0, 3.0};
+    const Vec3 v2{1.0, 2.0, 3.0};
+    const Vec3 v3{3.0, 2.0, 1.0};
 
     EXPECT_TRUE(v1 == v2);
     EXPECT_FALSE(v1 != v2);
@@ -340,25 +345,25 @@ TEST(VectorTest, EqualityOperators) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, StreamOutput) {
-    Vec3 v{1.0, 2.0, 3.0};
+    const Vec3 vector{1.0, 2.0, 3.0};
 
     std::ostringstream oss;
-    oss << v;
+    oss << vector;
 
     EXPECT_EQ(oss.str(), "(1, 2, 3)");
 }
 
 TEST(VectorTest, Print) {
-    Vec3 v{1.0, 2.0, 3.0};
+    const Vec3 vector{1.0, 2.0, 3.0};
 
-    std::ostringstream capture;
+    const std::ostringstream capture;
     auto* old_buf = std::cout.rdbuf(capture.rdbuf());
 
-    v.print();
+    vector.print();
 
     std::cout.rdbuf(old_buf);
 
-    EXPECT_EQ(capture.str(), "[Vector] - (1, 2, 3)\n");
+    EXPECT_EQ(capture.str(), "[RTB::Vector] - (1, 2, 3)\n");
 }
 
 // -----------------------------------------------------------------------------
@@ -383,16 +388,16 @@ TEST(VectorTest, CopySemantics) {
 
 TEST(VectorTest, MoveSemantics) {
     Vec3 v1{1.0, 2.0, 3.0};
-    Vec3 original = v1;
+    const Vec3 original = v1;
 
-    Vec3 v2 = std::move(v1);
+    const Vec3 v2 = std::move(v1);  // NOLINT(performance-move-const-arg)
     EXPECT_EQ(v2, original);
 
     Vec3 v3;
     Vec3 v4{4.0, 5.0, 6.0};
-    Vec3 v4_copy = v4;
+    const Vec3 v4_copy = v4;
 
-    v3 = std::move(v4);
+    v3 = std::move(v4);  // NOLINT(performance-move-const-arg)
 
     EXPECT_EQ(v3, v4_copy);
 }
@@ -402,46 +407,48 @@ TEST(VectorTest, MoveSemantics) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, RandomNormalizationProperty) {
-    std::mt19937 rng(12345);
+    std::mt19937 rng(12345);  // NOLINT
     std::uniform_real_distribution<double> dist(-1000.0, 1000.0);
 
     for (int i = 0; i < 10000; ++i) {
-        Vec3 v{dist(rng), dist(rng), dist(rng)};
+        const Vec3 vector{dist(rng), dist(rng), dist(rng)};
 
-        if (v.magnitude() < 1e-12) {
+        if (vector.magnitude() < 1e-12) {
             continue;
         }
 
-        Vec3 n = v.normalize();
+        const Vec3 normal = vector.normalize();
 
-        EXPECT_NEAR(n.magnitude(), 1.0, 1e-10);
+        EXPECT_NEAR(normal.magnitude(), 1.0, 1e-10);
     }
 }
 
 TEST(VectorTest, RandomDotProductSymmetry) {
-    std::mt19937 rng(67890);
+    std::mt19937 rng(67890);  // NOLINT
     std::uniform_real_distribution<double> dist(-1000.0, 1000.0);
 
     for (int i = 0; i < 10000; ++i) {
-        Vec3 a{dist(rng), dist(rng), dist(rng)};
-        Vec3 b{dist(rng), dist(rng), dist(rng)};
+        const Vec3 vector_a{dist(rng), dist(rng), dist(rng)};
+        const Vec3 vector_b{dist(rng), dist(rng), dist(rng)};
 
-        EXPECT_NEAR(dotProduct(a, b), dotProduct(b, a), kTol);
+        EXPECT_NEAR(dotProduct(vector_a, vector_b),
+                    dotProduct(vector_b, vector_a),
+                    epsilon);
     }
 }
 
 TEST(VectorTest, RandomCrossProductOrthogonality) {
-    std::mt19937 rng(54321);
+    std::mt19937 rng(54321);  // NOLINT
     std::uniform_real_distribution<double> dist(-100.0, 100.0);
 
     for (int i = 0; i < 1000; ++i) {  // 10x reduction
-        Vec3 a{dist(rng), dist(rng), dist(rng)};
-        Vec3 b{dist(rng), dist(rng), dist(rng)};
+        const Vec3 vector_a{dist(rng), dist(rng), dist(rng)};
+        const Vec3 vector_b{dist(rng), dist(rng), dist(rng)};
 
-        Vec3 c = crossProduct(a, b);
+        const Vec3 vector_c = crossProduct(vector_a, vector_b);
 
-        EXPECT_NEAR(dotProduct(a, c), 0.0, 1e-8);
-        EXPECT_NEAR(dotProduct(b, c), 0.0, 1e-8);
+        EXPECT_NEAR(dotProduct(vector_a, vector_c), 0.0, 1e-8);
+        EXPECT_NEAR(dotProduct(vector_b, vector_c), 0.0, 1e-8);
     }
 }
 
@@ -450,12 +457,12 @@ TEST(VectorTest, RandomCrossProductOrthogonality) {
 // -----------------------------------------------------------------------------
 
 TEST(VectorTest, IntegerVectorNormalization) {
-    Vector<int, 3> v{3, 4, 0};
+    const RTB::Vector<int, 3> vector{3, 4, 0};
 
     // magnitude() = 5, integer division truncates.
-    auto n = v.normalize();
+    auto normal = vector.normalize();
 
-    auto test = Vector<int, 3>({0, 0, 0});
+    auto test = RTB::Vector<int, 3>({0, 0, 0});
 
-    EXPECT_EQ(n, test);
+    EXPECT_EQ(normal, test);
 }

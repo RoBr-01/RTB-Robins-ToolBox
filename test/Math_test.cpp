@@ -1,6 +1,8 @@
+#include "RTB/Math.hpp"
+
 #include <gtest/gtest.h>
 
-#include <RTB/RTB.hpp>
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -115,7 +117,7 @@ TEST(Math, TrigIdentities) {
         const double s = sind(deg);
         const double c = cosd(deg);
 
-        ExpectNear(s * s + c * c, 1.0, 1e-12, 1e-12);
+        ExpectNear((s * s) + (c * c), 1.0, 1e-12, 1e-12);
     }
 }
 
@@ -232,11 +234,11 @@ TEST(Math, SphCartRoundTrip) {
 }
 
 TEST(Math, CartSphRoundTripRandomized) {
-    std::mt19937 rng(0x5EED1234u);
+    std::mt19937 rng(0x5EED1234U);
     std::uniform_real_distribution<double> dist(-1.0e6, 1.0e6);
 
     for (int i = 0; i < 10000; ++i) {
-        std::array<double, 3> cart{dist(rng), dist(rng), dist(rng)};
+        const std::array<double, 3> cart{dist(rng), dist(rng), dist(rng)};
 
         const auto sph = cart2sph<double>(cart);
         const auto cart2 = sph2cart<double>(sph);
@@ -285,15 +287,15 @@ TEST(Math, dBRoundTrip) {
 // -----------------------------------------------------------------------------
 
 TEST(Math, NextPowerOf2KnownValues) {
-    EXPECT_EQ(nextPowerOf2(0u), 1u);
-    EXPECT_EQ(nextPowerOf2(1u), 1u);
-    EXPECT_EQ(nextPowerOf2(2u), 2u);
-    EXPECT_EQ(nextPowerOf2(3u), 4u);
-    EXPECT_EQ(nextPowerOf2(4u), 4u);
-    EXPECT_EQ(nextPowerOf2(5u), 8u);
-    EXPECT_EQ(nextPowerOf2(15u), 16u);
-    EXPECT_EQ(nextPowerOf2(16u), 16u);
-    EXPECT_EQ(nextPowerOf2(17u), 32u);
+    EXPECT_EQ(nextPowerOf2(0U), 1U);
+    EXPECT_EQ(nextPowerOf2(1U), 1U);
+    EXPECT_EQ(nextPowerOf2(2U), 2U);
+    EXPECT_EQ(nextPowerOf2(3U), 4U);
+    EXPECT_EQ(nextPowerOf2(4U), 4U);
+    EXPECT_EQ(nextPowerOf2(5U), 8U);
+    EXPECT_EQ(nextPowerOf2(15U), 16U);
+    EXPECT_EQ(nextPowerOf2(16U), 16U);
+    EXPECT_EQ(nextPowerOf2(17U), 32U);
 }
 
 TEST(Math, NextPowerOf2ExhaustiveSmallRange) {
@@ -301,7 +303,7 @@ TEST(Math, NextPowerOf2ExhaustiveSmallRange) {
         const std::size_t p = nextPowerOf2(n);
 
         // p is power of two
-        EXPECT_EQ((p & (p - 1)), 0u);
+        EXPECT_EQ((p & (p - 1)), 0U);
 
         // p covers n
         EXPECT_GE(p, n);

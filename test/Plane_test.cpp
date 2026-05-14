@@ -5,6 +5,7 @@
 #include <RTB/Ray.hpp>
 #include <RTB/Vector.hpp>
 #include <cmath>
+#include <cstddef>
 #include <optional>
 
 namespace {
@@ -52,8 +53,8 @@ void ExpectPlaneCoefficientsNear(
 
 T EvaluatePlane(const Plane3& plane, const Point3& point) {
     auto coeffs = plane.getCoefficients();
-    return coeffs[0] * point[0] + coeffs[1] * point[1] + coeffs[2] * point[2] +
-           coeffs[3];
+    return (coeffs[0] * point[0]) + (coeffs[1] * point[1]) +
+           (coeffs[2] * point[2]) + coeffs[3];
 }
 
 bool IsPointOnPlane(const Plane3& plane, const Point3& point, T eps = kEps) {
@@ -61,7 +62,7 @@ bool IsPointOnPlane(const Plane3& plane, const Point3& point, T eps = kEps) {
 }
 
 bool AreVectorsParallel(const Vector3& a, const Vector3& b, T eps = kEps) {
-    Vector3 cross = RTB::crossProduct(a, b);
+    const Vector3 cross = RTB::crossProduct(a, b);
     return cross.magnitude() < eps;
 }
 
@@ -88,21 +89,21 @@ bool AreVectorsEqualOrOpposite(const Vector3& a,
 // ------------------------------------------------------------
 
 TEST(PlaneTest, DefaultConstructorInitializesToZero) {
-    Plane3 plane;
+    const Plane3 plane;
     ExpectPlaneCoefficientsNear(plane, 0.0, 0.0, 0.0, 0.0);
 }
 
 TEST(PlaneTest, CoefficientConstructorStoresValues) {
-    Plane3 plane(1.0, 2.0, 3.0, 4.0);
+    const Plane3 plane(1.0, 2.0, 3.0, 4.0);
     ExpectPlaneCoefficientsNear(plane, 1.0, 2.0, 3.0, 4.0);
 }
 
 TEST(PlaneTest, ThreePointConstructorXYPlane) {
-    Point3 a{0.0, 0.0, 0.0};
-    Point3 b{1.0, 0.0, 0.0};
-    Point3 c{0.0, 1.0, 0.0};
+    const Point3 a{0.0, 0.0, 0.0};
+    const Point3 b{1.0, 0.0, 0.0};
+    const Point3 c{0.0, 1.0, 0.0};
 
-    Plane3 plane(a, b, c);
+    const Plane3 plane(a, b, c);
 
     EXPECT_TRUE(IsPointOnPlane(plane, a));
     EXPECT_TRUE(IsPointOnPlane(plane, b));
@@ -113,11 +114,11 @@ TEST(PlaneTest, ThreePointConstructorXYPlane) {
 }
 
 TEST(PlaneTest, ThreePointConstructorGeneralPlane) {
-    Point3 a{1.0, 0.0, 0.0};
-    Point3 b{0.0, 1.0, 0.0};
-    Point3 c{0.0, 0.0, 1.0};
+    const Point3 a{1.0, 0.0, 0.0};
+    const Point3 b{0.0, 1.0, 0.0};
+    const Point3 c{0.0, 0.0, 1.0};
 
-    Plane3 plane(a, b, c);
+    const Plane3 plane(a, b, c);
 
     EXPECT_TRUE(IsPointOnPlane(plane, a));
     EXPECT_TRUE(IsPointOnPlane(plane, b));
@@ -161,7 +162,7 @@ TEST(PlaneTest, NormalizeZeroPlaneDoesNothing) {
 // ------------------------------------------------------------
 
 TEST(PlaneTest, GetNormalVectorReturnsFirstThreeCoefficients) {
-    Plane3 plane(4.0, 5.0, 6.0, 7.0);
+    const Plane3 plane(4.0, 5.0, 6.0, 7.0);
 
     auto n = plane.getNormalVector();
 
@@ -177,7 +178,7 @@ TEST(PlaneTest, GetIntersectionReturnsCorrectDistance) {
     Plane3 plane(0.0, 0.0, 1.0, -5.0);
     plane.normalize();
 
-    Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{0.0, 0.0, 1.0});
+    const Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{0.0, 0.0, 1.0});
 
     auto t = plane.getIntersection(ray);
 
@@ -194,7 +195,7 @@ TEST(PlaneTest, GetIntersectionRayStartsOnPlaneAndLiesInPlaneReturnsNullopt) {
     //   denominator = n · d = 0
     // so the function treats the ray as parallel and returns std::nullopt,
     // even though the ray starts on the plane.
-    Ray3 ray(Point3{1.0, 2.0, 5.0}, Vector3{1.0, 0.0, 0.0});
+    const Ray3 ray(Point3{1.0, 2.0, 5.0}, Vector3{1.0, 0.0, 0.0});
 
     auto t = plane.getIntersection(ray);
 
@@ -205,7 +206,7 @@ TEST(PlaneTest, GetIntersectionParallelRayReturnsNullopt) {
     Plane3 plane(0.0, 0.0, 1.0, -5.0);
     plane.normalize();
 
-    Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
+    const Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
 
     auto t = plane.getIntersection(ray);
 
@@ -216,7 +217,7 @@ TEST(PlaneTest, GetIntersectionBehindRayReturnsNullopt) {
     Plane3 plane(0.0, 0.0, 1.0, -5.0);
     plane.normalize();
 
-    Ray3 ray(Point3{0.0, 0.0, 10.0}, Vector3{0.0, 0.0, 1.0});
+    const Ray3 ray(Point3{0.0, 0.0, 10.0}, Vector3{0.0, 0.0, 1.0});
 
     auto t = plane.getIntersection(ray);
 
@@ -271,7 +272,7 @@ TEST(PlaneTest, ReflectedDirectionIsNormalized) {
     Plane3 plane(0.0, 0.0, 1.0, 0.0);
     plane.normalize();
 
-    Vector3 dir{2.0, 0.0, -2.0};
+    const Vector3 dir{2.0, 0.0, -2.0};
     Ray3 ray(Point3{0.0, 0.0, 1.0}, dir);
 
     auto t = plane.getIntersection(ray);
@@ -378,9 +379,9 @@ TEST(PlaneTest, IntersectPlanesDirectionMatchesCrossProduct) {
 // ------------------------------------------------------------
 
 TEST(PlaneTest, ThreePointConstructorThenNormalizeProducesUnitNormal) {
-    Point3 a{1.0, 1.0, 1.0};
-    Point3 b{2.0, 1.0, 1.0};
-    Point3 c{1.0, 3.0, 1.0};
+    const Point3 a{1.0, 1.0, 1.0};
+    const Point3 b{2.0, 1.0, 1.0};
+    const Point3 c{1.0, 3.0, 1.0};
 
     Plane3 plane(a, b, c);
     plane.normalize();

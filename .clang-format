@@ -7,3 +7,4 @@ AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 BinPackArguments: false
 BinPackParameters: false
+QualifierAlignment: Left

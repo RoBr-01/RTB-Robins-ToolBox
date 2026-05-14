@@ -31,6 +31,8 @@ CheckOptions:
     value: true
   - key: misc-const-correctness.WarnPointersAsValues
     value: false
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: 2
 
 WarningsAsErrors: ""
 HeaderFilterRegex: ".*"

@@ -11,12 +11,13 @@
 #include <gtest/gtest.h>
 
 #include <RTB/Random.hpp>
-#include <RTB/Standards.hpp>
 #include <RTB/Vector.hpp>
-#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <random>
 #include <type_traits>
+
+#include "RTB/Math.hpp"
 
 namespace {
 

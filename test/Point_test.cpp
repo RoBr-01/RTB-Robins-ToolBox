@@ -2,8 +2,10 @@
 
 #include <RTB/Point.hpp>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 namespace {
 
@@ -11,7 +13,7 @@ using Point2d = RTB::Point<double, 2>;
 using Point3d = RTB::Point<double, 3>;
 using Point3i = RTB::Point<int, 3>;
 
-constexpr double kEps = 1e-9;
+constexpr double epsilon = 1e-9;
 
 // ------------------------------------------------------------
 // Helper Functions
@@ -20,7 +22,7 @@ constexpr double kEps = 1e-9;
 template <typename PointType>
 void expectPointNear(const PointType& actual,
                      const PointType& expected,
-                     double eps = kEps) {
+                     double eps = epsilon) {
     constexpr std::size_t num_elements =
         std::tuple_size_v<decltype(actual.getCoords())>;
     for (std::size_t i = 0; i < num_elements; ++i) {
@@ -121,7 +123,7 @@ TEST(PointTest, DistanceBetweenIdenticalPointsIsZero) {
 
     const double distance = RTB::distance2Points(point, point);
 
-    EXPECT_NEAR(distance, 0.0, kEps);
+    EXPECT_NEAR(distance, 0.0, epsilon);
 }
 
 TEST(PointTest, DistanceInTwoDimensions) {
@@ -130,36 +132,36 @@ TEST(PointTest, DistanceInTwoDimensions) {
 
     const double distance = RTB::distance2Points(point_1, point_2);
 
-    EXPECT_NEAR(distance, 5.0, kEps);
+    EXPECT_NEAR(distance, 5.0, epsilon);
 }
 
 TEST(PointTest, DistanceInThreeDimensions) {
-    Point3d point_1{1.0, 2.0, 3.0};
-    Point3d point_2{4.0, 6.0, 3.0};
+    const Point3d point_1{1.0, 2.0, 3.0};
+    const Point3d point_2{4.0, 6.0, 3.0};
 
-    double distance = RTB::distance2Points(point_1, point_2);
+    const double distance = RTB::distance2Points(point_1, point_2);
 
-    EXPECT_NEAR(distance, 5.0, kEps);
+    EXPECT_NEAR(distance, 5.0, epsilon);
 }
 
 TEST(PointTest, DistanceIsSymmetric) {
-    Point3d point_1{1.0, -2.0, 3.0};
-    Point3d point_2{-4.0, 5.0, 0.5};
+    const Point3d point_1{1.0, -2.0, 3.0};
+    const Point3d point_2{-4.0, 5.0, 0.5};
 
-    double d1 = RTB::distance2Points(point_1, point_2);
-    double d2 = RTB::distance2Points(point_2, point_1);
+    const double d1 = RTB::distance2Points(point_1, point_2);
+    const double d2 = RTB::distance2Points(point_2, point_1);
 
-    EXPECT_NEAR(d1, d2, kEps);
+    EXPECT_NEAR(d1, d2, epsilon);
 }
 
 TEST(PointTest, DistanceSupportsMixedTypes) {
-    RTB::Point<int, 3> point_1{0, 0, 0};
-    RTB::Point<double, 3> point_2{1.0, 2.0, 2.0};
+    const RTB::Point<int, 3> point_1{0, 0, 0};
+    const RTB::Point<double, 3> point_2{1.0, 2.0, 2.0};
 
     auto distance = RTB::distance2Points(point_1, point_2);
 
     static_assert(std::is_same_v<decltype(distance), double>);
-    EXPECT_NEAR(distance, 3.0, kEps);
+    EXPECT_NEAR(distance, 3.0, epsilon);
 }
 
 // ------------------------------------------------------------
@@ -167,7 +169,7 @@ TEST(PointTest, DistanceSupportsMixedTypes) {
 // ------------------------------------------------------------
 
 TEST(PointTest, MidpointBetweenIdenticalPointsIsSamePoint) {
-    Point3d point{1.0, 2.0, 3.0};
+    const Point3d point{1.0, 2.0, 3.0};
 
     auto mid = RTB::midpoint2Points(point, point);
 
@@ -175,8 +177,8 @@ TEST(PointTest, MidpointBetweenIdenticalPointsIsSamePoint) {
 }
 
 TEST(PointTest, MidpointInTwoDimensions) {
-    Point2d point_1{0.0, 0.0};
-    Point2d point_2{4.0, 6.0};
+    const Point2d point_1{0.0, 0.0};
+    const Point2d point_2{4.0, 6.0};
 
     auto mid = RTB::midpoint2Points(point_1, point_2);
 
@@ -185,8 +187,8 @@ TEST(PointTest, MidpointInTwoDimensions) {
 }
 
 TEST(PointTest, MidpointInThreeDimensions) {
-    Point3d point_1{1.0, 2.0, 3.0};
-    Point3d point_2{5.0, 6.0, 7.0};
+    const Point3d point_1{1.0, 2.0, 3.0};
+    const Point3d point_2{5.0, 6.0, 7.0};
 
     auto mid = RTB::midpoint2Points(point_1, point_2);
 
@@ -196,8 +198,8 @@ TEST(PointTest, MidpointInThreeDimensions) {
 }
 
 TEST(PointTest, MidpointSupportsMixedTypes) {
-    RTB::Point<int, 3> point_1{0, 0, 0};
-    RTB::Point<double, 3> point_2{1.0, 2.0, 3.0};
+    const RTB::Point<int, 3> point_1{0, 0, 0};
+    const RTB::Point<double, 3> point_2{1.0, 2.0, 3.0};
 
     auto mid = RTB::midpoint2Points(point_1, point_2);
 
@@ -209,8 +211,8 @@ TEST(PointTest, MidpointSupportsMixedTypes) {
 }
 
 TEST(PointTest, MidpointIsSymmetric) {
-    Point3d point_1{1.0, 2.0, 3.0};
-    Point3d point_2{7.0, 8.0, 9.0};
+    const Point3d point_1{1.0, 2.0, 3.0};
+    const Point3d point_2{7.0, 8.0, 9.0};
 
     auto mid1 = RTB::midpoint2Points(point_1, point_2);
     auto mid2 = RTB::midpoint2Points(point_2, point_1);
@@ -254,14 +256,15 @@ TEST(PointTest, MidpointReturnTypeUsesCommonType) {
 TEST(PointTest, InitializerListWrongSizeTriggersAssert) {
     EXPECT_DEATH((RTB::Point<double, 3>{1.0, 2.0}), "");
 }
-
+// NOLINTBEGIN
 TEST(PointTest, OutOfBoundsAccessTriggersAssert) {
     EXPECT_DEATH(([]() {
                      RTB::Point<double, 3> point{1.0, 2.0, 3.0};
                      [[maybe_unused]] auto value = point[3];
                  }()),
-                 "");
+                 "");  
 }
+// NOLINTEND
 
 #endif  // NDEBUG
 
@@ -294,19 +297,19 @@ TEST(PointTest, SetCoordsOverwritesExistingValues) {
 }
 
 TEST(PointTest, DistanceHandlesNegativeCoordinates) {
-    Point3d point_1{-1.0, -2.0, -3.0};
-    Point3d point_2{2.0, 2.0, 1.0};
+    const Point3d point_1{-1.0, -2.0, -3.0};
+    const Point3d point_2{2.0, 2.0, 1.0};
 
     const double distance = RTB::distance2Points(point_1, point_2);
 
     // Differences: (3, 4, 4)
     // Distance = sqrt(9 + 16 + 16) = sqrt(41)
-    EXPECT_NEAR(distance, std::sqrt(41.0), kEps);
+    EXPECT_NEAR(distance, std::sqrt(41.0), epsilon);
 }
 
 TEST(PointTest, MidpointHandlesNegativeCoordinates) {
-    Point3d point_1{-2.0, 4.0, -6.0};
-    Point3d point_2{2.0, 0.0, 2.0};
+    const Point3d point_1{-2.0, 4.0, -6.0};
+    const Point3d point_2{2.0, 0.0, 2.0};
 
     auto mid = RTB::midpoint2Points(point_1, point_2);
 
@@ -326,18 +329,18 @@ TEST(PointTest, WorksForHigherDimensions) {
 }
 
 TEST(PointTest, DistanceWorksForHigherDimensions) {
-    RTB::Point<double, 5> point_1{0.0, 0.0, 0.0, 0.0, 0.0};
-    RTB::Point<double, 5> point_2{1.0, 2.0, 2.0, 1.0, 2.0};
+    const RTB::Point<double, 5> point_1{0.0, 0.0, 0.0, 0.0, 0.0};
+    const RTB::Point<double, 5> point_2{1.0, 2.0, 2.0, 1.0, 2.0};
 
     const double distance = RTB::distance2Points(point_1, point_2);
 
     // sqrt(1 + 4 + 4 + 1 + 4) = sqrt(14)
-    EXPECT_NEAR(distance, std::sqrt(14.0), kEps);
+    EXPECT_NEAR(distance, std::sqrt(14.0), epsilon);
 }
 
 TEST(PointTest, MidpointWorksForHigherDimensions) {
-    RTB::Point<double, 5> point_1{0.0, 2.0, 4.0, 6.0, 8.0};
-    RTB::Point<double, 5> point_2{2.0, 4.0, 6.0, 8.0, 10.0};
+    const RTB::Point<double, 5> point_1{0.0, 2.0, 4.0, 6.0, 8.0};
+    const RTB::Point<double, 5> point_2{2.0, 4.0, 6.0, 8.0, 10.0};
 
     auto mid = RTB::midpoint2Points(point_1, point_2);
 

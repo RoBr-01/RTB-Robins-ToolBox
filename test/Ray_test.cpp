@@ -4,7 +4,6 @@
 #include <RTB/Ray.hpp>
 #include <RTB/Vector.hpp>
 #include <cmath>
-#include <type_traits>
 
 namespace {
 
@@ -12,14 +11,14 @@ using Ray3d = RTB::Ray<double, 3>;
 using Point3d = RTB::Point<double, 3>;
 using Vector3d = RTB::Vector<double, 3>;
 
-constexpr double kEps = 1e-9;
+constexpr double epsilon = 1e-9;
 
 // ------------------------------------------------------------
 // Constructor / Accessors
 // ------------------------------------------------------------
 
 TEST(RayTest, DefaultConstructorWorks) {
-    Ray3d ray;
+    const Ray3d ray;
 
     // Default constructed Point/Vector should be zero-initialized
     EXPECT_DOUBLE_EQ(ray.getOrigin()[0], 0.0);
@@ -32,10 +31,10 @@ TEST(RayTest, DefaultConstructorWorks) {
 }
 
 TEST(RayTest, ConstructorStoresValues) {
-    Point3d origin{1.0, 2.0, 3.0};
-    Vector3d dir{4.0, 5.0, 6.0};
+    const Point3d origin{1.0, 2.0, 3.0};
+    const Vector3d dir{4.0, 5.0, 6.0};
 
-    Ray3d ray(origin, dir);
+    const Ray3d ray(origin, dir);
 
     EXPECT_EQ(ray.getOrigin()[0], 1.0);
     EXPECT_EQ(ray.getOrigin()[1], 2.0);
@@ -53,7 +52,7 @@ TEST(RayTest, ConstructorStoresValues) {
 TEST(RayTest, SetReplacesOriginAndDirection) {
     Ray3d ray;
 
-    Point3d origin{1.0, 2.0, 3.0};
+    const Point3d origin{1.0, 2.0, 3.0};
     Vector3d dir{4.0, 5.0, 6.0};
 
     ray.set(origin, dir);
@@ -73,7 +72,8 @@ TEST(RayTest, NormalizeNormalizesDirection) {
 
     const auto& d = ray.getDirection();
 
-    EXPECT_NEAR(std::sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]), 1.0, kEps);
+    EXPECT_NEAR(
+        std::sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]), 1.0, epsilon);
 }
 
 // ------------------------------------------------------------
