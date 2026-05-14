@@ -85,7 +85,8 @@ TEST_F(EllipsoidRayTest, UnitSphereAlongX) {
     ASSERT_TRUE(result.has_value());
 
     // t values should give intersection at x = 1 (t=2) and x = -1 (t=4)
-    double t1 = result->at(0), t2 = result->at(1);
+    double t1 = result->at(0);
+    double t2 = result->at(1);
     // Sort for deterministic comparison
     if (t1 > t2)
         std::swap(t1, t2);
@@ -142,7 +143,8 @@ TEST_F(EllipsoidRayTest, ProlateAlongMajorAxis) {
     auto result = prolate.IntersectRay(ray);
     ASSERT_TRUE(result.has_value());
 
-    double t1 = result->at(0), t2 = result->at(1);
+    double t1 = result->at(0);
+    double t2 = result->at(1);
     if (t1 > t2)
         std::swap(t1, t2);
     EXPECT_NEAR(t1, 3.0, k_tight);  // hits x = +2 at t=3
@@ -155,7 +157,8 @@ TEST_F(EllipsoidRayTest, ProlateAlongMinorAxis) {
     auto result = prolate.IntersectRay(ray);
     ASSERT_TRUE(result.has_value());
 
-    double t1 = result->at(0), t2 = result->at(1);
+    double t1 = result->at(0);
+    double t2 = result->at(1);
     if (t1 > t2)
         std::swap(t1, t2);
     EXPECT_NEAR(t1, 4.0, k_tight);
@@ -168,7 +171,8 @@ TEST(EllipsoidFloatTest, FloatSpecializationWorks) {
     const Ray<float, 3> ray({3.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f});
     auto result = e.IntersectRay(ray);
     ASSERT_TRUE(result.has_value());
-    float t1 = result->at(0), t2 = result->at(1);
+    float t1 = result->at(0);
+    float t2 = result->at(1);
     if (t1 > t2)
         std::swap(t1, t2);
     EXPECT_NEAR(t1, 2.0f, 1e-5f);
@@ -208,9 +212,11 @@ TEST_F(EllipsoidPlaneTest, ProlateXYPlaneSemiAxes) {
     xy.normalize();
     EllipseParams<double> ep = prolate.IntersectPlane(xy);
 
-    double sa0 = ep.semi_axis_lengths[0], sa1 = ep.semi_axis_lengths[1];
+    double sa0 = ep.semi_axis_lengths[0];
+    double sa1 = ep.semi_axis_lengths[1];
     // Larger semi-axis should be ~2, smaller ~1
-    double sa_max = std::max(sa0, sa1), sa_min = std::min(sa0, sa1);
+    double sa_max = std::max(sa0, sa1);
+    double sa_min = std::min(sa0, sa1);
     EXPECT_NEAR(sa_max, 2.0, k_med);
     EXPECT_NEAR(sa_min, 1.0, k_med);
 }
