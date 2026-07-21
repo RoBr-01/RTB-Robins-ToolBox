@@ -70,6 +70,10 @@ class Ellipsoid {
 
     [[nodiscard]] std::array<T, 3> getDimensions() const;
 
+    [[nodiscard]] T getRadiusAt(float a_azimuth, float a_elevation) const;
+
+    void setDimensions(T a_depth, T a_width, T a_height);
+
     [[nodiscard]] std::array<std::optional<T>, 2> intersectRay(
         Ray<T, 3> ray) const;
 
@@ -85,7 +89,7 @@ class Ellipsoid {
         Point<T, 3> point_outside, Point<T, 3> point_on) const;
 
    private:
-    std::array<T, 3> m_dimensions{};
+    std::array<T, 3> m_dimensions{0};
     Point<T, 3> m_origin;
     // Quaternion<T> m_rotation{};
 };
@@ -97,6 +101,33 @@ Ellipsoid<T>::Ellipsoid(T length, T width, T height)
 template <typename T>
 std::array<T, 3> Ellipsoid<T>::getDimensions() const {
     return m_dimensions;
+}
+
+template <typename T>
+T Ellipsoid<T>::getRadiusAt(float a_azimuth, float a_elevation) const {
+    const T dim_a = m_dimensions[0];
+    const T dim_b = m_dimensions[1];
+    const T dim_c = m_dimensions[2];
+
+    const T cos_ele = static_cast<T>(RTB::cosd(a_elevation));
+    const T sin_ele = static_cast<T>(RTB::sind(a_elevation));
+    const T cos_azi = static_cast<T>(RTB::cosd(a_azimuth));
+    const T sin_azi = static_cast<T>(RTB::sind(a_azimuth));
+
+    // Direction (cos_ele*cos_azi, cos_ele*sin_azi, sin_ele) is a unit vector;
+    // solving the ellipsoid equation (x/a)^2+(y/b)^2+(z/c)^2=1 for r along
+    // that direction gives r = 1/sqrt(...).
+    const T inv_radius_sq =
+        (cos_ele * cos_ele * cos_azi * cos_azi) / (dim_a * dim_a) +
+        (cos_ele * cos_ele * sin_azi * sin_azi) / (dim_b * dim_b) +
+        (sin_ele * sin_ele) / (dim_c * dim_c);
+
+    return static_cast<T>(1) / std::sqrt(inv_radius_sq);
+}
+
+template <typename T>
+void Ellipsoid<T>::setDimensions(T a_depth, T a_width, T a_height) {
+    m_dimensions = {a_depth, a_width, a_height};
 }
 
 template <typename T>

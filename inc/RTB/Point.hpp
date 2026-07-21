@@ -32,6 +32,18 @@ class Point {
         std::copy(values.begin(), values.end(), m_coords.begin());
     }
 
+    template <typename... Args,
+              typename = std::enable_if_t<(sizeof...(Args) == N)>>
+    Point(Args&&... args)
+        : m_coords{static_cast<T>(std::forward<Args>(args))...} {
+        static_assert(sizeof...(Args) == N,
+                      "Point requires exactly N arguments");
+    }
+
+    explicit Point(std::array<T, N> values) {
+        std::copy(values.begin(), values.end(), m_coords.begin());
+    }
+
     [[nodiscard]] std::array<T, N> getCoords() const {
         return m_coords;
     }
