@@ -461,14 +461,14 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
         std::cerr << "No valid intersection between the planes!\n";
         polar_plane.print();
         point_plane.print();
-        std::abort();
+        return {std::nullopt, std::nullopt};
     }
 
     const auto intersections = intersectRay(intersection_line.value());
 
     if (!intersections[0] || !intersections[1]) {
         std::cerr << "No valid intersection between ray and ellipsoid!\n";
-        std::abort();
+        return {std::nullopt, std::nullopt};
     }
 
     const Point<T, 3> tangent_a =
@@ -481,7 +481,7 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
 
     if (!ellipse) {
         std::cerr << "No valid ellipse!\n";
-        std::abort();
+        return {std::nullopt, std::nullopt};
     }
 
     const T arc_a = ellipse->arcLength(point_on, tangent_a);
