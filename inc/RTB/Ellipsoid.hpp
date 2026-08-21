@@ -369,28 +369,6 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
     const Point<T, 3> point_outside, const Point<T, 3> point_on) const {
     const auto eps = std::numeric_limits<T>::epsilon();
 
-    const auto colinear =
-        areCollinear<T, 3>(eps, m_origin, point_on, point_outside);
-
-    // FIXME: colinear can mean 2 things:
-    // -either the point_on is in between point_outside and m_origin
-    // - or m_origin is between point_on and point_outside
-    // Both have different solutions!
-    if (colinear) {
-        Path<T> p1;
-        p1.source2tanpoint = Vector<T, 3>(point_outside, point_on);
-        p1.arclength = 0;
-        p1.straigh_length = p1.source2tanpoint.magnitude();
-        p1.total_length = p1.straigh_length;
-        p1.tangent_point = point_on;
-
-        std::array<std::optional<Path<T>>, 2> paths{p1, p1};
-        return paths;
-    }
-
-    Plane<T> point_plane(m_origin, point_on, point_outside);
-    point_plane.normalize();
-
     const T dim_a = m_dimensions[0];
     const T dim_b = m_dimensions[1];
     const T dim_c = m_dimensions[2];
@@ -398,6 +376,73 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
     const T dim_a_sq = dim_a * dim_a;
     const T dim_b_sq = dim_b * dim_b;
     const T dim_c_sq = dim_c * dim_c;
+
+    // Visibility test: is point_on directly visible (unobstructed) from
+    // point_outside? True iff point_outside lies on/outside the tangent
+    // plane of the ellipsoid at point_on. Equivalent to evaluating the
+    // polar plane of point_on at point_outside.
+    const T visibility = (point_on[0] * point_outside[0]) / dim_a_sq +
+                         (point_on[1] * point_outside[1]) / dim_b_sq +
+                         (point_on[2] * point_outside[2]) / dim_c_sq;
+
+    if (visibility >= static_cast<T>(1) - eps) {
+        Path<T> p1;
+        p1.source2tanpoint = Vector<T, 3>(point_outside, point_on);
+        p1.arclength = 0;
+        p1.straigh_length = p1.source2tanpoint.magnitude();
+        p1.total_length = p1.straigh_length;
+        p1.tangent_point = point_on;
+
+        // Unobstructed: only one physical path exists.
+        std::array<std::optional<Path<T>>, 2> paths{p1, std::nullopt};
+        return paths;
+    }
+
+    // Degenerate case: point_outside, m_origin, point_on exactly collinear
+    // with m_origin between them (obstructed, but point_plane below would
+    // be undefined since three collinear points don't define a plane).
+    // Infinitely many tangent-plane choices are equally valid here; no
+    // single "correct" answer exists without an extra convention.
+    const auto colinear =
+        areCollinear<T, 3>(eps, m_origin, point_on, point_outside);
+
+    Plane<T> point_plane;
+
+    if (colinear) {
+        // Degenerate: point_outside, m_origin, point_on exactly collinear with
+        // m_origin between them. Infinitely many planes contain this line; pick
+        // one deterministically (least-aligned standard axis as helper vector)
+        // rather than returning no path at all — callers depend on paths[0]
+        // always being populated.
+        Vector<T, 3> dir(point_on, point_outside);
+        dir.normalizeInPlace();
+
+        Vector<T, 3> helper{0, 0, 0};
+        const T ax = std::abs(dir[0]);
+        const T ay = std::abs(dir[1]);
+        const T az = std::abs(dir[2]);
+
+        if (ax <= ay && ax <= az) {
+            helper = Vector<T, 3>{1, 0, 0};
+        } else if (ay <= ax && ay <= az) {
+            helper = Vector<T, 3>{0, 1, 0};
+        } else {
+            helper = Vector<T, 3>{0, 0, 1};
+        }
+
+        Vector<T, 3> normal = crossProduct(dir, helper);
+        normal.normalizeInPlace();
+
+        point_plane =
+            Plane<T>(normal[0],
+                     normal[1],
+                     normal[2],
+                     -(normal[0] * m_origin[0] + normal[1] * m_origin[1] +
+                       normal[2] * m_origin[2]));
+    } else {
+        point_plane = Plane<T>(m_origin, point_on, point_outside);
+    }
+    point_plane.normalize();
 
     const T point_out_x = point_outside[0];
     const T point_out_y = point_outside[1];

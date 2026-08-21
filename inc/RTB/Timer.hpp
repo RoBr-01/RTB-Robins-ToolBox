@@ -43,7 +43,7 @@ class Timer {
     }
 
     void start() {
-        m_start = std::chrono::high_resolution_clock::now();
+        m_start = std::chrono::steady_clock::now();
     }
 
     /**
@@ -60,7 +60,7 @@ class Timer {
     template <typename Duration = std::chrono::nanoseconds>
     [[nodiscard]] double elapsed() const {
         return std::chrono::duration<double, typename Duration::period>(
-                   std::chrono::high_resolution_clock::now() - m_start)
+                   std::chrono::steady_clock::now() - m_start)
             .count();
     }
 
@@ -77,7 +77,7 @@ class Timer {
     }
 
    private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+    std::chrono::time_point<std::chrono::steady_clock> m_start;
 };
 
 /**
