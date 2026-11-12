@@ -1,9 +1,24 @@
-#ifndef TIMER_HPP
-#define TIMER_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Timer.hpp
+ Simple stopwatch and scoped RAII timer.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_TIMER_HPP
+#define RTB_TIMER_HPP
 
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <utility>
 
 // Original by the cherno:
 // https://github.com/StudioCherno/Walnut/blob/master/Walnut/src/Walnut/Timer.h
@@ -43,24 +58,24 @@ class Timer {
     }
 
     void start() {
-        m_start = std::chrono::high_resolution_clock::now();
+        m_start = std::chrono::steady_clock::now();
     }
 
     /**
      * @brief Returns elapsed time since the last start() call.
      *
-     * @tparam Duration  A std::chrono duration type. Defaults to milliseconds.
+     * @tparam Duration  A std::chrono duration type. Defaults to nanoseconds.
      * @return           elapsed time as a double in the requested unit.
      *
      * Example:
-     *   timer.elapsed();                              // milliseconds (default)
+     *   timer.elapsed();                              // nanoseconds (default)
      *   timer.elapsed<std::chrono::microseconds>();
      *   timer.elapsed<std::chrono::seconds>();
      */
     template <typename Duration = std::chrono::nanoseconds>
     [[nodiscard]] double elapsed() const {
         return std::chrono::duration<double, typename Duration::period>(
-                   std::chrono::high_resolution_clock::now() - m_start)
+                   std::chrono::steady_clock::now() - m_start)
             .count();
     }
 
@@ -77,7 +92,7 @@ class Timer {
     }
 
    private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+    std::chrono::time_point<std::chrono::steady_clock> m_start;
 };
 
 /**
@@ -107,4 +122,4 @@ class ScopedTimer {
 
 }  // namespace RTB
 
-#endif  // TIMER_HPP
+#endif  // RTB_TIMER_HPP

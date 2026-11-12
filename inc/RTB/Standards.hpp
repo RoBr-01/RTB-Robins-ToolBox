@@ -1,5 +1,19 @@
-#ifndef STANDARDS_HPP
-#define STANDARDS_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Standards.hpp
+ SOFA axis/direction conventions and physical constants.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_STANDARDS_HPP
+#define RTB_STANDARDS_HPP
 
 /*
  * Axes follow the SOFA convention:
@@ -23,10 +37,10 @@ constexpr double speed_of_sound = 344.0;
 /** @brief Speed of light in vacuum (m/s). */
 constexpr double speed_of_light = 299'792'458.0;
 
-enum Axes { X, Y, Z };
-enum Directions { Left, Right, Front, Back, Up, Down };
-enum Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
+enum class Axes { X, Y, Z };
+enum class Directions { Left, Right, Front, Back, Up, Down };
+enum class Vertices { LFD, RFD, LBD, RBD, LFU, RFU, LBU, RBU };
 
 }  // namespace RTB
 
-#endif  // STANDARDS_HPP
+#endif  // RTB_STANDARDS_HPP

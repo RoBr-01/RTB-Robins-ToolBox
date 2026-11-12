@@ -1,8 +1,23 @@
-#ifndef PLANE_HPP
-#define PLANE_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Plane.hpp
+ Infinite plane: construction, intersection, and reflection.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_PLANE_HPP
+#define RTB_PLANE_HPP
 
 // STL
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -16,21 +31,38 @@
 
 namespace RTB {
 
+// ==============================
+// Forward declarations
+// ==============================
+
+template <typename T>
+class Plane;
+
+template <typename T>
+[[nodiscard]] std::optional<Ray<T, 3>> intersectPlanes(const Plane<T>& plane_1,
+                                                       const Plane<T>& plane_2);
+
+// ==============================
+// Plane Class
+// ==============================
+
 /**
  * @brief Infinite plane represented by the equation ax + by + cz + d = 0.
  *
  * Coefficients are stored as {a, b, c, d}. Call normalize() to ensure
  * the normal vector (a, b, c) is unit length, which is required by
- * getIntersection(), reflect(), and IntersectPlanes().
+ * getIntersection() and intersectPlanes(). reflect() normalizes the
+ * normal internally, so it does not require the plane itself to already
+ * be normalized.
  */
 template <typename T>
 class Plane {
    public:
     Plane();
     Plane(T coeff_a, T coeff_b, T coeff_c, T coeff_d);
-    Plane(const Point<T, 3>& point_A,
-          const Point<T, 3>& point_B,
-          const Point<T, 3>& point_C);
+    Plane(const Point<T, 3>& point_a,
+          const Point<T, 3>& point_b,
+          const Point<T, 3>& point_c);
 
     /**
      * @brief Flips the plane normal (negates all coefficients).
@@ -40,8 +72,8 @@ class Plane {
     /**
      * @brief Normalizes the plane so that (a, b, c) is a unit vector.
      *
-     * Also scales d accordingly. Required before using getIntersection(),
-     * reflect(), or IntersectPlanes().
+     * Also scales d accordingly. Required before using getIntersection()
+     * or intersectPlanes().
      */
     void normalize();
 
@@ -59,14 +91,15 @@ class Plane {
      * Returns std::nullopt if the ray is parallel to the plane or the
      * intersection is behind the ray origin (t < 0).
      *
-     * Assumes the plane is normalized.
+     * Requires the plane to be normalized (asserted in Debug builds).
      */
     [[nodiscard]] std::optional<T> getIntersection(const Ray<T, 3>& ray) const;
 
     /**
      * @brief Reflects the ray about the plane at parameter t.
      *
-     * Assumes the plane is normalized.
+     * Normalizes its own copy of the plane's normal internally, so the
+     * plane itself does not need to already be normalized.
      */
     void reflect(Ray<T, 3>& ray, T step) const;
 
@@ -90,20 +123,20 @@ Plane<T>::Plane(T coeff_a, T coeff_b, T coeff_c, T coeff_d)
     : m_coefficients{coeff_a, coeff_b, coeff_c, coeff_d} {}
 
 template <typename T>
-Plane<T>::Plane(const Point<T, 3>& point_A,
-                const Point<T, 3>& point_B,
-                const Point<T, 3>& point_C) {
-    const T point_a_0 = point_A[0];
-    const T point_a_1 = point_A[1];
-    const T point_a_2 = point_A[2];
+Plane<T>::Plane(const Point<T, 3>& point_a,
+                const Point<T, 3>& point_b,
+                const Point<T, 3>& point_c) {
+    const T point_a_0 = point_a[0];
+    const T point_a_1 = point_a[1];
+    const T point_a_2 = point_a[2];
 
-    const T point_b_0 = point_B[0];
-    const T point_b_1 = point_B[1];
-    const T point_b_2 = point_B[2];
+    const T point_b_0 = point_b[0];
+    const T point_b_1 = point_b[1];
+    const T point_b_2 = point_b[2];
 
-    const T point_c_0 = point_C[0];
-    const T point_c_1 = point_C[1];
-    const T point_c_2 = point_C[2];
+    const T point_c_0 = point_c[0];
+    const T point_c_1 = point_c[1];
+    const T point_c_2 = point_c[2];
 
     m_coefficients[0] = (point_b_1 - point_a_1) * (point_c_2 - point_a_2) -
                         (point_c_1 - point_a_1) * (point_b_2 - point_a_2);
@@ -146,25 +179,33 @@ void Plane<T>::print() const {
 template <typename T>
 Vector<T, 3> Plane<T>::getNormalVector() const {
     return Vector<T, 3>{
-        m_coefficients[0], m_coefficients[1], m_coefficients[2]};
+        m_coefficients[0],
+        m_coefficients[1],
+        m_coefficients[2],
+    };
 }
 
 template <typename T>
 std::optional<T> Plane<T>::getIntersection(const Ray<T, 3>& ray) const {
-    const Vector<T, 3> raydirection = ray.getDirection();
+    assert(std::abs(getNormalVector().magnitudeSquared() - static_cast<T>(1)) <
+               std::numeric_limits<T>::epsilon() * static_cast<T>(10) &&
+           "Plane::getIntersection() requires a normalized plane; call "
+           "normalize() first.");
 
-    const T denominator = m_coefficients[0] * raydirection[0] +
-                          m_coefficients[1] * raydirection[1] +
-                          m_coefficients[2] * raydirection[2];
+    const Vector<T, 3> ray_direction = ray.getDirection();
+
+    const T denominator = m_coefficients[0] * ray_direction[0] +
+                          m_coefficients[1] * ray_direction[1] +
+                          m_coefficients[2] * ray_direction[2];
 
     if (std::abs(denominator) < std::numeric_limits<T>::epsilon()) {
         return std::nullopt;  // Ray is parallel to the plane
     }
 
-    const Point<T, 3> rayorigin = ray.getOrigin();
-    const T numerator =
-        -(m_coefficients[0] * rayorigin[0] + m_coefficients[1] * rayorigin[1] +
-          m_coefficients[2] * rayorigin[2] + m_coefficients[3]);
+    const Point<T, 3> ray_origin = ray.getOrigin();
+    const T numerator = -(
+        m_coefficients[0] * ray_origin[0] + m_coefficients[1] * ray_origin[1] +
+        m_coefficients[2] * ray_origin[2] + m_coefficients[3]);
 
     const T step = numerator / denominator;
 
@@ -177,20 +218,20 @@ std::optional<T> Plane<T>::getIntersection(const Ray<T, 3>& ray) const {
 
 template <typename T>
 void Plane<T>::reflect(Ray<T, 3>& ray, T step) const {
-    const Point<T, 3> intersectionpoint = ray.getPosition(step);
+    const Point<T, 3> intersection_point = ray.getPosition(step);
 
     Vector<T, 3> normal = getNormalVector();
     normal.normalizeInPlace();
 
     ray.normalize();
-    const Vector<T, 3> incomingdirection = ray.getDirection();
+    const Vector<T, 3> incoming_direction = ray.getDirection();
 
-    Vector<T, 3> reflecteddirection =
-        incomingdirection -
-        normal * (static_cast<T>(2) * dotProduct(incomingdirection, normal));
-    reflecteddirection.normalizeInPlace();
+    Vector<T, 3> reflected_direction =
+        incoming_direction -
+        normal * (static_cast<T>(2) * dotProduct(incoming_direction, normal));
+    reflected_direction.normalizeInPlace();
 
-    ray.set(intersectionpoint, reflecteddirection);
+    ray.set(intersection_point, reflected_direction);
 }
 
 // ==============================
@@ -216,20 +257,21 @@ std::optional<Ray<T, 3>> intersectPlanes(const Plane<T>& plane_1,
     // Direction of the intersection line: normal_1 x normal_2
     const Vector<T, 3> dir = crossProduct(normal_1, normal_2);
 
-    if (dir.magnitudeSquared() < std::numeric_limits<T>::epsilon()) {
+    constexpr T epsilon = std::numeric_limits<T>::epsilon();
+    if (dir.magnitudeSquared() < epsilon * epsilon) {
         return std::nullopt;  // Planes are parallel or coincident
     }
 
     // Find a point on the intersection line by zeroing the coordinate
     // corresponding to the largest component of dir (most numerically stable).
-    const T directionx = std::abs(dir[0]);
-    const T directiony = std::abs(dir[1]);
-    const T directionz = std::abs(dir[2]);
+    const T direction_x = std::abs(dir[0]);
+    const T direction_y = std::abs(dir[1]);
+    const T direction_z = std::abs(dir[2]);
     size_t index_a;
 
-    if (directionx >= directiony && directionx >= directionz) {
+    if (direction_x >= direction_y && direction_x >= direction_z) {
         index_a = 0;
-    } else if (directiony >= directionz) {
+    } else if (direction_y >= direction_z) {
         index_a = 1;
     } else {
         index_a = 2;
@@ -265,4 +307,4 @@ std::optional<Ray<T, 3>> intersectPlanes(const Plane<T>& plane_1,
 
 }  // namespace RTB
 
-#endif /* PLANE_HPP */
+#endif /* RTB_PLANE_HPP */

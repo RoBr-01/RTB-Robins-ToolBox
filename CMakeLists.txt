@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 4.3.2)
-# TODO: add version number into the library (see buildtest for an example)
-project(RTB VERSION 0.0.1)
+cmake_minimum_required(VERSION 3.21...4.3.2)
+project(RTB VERSION 0.1.0)
 
 include(CTest)
 include(cmake/Checks.cmake)
@@ -14,19 +13,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-)
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE compile_options)
+# compile_options is deliberately NOT linked here: it carries flags meant
+# for this repo's own tests/bench/examples/dev builds (e.g. -ffast-math,
+# -fno-exceptions, -fno-rtti), and linking it INTERFACE would force those
+# onto every external consumer's own translation units too. Each of
+# test/, bench/, examples/, dev/ links it directly on its own targets.
 
 # Make sure we don't link hwy twice
 if(NOT TARGET hwy)
-    set(HWY_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
-    set(HWY_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(HWY_ENABLE_CONTRIB OFF CACHE BOOL "" FORCE)
+    # Not FORCE'd: lets a consumer who explicitly passes
+    # -DHWY_ENABLE_TESTS=ON (etc.) on their own cmake command line
+    # override these defaults; FORCE would silently stomp that choice.
+    set(HWY_ENABLE_TESTS OFF CACHE BOOL "Enable HWY tests")
+    set(HWY_ENABLE_EXAMPLES OFF CACHE BOOL "Build examples")
+    set(HWY_ENABLE_CONTRIB OFF CACHE BOOL "Include contrib/")
     cmake_policy(PUSH)
     set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/highway)
@@ -34,7 +36,6 @@ if(NOT TARGET hwy)
 endif()
 
 target_link_libraries(${PROJECT_NAME} INTERFACE hwy)
-target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/lib/highway/hwy)
 
 
 # Only build tests/bench/examples when we are the top-level project
@@ -43,6 +44,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     option(${PROJECT_NAME}_ENABLE_TESTING "Enable building of tests" OFF)
     option(${PROJECT_NAME}_ENABLE_BENCHMARK "Enable building of benchmarks" OFF)
     option(${PROJECT_NAME}_ENABLE_EXAMPLES "Enable building of examples" OFF)
+    option(${PROJECT_NAME}_ENABLE_DEV "Enable building of the dev playground" OFF)
 
     if(${PROJECT_NAME}_ENABLE_TESTING)
         message(STATUS "Building Unit Tests")

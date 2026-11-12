@@ -1,5 +1,19 @@
-#ifndef VECTOR_HPP
-#define VECTOR_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Vector.hpp
+ Mathematical N-dimensional vector class.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_VECTOR_HPP
+#define RTB_VECTOR_HPP
 
 // STL
 #include <algorithm>
@@ -82,22 +96,26 @@ class Vector {
 
     Vector() : m_components{} {}
 
-    Vector(const std::initializer_list<T>& values) {
+    Vector(const std::initializer_list<T>& values) : m_components{} {
         assert(values.size() == N);
         std::copy(values.begin(), values.end(), m_components.begin());
     }
 
     explicit Vector(const std::array<T, N>& values) : m_components(values) {}
 
-    Vector(const Point<T, N>& startPoint, const Point<T, N>& endPoint) {
+    /** @brief Constructs the vector from start_point to end_point. */
+    Vector(const Point<T, N>& start_point, const Point<T, N>& end_point) {
         for (std::size_t i = 0; i < N; ++i) {
-            m_components[i] = endPoint[i] - startPoint[i];
+            m_components[i] = end_point[i] - start_point[i];
         }
     }
 
-    explicit Vector(const Point<T, N>& endPoint) {
+    /**
+     * @brief Constructs the position vector from the origin to end_point.
+     */
+    explicit Vector(const Point<T, N>& end_point) {
         for (std::size_t i = 0; i < N; ++i) {
-            m_components[i] = endPoint[i];
+            m_components[i] = end_point[i];
         }
     }
 
@@ -206,6 +224,14 @@ class Vector {
         return *this;
     }
 
+    /**
+     * @brief Divides every component by scalar in-place.
+     *
+     * @warning Debug builds assert that scalar is not (near-)zero. In
+     * Release builds (NDEBUG) this check compiles out; dividing by zero
+     * there produces inf/nan per standard floating-point/integer
+     * division semantics, with no diagnostic.
+     */
     Vector& operator/=(const T scalar) {
         if constexpr (std::is_floating_point_v<T>) {
             assert(std::abs(scalar) >
@@ -275,7 +301,10 @@ class Vector {
     /**
      * @brief Returns a normalized (unit-length) copy of this vector.
      *
-     * If the vector is zero-length, returns it unchanged.
+     * If the vector is zero-length, returns it unchanged rather than
+     * dividing by zero (matching Eigen's normalized() convention, as
+     * opposed to GLM's, which leaves the zero-length case undefined and
+     * in practice yields NaN components).
      */
     [[nodiscard]] Vector normalize() const {
         const T len = magnitude();
@@ -294,7 +323,9 @@ class Vector {
     /**
      * @brief Normalizes the vector in-place.
      *
-     * If the vector is zero-length, leaves it unchanged.
+     * If the vector is zero-length, leaves it unchanged rather than
+     * dividing by zero (matching Eigen's normalize() convention; see
+     * normalize() for the non-in-place equivalent).
      * @return Reference to *this.
      */
     Vector& normalizeInPlace() {
@@ -358,9 +389,11 @@ auto crossProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
     const R vector_2_2 = static_cast<R>(vector_2[1]);
     const R vector_2_3 = static_cast<R>(vector_2[2]);
 
-    return Vector<R, N>{vector_1_2 * vector_2_3 - vector_1_3 * vector_2_2,
-                        vector_1_3 * vector_2_1 - vector_1_1 * vector_2_3,
-                        vector_1_1 * vector_2_2 - vector_1_2 * vector_2_1};
+    return Vector<R, N>{
+        vector_1_2 * vector_2_3 - vector_1_3 * vector_2_2,
+        vector_1_3 * vector_2_1 - vector_1_1 * vector_2_3,
+        vector_1_1 * vector_2_2 - vector_1_2 * vector_2_1,
+    };
 }
 
 /**
@@ -432,4 +465,4 @@ bool operator!=(const Vector<T, N>& left_vector,
 
 }  // namespace RTB
 
-#endif /* VECTOR_HPP */
+#endif /* RTB_VECTOR_HPP */

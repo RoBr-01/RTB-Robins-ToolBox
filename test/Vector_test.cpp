@@ -5,7 +5,6 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <random>
 #include <sstream>
 #include <utility>
@@ -270,7 +269,7 @@ TEST(VectorTest, DotProductMixedTypes) {
     const RTB::Vector<float, 3> vf{1.0F, 2.0F, 3.0F};
     const RTB::Vector<double, 3> vd{4.0, -5.0, 6.0};
 
-    auto result = dotProduct(vf, vd);
+    const auto result = dotProduct(vf, vd);
 
     EXPECT_DOUBLE_EQ(result, 12.0);
 }
@@ -355,19 +354,6 @@ TEST(VectorTest, StreamOutput) {
     oss << vector;
 
     EXPECT_EQ(oss.str(), "(1, 2, 3)");
-}
-
-TEST(VectorTest, Print) {
-    const Vec3 vector{1.0, 2.0, 3.0};
-
-    const std::ostringstream capture;
-    auto* old_buf = std::cout.rdbuf(capture.rdbuf());
-
-    vector.print();
-
-    std::cout.rdbuf(old_buf);
-
-    EXPECT_EQ(capture.str(), "[RTB::Vector] - (1, 2, 3)\n");
 }
 
 // -----------------------------------------------------------------------------
@@ -464,9 +450,34 @@ TEST(VectorTest, IntegerVectorNormalization) {
     const RTB::Vector<int, 3> vector{3, 4, 0};
 
     // magnitude() = 5, integer division truncates.
-    auto normal = vector.normalize();
+    const auto normal = vector.normalize();
 
-    auto test = RTB::Vector<int, 3>({0, 0, 0});
+    const auto test = RTB::Vector<int, 3>({0, 0, 0});
 
     EXPECT_EQ(normal, test);
 }
+
+// -----------------------------------------------------------------------------
+// Death tests (Debug-only asserts)
+// -----------------------------------------------------------------------------
+
+#ifndef NDEBUG
+
+TEST(VectorTest, DivideByNearZeroScalarTriggersAssert) {
+    EXPECT_DEATH(([]() {
+                     Vec3 vector{1.0, 2.0, 3.0};
+                     vector /= 0.0;
+                 }()),
+                 "");
+}
+
+TEST(VectorTest, ElementWiseDivideByNearZeroTriggersAssert) {
+    EXPECT_DEATH(([]() {
+                     Vec3 vector{1.0, 2.0, 3.0};
+                     const Vec3 divisor{1.0, 0.0, 1.0};
+                     vector /= divisor;
+                 }()),
+                 "");
+}
+
+#endif  // NDEBUG

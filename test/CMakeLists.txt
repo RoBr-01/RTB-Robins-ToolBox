@@ -1,10 +1,15 @@
 set(TESTS
+    Colour_test
+    Ellipse_test
     Ellipsoid_test
     Math_test
+    Mixer_test
     Plane_test
     Point_test
     Random_test
     Ray_test
+    RTB_test
+    Standards_test
     Timer_test
     Vector_test
 )

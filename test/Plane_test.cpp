@@ -52,7 +52,7 @@ void expectPlaneCoefficientsNear(const Plane3& plane,
                                  T coeff_c,
                                  T coeff_d,
                                  T eps = k_eps) {
-    auto coeffs = plane.getCoefficients();
+    const auto coeffs = plane.getCoefficients();
     EXPECT_NEAR(coeffs[0], coeff_a, eps);
     EXPECT_NEAR(coeffs[1], coeff_b, eps);
     EXPECT_NEAR(coeffs[2], coeff_c, eps);
@@ -60,7 +60,7 @@ void expectPlaneCoefficientsNear(const Plane3& plane,
 }
 
 T evaluatePlane(const Plane3& plane, const Point3& point) {
-    auto coeffs = plane.getCoefficients();
+    const auto coeffs = plane.getCoefficients();
     return (coeffs[0] * point[0]) + (coeffs[1] * point[1]) +
            (coeffs[2] * point[2]) + coeffs[3];
 }
@@ -119,7 +119,7 @@ TEST(PlaneTest, ThreePointConstructorXYPlane) {
     EXPECT_TRUE(isPointOnPlane(plane, point_b));
     EXPECT_TRUE(isPointOnPlane(plane, point_c));
 
-    auto normal = plane.getNormalVector();
+    const auto normal = plane.getNormalVector();
     EXPECT_TRUE(areVectorsParallel(normal, Vector3{0.0, 0.0, 1.0}));
 }
 
@@ -156,7 +156,7 @@ TEST(PlaneTest, NormalizeProducesUnitNormal) {
 
     expectPlaneCoefficientsNear(plane, 1.0, 0.0, 0.0, -2.0);
 
-    auto normal = plane.getNormalVector();
+    const auto normal = plane.getNormalVector();
     EXPECT_NEAR(normal.magnitude(), 1.0, k_eps);
 }
 
@@ -174,7 +174,7 @@ TEST(PlaneTest, NormalizeZeroPlaneDoesNothing) {
 TEST(PlaneTest, GetNormalVectorReturnsFirstThreeCoefficients) {
     const Plane3 plane(4.0, 5.0, 6.0, 7.0);
 
-    auto normal = plane.getNormalVector();
+    const auto normal = plane.getNormalVector();
 
     expectVectorNear(normal, Vector3{4.0, 5.0, 6.0});
 }
@@ -190,7 +190,7 @@ TEST(PlaneTest, GetIntersectionReturnsCorrectDistance) {
 
     const Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{0.0, 0.0, 1.0});
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
 
     if (step.has_value()) {
         EXPECT_NEAR(*step, 5.0, k_eps);
@@ -210,7 +210,7 @@ TEST(PlaneTest, GetIntersectionRayStartsOnPlaneAndLiesInPlaneReturnsNullopt) {
     // even though the ray starts on the plane.
     const Ray3 ray(Point3{1.0, 2.0, 5.0}, Vector3{1.0, 0.0, 0.0});
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
 
     EXPECT_FALSE(step.has_value());
 }
@@ -221,7 +221,7 @@ TEST(PlaneTest, GetIntersectionParallelRayReturnsNullopt) {
 
     const Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
 
     EXPECT_FALSE(step.has_value());
 }
@@ -232,7 +232,7 @@ TEST(PlaneTest, GetIntersectionBehindRayReturnsNullopt) {
 
     const Ray3 ray(Point3{0.0, 0.0, 10.0}, Vector3{0.0, 0.0, 1.0});
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
 
     EXPECT_FALSE(step.has_value());
 }
@@ -248,7 +248,7 @@ TEST(PlaneTest, ReflectOffHorizontalPlane) {
 
     Ray3 ray(Point3{0.0, 0.0, 1.0}, Vector3{0.0, 0.0, -1.0});
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
     if (step.has_value()) {
         plane.reflect(ray, *step);
     } else {
@@ -262,6 +262,21 @@ TEST(PlaneTest, ReflectOffHorizontalPlane) {
     expectVectorNear(ray.getDirection(), Vector3{0.0, 0.0, 1.0});
 }
 
+TEST(PlaneTest, ReflectWorksOnNonNormalizedPlane) {
+    // Plane 2z = 0 (equivalent to z = 0), never normalized: the normal
+    // (0, 0, 2) is not unit length. reflect() normalizes its own copy of
+    // the normal internally, so this should still behave correctly.
+    const Plane3 plane(0.0, 0.0, 2.0, 0.0);
+
+    // Pick a step directly rather than via getIntersection(), which does
+    // require a normalized plane.
+    Ray3 ray(Point3{0.0, 0.0, 1.0}, Vector3{0.0, 0.0, -1.0});
+    plane.reflect(ray, 1.0);
+
+    expectPointNear(ray.getOrigin(), Point3{0.0, 0.0, 0.0});
+    expectVectorNear(ray.getDirection(), Vector3{0.0, 0.0, 1.0});
+}
+
 TEST(PlaneTest, ReflectAt45Degrees) {
     // Plane y = 0
     Plane3 plane(0.0, 1.0, 0.0, 0.0);
@@ -272,7 +287,7 @@ TEST(PlaneTest, ReflectAt45Degrees) {
 
     Ray3 ray(Point3{0.0, 1.0, 0.0}, incoming);
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
     if (step.has_value()) {
         plane.reflect(ray, *step);
     } else {
@@ -292,7 +307,7 @@ TEST(PlaneTest, ReflectedDirectionIsNormalized) {
     const Vector3 dir{2.0, 0.0, -2.0};
     Ray3 ray(Point3{0.0, 0.0, 1.0}, dir);
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
     ASSERT_TRUE(step.has_value());
     if (step.has_value()) {
         plane.reflect(ray, step.value());
@@ -314,7 +329,7 @@ TEST(PlaneTest, IntersectPlanesReturnsLineForOrthogonalPlanes) {
     p1.normalize();
     p2.normalize();
 
-    auto line = RTB::intersectPlanes(p1, p2);
+    const auto line = RTB::intersectPlanes(p1, p2);
 
     if (line.has_value()) {
         // Origin should satisfy both planes
@@ -338,7 +353,7 @@ TEST(PlaneTest, IntersectPlanesReturnsCorrectLine) {
     p1.normalize();
     p2.normalize();
 
-    auto line = RTB::intersectPlanes(p1, p2);
+    const auto line = RTB::intersectPlanes(p1, p2);
 
     Point3 origin;
     if (line.has_value()) {
@@ -363,7 +378,7 @@ TEST(PlaneTest, IntersectPlanesParallelReturnsNullopt) {
     p1.normalize();
     p2.normalize();
 
-    auto line = RTB::intersectPlanes(p1, p2);
+    const auto line = RTB::intersectPlanes(p1, p2);
 
     EXPECT_FALSE(line.has_value());
 }
@@ -375,7 +390,7 @@ TEST(PlaneTest, IntersectPlanesCoincidentReturnsNullopt) {
     p1.normalize();
     p2.normalize();
 
-    auto line = RTB::intersectPlanes(p1, p2);
+    const auto line = RTB::intersectPlanes(p1, p2);
 
     EXPECT_FALSE(line.has_value());
 }
@@ -387,7 +402,7 @@ TEST(PlaneTest, IntersectPlanesDirectionMatchesCrossProduct) {
     p1.normalize();
     p2.normalize();
 
-    auto line = RTB::intersectPlanes(p1, p2);
+    const auto line = RTB::intersectPlanes(p1, p2);
 
     Vector3 expected =
         RTB::crossProduct(p1.getNormalVector(), p2.getNormalVector());
@@ -428,7 +443,7 @@ TEST(PlaneTest, ReflectionPreservesIncidentAngleMagnitude) {
 
     Ray3 ray(Point3{0.0, 0.0, 1.0}, dir);
 
-    auto step = plane.getIntersection(ray);
+    const auto step = plane.getIntersection(ray);
     ASSERT_TRUE(step.has_value());
 
     if (step.has_value()) {
@@ -444,5 +459,25 @@ TEST(PlaneTest, ReflectionPreservesIncidentAngleMagnitude) {
 
     expectVectorNear(ray.getDirection(), expected);
 }
+
+// -----------------------------------------------------------------------------
+// Death tests (Debug-only asserts)
+// -----------------------------------------------------------------------------
+
+#ifndef NDEBUG
+
+TEST(PlaneTest, GetIntersectionOnNonNormalizedPlaneTriggersAssert) {
+    EXPECT_DEATH(
+        ([]() {
+            // Plane 2x + 0y + 0z - 10 = 0 (equivalent to x = 5), never
+            // normalized: the normal (2, 0, 0) is not unit length.
+            const Plane3 plane(2.0, 0.0, 0.0, -10.0);
+            const Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
+            [[maybe_unused]] const auto step = plane.getIntersection(ray);
+        }()),
+        "");
+}
+
+#endif  // NDEBUG
 
 }  // namespace

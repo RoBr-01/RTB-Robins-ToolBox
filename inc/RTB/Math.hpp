@@ -1,10 +1,25 @@
-#ifndef MATH_HPP
-#define MATH_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Math.hpp
+ Math constants and trigonometric/coordinate-conversion helpers.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_MATH_HPP
+#define RTB_MATH_HPP
 
 // STL
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 
 namespace RTB {
 
@@ -17,14 +32,6 @@ constexpr double pi_div_2 = pi / 2.0;
 constexpr double pi_div_4 = pi / 4.0;
 constexpr double pi_div_180 = pi / 180.0;
 constexpr double r180_div_pi = 180.0 / pi;
-
-/**
- * @brief Cartesian 3D coordinate (x, y, z).
- */
-template <typename T>
-struct CartesianCoord {
-    T x{}, y{}, z{};
-};
 
 /**
  * @brief Spherical coordinate (azimuth, elevation, radius).
@@ -102,7 +109,8 @@ template <typename T, typename C>
                        static_cast<T>(r180_div_pi)),
         static_cast<T>(std::atan2(cart_z, rxy) * static_cast<T>(r180_div_pi)),
         static_cast<T>(std::sqrt((cart_x * cart_x) + (cart_y * cart_y) +
-                                 (cart_z * cart_z)))};
+                                 (cart_z * cart_z))),
+    };
 }
 
 /**
@@ -119,9 +127,11 @@ template <typename T, typename S>
 
     const T cos_el = cosd(elevation);
 
-    return {radius * cos_el * cosd(azimuth),
-            radius * cos_el * sind(azimuth),
-            radius * sind(elevation)};
+    return {
+        radius * cos_el * cosd(azimuth),
+        radius * cos_el * sind(azimuth),
+        radius * sind(elevation),
+    };
 }
 
 /** @brief Amplitude ratio to dB (20 * log10). */
@@ -136,18 +146,33 @@ template <typename T>
     return static_cast<T>(std::pow(10.0, static_cast<double>(decibel) / 20.0));
 }
 
-// TODO: expand to be a template?
-[[nodiscard]] inline size_t nextPowerOf2(const size_t number) {
-    if (number == 0) {
+/**
+ * @brief Rounds up to the next power of 2.
+ *
+ * Saturates to the largest representable power of 2 (2^(bits-1)) for inputs
+ * above it, since no larger power of 2 is representable in size_t.
+ */
+[[nodiscard]] inline size_t nextPowerOf2(size_t number) {
+    if (number <= 1) {
         return 1;
     }
-    size_t power = 1;
-    while (power < number) {
-        power <<= 1;
+    constexpr size_t max_power = size_t{1}
+                                 << (std::numeric_limits<size_t>::digits - 1U);
+    if (number > max_power) {
+        return max_power;
     }
-    return power;
+    --number;
+    number |= number >> 1U;
+    number |= number >> 2U;
+    number |= number >> 4U;
+    number |= number >> 8U;
+    number |= number >> 16U;
+    if constexpr (sizeof(size_t) > 4) {
+        number |= number >> 32U;
+    }
+    return number + 1;
 }
 
 }  // namespace RTB
 
-#endif /* MATH_HPP */
+#endif /* RTB_MATH_HPP */

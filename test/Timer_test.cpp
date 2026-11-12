@@ -45,8 +45,10 @@ ParsedTimerOutput parseTimerOutputs(const std::string& output) {
         R"(^\[TIMER\]\s*(.*?)\s*-\s*([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s+(s|ms|us|ns)\s*$)");
 
     std::smatch match;
-    EXPECT_TRUE(std::regex_search(output, match, re))
-        << "Could not parse timer output: '" << output << "'";
+    if (!std::regex_search(output, match, re)) {
+        ADD_FAILURE() << "Could not parse timer output: '" << output << "'";
+        return ParsedTimerOutput{};
+    }
 
     ParsedTimerOutput result;
     result.label = match[1].str();

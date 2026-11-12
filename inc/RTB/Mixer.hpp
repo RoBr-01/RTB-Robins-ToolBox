@@ -1,5 +1,19 @@
-#ifndef MATRIX_MIXER_HPP
-#define MATRIX_MIXER_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Mixer.hpp
+ SIMD-accelerated matrix mixer (summing matrix) for multichannel audio.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_MIXER_HPP
+#define RTB_MIXER_HPP
 
 // STL
 #include <algorithm>
@@ -10,6 +24,7 @@
 #include <type_traits>
 
 // LIB
+#include <hwy/aligned_allocator.h>  // HWY_ALIGNMENT
 #include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
@@ -32,7 +47,7 @@ namespace hn = hwy::HWY_NAMESPACE;
  * in memory, which is optimal for the inner SIMD loop.
  *
  * Gain changes are smoothed over a configurable ramp time to avoid clicks.
- * Call Prepare() before processing to set the sample rate and ramp time.
+ * Call prepare() before processing to set the sample rate and ramp time.
  *
  * SIMD dispatch is handled by Google Highway — the best available instruction
  * set (AVX2, SSE4, NEON, etc.) is selected at runtime.
@@ -43,22 +58,22 @@ namespace hn = hwy::HWY_NAMESPACE;
  */
 template <typename T, std::size_t Inputs, std::size_t Outputs>
 class MatrixMixer {
-    static_assert(std::is_floating_point<T>::value,
+    static_assert(std::is_floating_point_v<T>,
                   "MatrixMixer<T>: T must be a floating-point type. "
                   "Integer mixing is not supported due to smoothing.");
     static_assert(Inputs > 0, "MatrixMixer: Inputs must be > 0.");
     static_assert(Outputs > 0, "MatrixMixer: Outputs must be > 0.");
 
-    static constexpr std::size_t kMatrixSize = Inputs * Outputs;
+    static constexpr std::size_t matrix_size = Inputs * Outputs;
 
    public:
     MatrixMixer() {
         m_current.fill(static_cast<T>(0));
         m_target.fill(static_cast<T>(0));
         m_delta.fill(static_cast<T>(0));
-        m_rampSamplesRemaining = 0;
-        m_rampSamples = 0;
-        m_sampleRate = static_cast<T>(44100);
+        m_ramp_samples_remaining = 0;
+        m_ramp_samples = 0;
+        m_sample_rate = static_cast<T>(44100);
     }
 
     // -------------------------------------------------------------------------
@@ -68,21 +83,21 @@ class MatrixMixer {
     /**
      * @brief Prepares the mixer for processing.
      *
-     * Must be called before any Process() call, and again if the sample
+     * Must be called before any process() call, and again if the sample
      * rate changes.
      *
-     * @param sampleRate  Sample rate in Hz.
-     * @param rampTimeMs  Gain ramp time in milliseconds. Gain changes are
-     *                    linearly interpolated over this duration to prevent
-     *                    clicks. Typical values: 5–20 ms.
+     * @param sample_rate  Sample rate in Hz.
+     * @param ramp_time_ms Gain ramp time in milliseconds. Gain changes are
+     *                     linearly interpolated over this duration to
+     *                     prevent clicks. Typical values: 5-20 ms.
      */
-    void Prepare(T sampleRate, T rampTimeMs) {
-        assert(sampleRate > static_cast<T>(0));
-        assert(rampTimeMs >= static_cast<T>(0));
-        m_sampleRate = sampleRate;
-        m_rampSamples =
-            static_cast<int>(sampleRate * rampTimeMs / static_cast<T>(1000));
-        m_rampSamples = std::max(m_rampSamples, 1);  // at least 1 sample
+    void prepare(T sample_rate, T ramp_time_ms) {
+        assert(sample_rate > static_cast<T>(0));
+        assert(ramp_time_ms >= static_cast<T>(0));
+        m_sample_rate = sample_rate;
+        m_ramp_samples =
+            static_cast<int>(sample_rate * ramp_time_ms / static_cast<T>(1000));
+        m_ramp_samples = std::max(m_ramp_samples, 1);  // at least 1 sample
     }
 
     // -------------------------------------------------------------------------
@@ -92,15 +107,15 @@ class MatrixMixer {
     /**
      * @brief Sets a single gain coefficient and triggers a ramp.
      *
-     * @param outputIdx  Output channel index [0, Outputs).
-     * @param inputIdx   Input channel index  [0, Inputs).
-     * @param gain       Target gain value.
+     * @param output_idx  Output channel index [0, Outputs).
+     * @param input_idx   Input channel index  [0, Inputs).
+     * @param gain        Target gain value.
      */
-    void SetGain(std::size_t outputIdx, std::size_t inputIdx, T gain) {
-        assert(outputIdx < Outputs);
-        assert(inputIdx < Inputs);
-        m_target[Index(outputIdx, inputIdx)] = gain;
-        RecomputeDeltas();
+    void setGain(std::size_t output_idx, std::size_t input_idx, T gain) {
+        assert(output_idx < Outputs);
+        assert(input_idx < Inputs);
+        m_target[index(output_idx, input_idx)] = gain;
+        recomputeDeltas();
     }
 
     /**
@@ -109,33 +124,34 @@ class MatrixMixer {
      * @param gains  Row-major array of size Outputs * Inputs.
      *               gains[i * Inputs + j] is the gain from input j to output i.
      */
-    void SetMatrix(const std::array<T, kMatrixSize>& gains) {
+    void setMatrix(const std::array<T, matrix_size>& gains) {
         m_target = gains;
-        RecomputeDeltas();
+        recomputeDeltas();
     }
 
     /**
-     * @brief Returns the current (possibly mid-ramp) gain at (outputIdx,
-     * inputIdx).
+     * @brief Returns the current (possibly mid-ramp) gain at (output_idx,
+     * input_idx).
      */
-    T GetGain(std::size_t outputIdx, std::size_t inputIdx) const {
-        assert(outputIdx < Outputs);
-        assert(inputIdx < Inputs);
-        return m_current[Index(outputIdx, inputIdx)];
+    [[nodiscard]] T getGain(std::size_t output_idx,
+                            std::size_t input_idx) const {
+        assert(output_idx < Outputs);
+        assert(input_idx < Inputs);
+        return m_current[index(output_idx, input_idx)];
     }
 
     /**
      * @brief Returns the target gain matrix as a row-major array.
      */
-    const std::array<T, kMatrixSize>& GetMatrix() const {
+    [[nodiscard]] const std::array<T, matrix_size>& getMatrix() const {
         return m_target;
     }
 
     /**
      * @brief Returns true if a gain ramp is currently in progress.
      */
-    bool IsRamping() const {
-        return m_rampSamplesRemaining > 0;
+    [[nodiscard]] bool isRamping() const {
+        return m_ramp_samples_remaining > 0;
     }
 
     // -------------------------------------------------------------------------
@@ -148,62 +164,68 @@ class MatrixMixer {
      * @param inputs   Array of Inputs input samples.
      * @param outputs  Array of Outputs output samples (overwritten).
      */
-    void ProcessSample(const std::array<T, Inputs>& inputs,
+    void processSample(const std::array<T, Inputs>& inputs,
                        std::array<T, Outputs>& outputs) {
-        AdvanceRamp();
-        ProcessSampleWithCurrentMatrix(inputs, outputs);
+        advanceRamp();
+        processFrameSIMD(inputs.data(), outputs.data());
     }
 
     /**
      * @brief Processes a block of samples.
      *
-     * @param inputs      Pointer to interleaved input samples:
-     *                    inputs[sample * Inputs + channel].
-     * @param outputs     Pointer to interleaved output samples (overwritten).
-     * @param numSamples  Number of samples to process.
+     * @param inputs       Pointer to interleaved input samples:
+     *                     inputs[sample * Inputs + channel].
+     * @param outputs      Pointer to interleaved output samples (overwritten).
+     * @param num_samples  Number of samples to process.
      */
-    void ProcessBlock(const T* inputs, T* outputs, std::size_t numSamples) {
+    void processBlock(const T* inputs, T* outputs, std::size_t num_samples) {
         assert(inputs != nullptr);
         assert(outputs != nullptr);
 
-        for (std::size_t s = 0; s < numSamples; ++s) {
-            AdvanceRamp();
+        for (std::size_t sample = 0; sample < num_samples; ++sample) {
+            advanceRamp();
 
-            const T* inFrame = inputs + s * Inputs;
-            T* outFrame = outputs + s * Outputs;
+            const T* in_frame = inputs + (sample * Inputs);
+            T* out_frame = outputs + (sample * Outputs);
 
-            ProcessFrameSIMD(inFrame, outFrame);
+            processFrameSIMD(in_frame, out_frame);
         }
     }
 
     /**
      * @brief Processes a block of samples with non-interleaved (planar) layout.
      *
-     * @param inputs      Array of Inputs pointers, each pointing to numSamples
-     *                    samples for that input channel.
-     * @param outputs     Array of Outputs pointers (overwritten).
-     * @param numSamples  Number of samples to process.
+     * @param inputs       Array of Inputs pointers, each pointing to
+     *                     num_samples samples for that input channel.
+     * @param outputs      Array of Outputs pointers (overwritten).
+     * @param num_samples  Number of samples to process.
      */
-    void ProcessBlockPlanar(const T* const inputs[Inputs],
-                            T* const outputs[Outputs],
-                            std::size_t numSamples) {
-        assert(inputs != nullptr);
-        assert(outputs != nullptr);
+    void processBlockPlanar(const std::array<const T*, Inputs>& inputs,
+                            const std::array<T*, Outputs>& outputs,
+                            std::size_t num_samples) {
+        for (const T* channel_ptr : inputs) {
+            assert(channel_ptr != nullptr);
+        }
+        for (const T* channel_ptr : outputs) {
+            assert(channel_ptr != nullptr);
+        }
 
         // Temp frame buffers for per-sample dispatch
-        std::array<T, Inputs> inFrame;
-        std::array<T, Outputs> outFrame;
+        std::array<T, Inputs> in_frame;
+        std::array<T, Outputs> out_frame;
 
-        for (std::size_t s = 0; s < numSamples; ++s) {
-            AdvanceRamp();
+        for (std::size_t sample = 0; sample < num_samples; ++sample) {
+            advanceRamp();
 
-            for (std::size_t c = 0; c < Inputs; ++c)
-                inFrame[c] = inputs[c][s];
+            for (std::size_t channel = 0; channel < Inputs; ++channel) {
+                in_frame[channel] = inputs[channel][sample];
+            }
 
-            ProcessFrameSIMD(inFrame.data(), outFrame.data());
+            processFrameSIMD(in_frame.data(), out_frame.data());
 
-            for (std::size_t c = 0; c < Outputs; ++c)
-                outputs[c][s] = outFrame[c];
+            for (std::size_t channel = 0; channel < Outputs; ++channel) {
+                outputs[channel][sample] = out_frame[channel];
+            }
         }
     }
 
@@ -212,30 +234,46 @@ class MatrixMixer {
     // Internal helpers
     // -------------------------------------------------------------------------
 
-    static constexpr std::size_t Index(std::size_t outputIdx,
-                                       std::size_t inputIdx) {
-        return outputIdx * Inputs + inputIdx;  // row-major
+    static constexpr std::size_t index(std::size_t output_idx,
+                                       std::size_t input_idx) {
+        return (output_idx * Inputs) + input_idx;  // row-major
     }
 
-    void RecomputeDeltas() {
-        m_rampSamplesRemaining = m_rampSamples;
-        for (std::size_t i = 0; i < kMatrixSize; ++i)
-            m_delta[i] =
-                (m_target[i] - m_current[i]) / static_cast<T>(m_rampSamples);
-    }
+    void recomputeDeltas() {
+        assert(m_ramp_samples > 0 &&
+               "MatrixMixer::recomputeDeltas() called before prepare(); "
+               "call prepare() before setGain()/setMatrix().");
 
-    void AdvanceRamp() {
-        if (m_rampSamplesRemaining <= 0)
+        if (m_ramp_samples <= 0) {
+            // Not prepared yet: snap directly to target rather than
+            // dividing by zero.
+            m_current = m_target;
+            m_ramp_samples_remaining = 0;
             return;
+        }
 
-        for (std::size_t i = 0; i < kMatrixSize; ++i)
+        m_ramp_samples_remaining = m_ramp_samples;
+        for (std::size_t i = 0; i < matrix_size; ++i) {
+            m_delta[i] =
+                (m_target[i] - m_current[i]) / static_cast<T>(m_ramp_samples);
+        }
+    }
+
+    void advanceRamp() {
+        if (m_ramp_samples_remaining <= 0) {
+            return;
+        }
+
+        for (std::size_t i = 0; i < matrix_size; ++i) {
             m_current[i] += m_delta[i];
+        }
 
-        --m_rampSamplesRemaining;
+        --m_ramp_samples_remaining;
 
         // Snap to target on completion to avoid floating-point drift
-        if (m_rampSamplesRemaining == 0)
+        if (m_ramp_samples_remaining == 0) {
             m_current = m_target;
+        }
     }
 
     /**
@@ -247,32 +285,33 @@ class MatrixMixer {
      * The inner loop over j is vectorised. Inputs are loaded in SIMD-width
      * chunks; the horizontal sum of the accumulator gives the scalar output.
      */
-    void ProcessFrameSIMD(const T* HWY_RESTRICT inFrame,
-                          T* HWY_RESTRICT outFrame) const {
-        const hn::ScalableTag<T> d;
-        const std::size_t lanes = hn::Lanes(d);
+    void processFrameSIMD(const T* HWY_RESTRICT in_frame,
+                          T* HWY_RESTRICT out_frame) const {
+        const hn::ScalableTag<T> tag;
+        const std::size_t lanes = hn::Lanes(tag);
 
         for (std::size_t i = 0; i < Outputs; ++i) {
-            const T* row = m_current.data() + i * Inputs;
+            const T* row = m_current.data() + (i * Inputs);
 
-            auto acc = hn::Zero(d);
-            std::size_t j = 0;
+            auto acc = hn::Zero(tag);
+            std::size_t col = 0;
 
             // Vectorised inner loop — process `lanes` inputs at a time
-            for (; j + lanes <= Inputs; j += lanes) {
-                const auto g = hn::LoadU(d, row + j);
-                const auto x = hn::LoadU(d, inFrame + j);
-                acc = hn::MulAdd(g, x, acc);
+            for (; col + lanes <= Inputs; col += lanes) {
+                const auto gains = hn::LoadU(tag, row + col);
+                const auto inputs_vec = hn::LoadU(tag, in_frame + col);
+                acc = hn::MulAdd(gains, inputs_vec, acc);
             }
 
             // Horizontal sum of SIMD accumulator
-            T sum = hn::ReduceSum(d, acc);
+            T sum = hn::ReduceSum(tag, acc);
 
             // Scalar tail for remaining inputs
-            for (; j < Inputs; ++j)
-                sum += row[j] * inFrame[j];
+            for (; col < Inputs; ++col) {
+                sum += row[col] * in_frame[col];
+            }
 
-            outFrame[i] = sum;
+            out_frame[i] = sum;
         }
     }
 
@@ -280,14 +319,14 @@ class MatrixMixer {
     // State
     // -------------------------------------------------------------------------
 
-    alignas(HWY_ALIGNMENT) std::array<T, kMatrixSize> m_current;  // live gains
-    alignas(HWY_ALIGNMENT) std::array<T, kMatrixSize> m_target;  // target gains
+    alignas(HWY_ALIGNMENT) std::array<T, matrix_size> m_current;  // live gains
+    alignas(HWY_ALIGNMENT) std::array<T, matrix_size> m_target;  // target gains
     alignas(HWY_ALIGNMENT)
-        std::array<T, kMatrixSize> m_delta;  // per-sample increment
+        std::array<T, matrix_size> m_delta;  // per-sample increment
 
-    int m_rampSamplesRemaining;
-    int m_rampSamples;
-    T m_sampleRate;
+    int m_ramp_samples_remaining;
+    int m_ramp_samples;
+    T m_sample_rate;
 };
 
 }  // namespace HWY_NAMESPACE
@@ -312,4 +351,4 @@ namespace RTB {
 using HWY_NAMESPACE::MatrixMixer;
 }
 
-#endif  // MATRIX_MIXER_HPP
+#endif  // RTB_MIXER_HPP
