@@ -64,11 +64,11 @@ class Timer {
     /**
      * @brief Returns elapsed time since the last start() call.
      *
-     * @tparam Duration  A std::chrono duration type. Defaults to milliseconds.
+     * @tparam Duration  A std::chrono duration type. Defaults to nanoseconds.
      * @return           elapsed time as a double in the requested unit.
      *
      * Example:
-     *   timer.elapsed();                              // milliseconds (default)
+     *   timer.elapsed();                              // nanoseconds (default)
      *   timer.elapsed<std::chrono::microseconds>();
      *   timer.elapsed<std::chrono::seconds>();
      */

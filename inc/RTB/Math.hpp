@@ -156,19 +156,19 @@ template <typename T>
     if (number <= 1) {
         return 1;
     }
-    constexpr size_t max_power =
-        size_t{1} << (std::numeric_limits<size_t>::digits - 1);
+    constexpr size_t max_power = size_t{1}
+                                 << (std::numeric_limits<size_t>::digits - 1U);
     if (number > max_power) {
         return max_power;
     }
     --number;
-    number |= number >> 1;
-    number |= number >> 2;
-    number |= number >> 4;
-    number |= number >> 8;
-    number |= number >> 16;
+    number |= number >> 1U;
+    number |= number >> 2U;
+    number |= number >> 4U;
+    number |= number >> 8U;
+    number |= number >> 16U;
     if constexpr (sizeof(size_t) > 4) {
-        number |= number >> 32;
+        number |= number >> 32U;
     }
     return number + 1;
 }

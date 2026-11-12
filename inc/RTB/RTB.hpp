@@ -18,8 +18,11 @@
 // This header includes everything, use with care
 
 #include <RTB/Colour.hpp>
+#include <RTB/Debug.hpp>
+#include <RTB/Ellipse.hpp>
 #include <RTB/Ellipsoid.hpp>
 #include <RTB/Math.hpp>
+#include <RTB/Mixer.hpp>
 #include <RTB/Plane.hpp>
 #include <RTB/Point.hpp>
 #include <RTB/Random.hpp>

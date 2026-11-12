@@ -456,3 +456,28 @@ TEST(VectorTest, IntegerVectorNormalization) {
 
     EXPECT_EQ(normal, test);
 }
+
+// -----------------------------------------------------------------------------
+// Death tests (Debug-only asserts)
+// -----------------------------------------------------------------------------
+
+#ifndef NDEBUG
+
+TEST(VectorTest, DivideByNearZeroScalarTriggersAssert) {
+    EXPECT_DEATH(([]() {
+                     Vec3 vector{1.0, 2.0, 3.0};
+                     vector /= 0.0;
+                 }()),
+                 "");
+}
+
+TEST(VectorTest, ElementWiseDivideByNearZeroTriggersAssert) {
+    EXPECT_DEATH(([]() {
+                     Vec3 vector{1.0, 2.0, 3.0};
+                     const Vec3 divisor{1.0, 0.0, 1.0};
+                     vector /= divisor;
+                 }()),
+                 "");
+}
+
+#endif  // NDEBUG

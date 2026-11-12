@@ -14,7 +14,8 @@ Checks: >
   -bugprone-branch-clone,
   -readability-redundant-access-specifiers,
   -readability-const-return-type,
-  -google-readability-todo
+  -google-readability-todo,
+  -modernize-concat-nested-namespaces
 
 CheckOptions:
   - key: readability-identifier-naming.ClassCase

@@ -68,6 +68,66 @@ TEST(EllipsoidTest, ThreeArgConstructor) {
 }
 
 // ============================================================
+// getRadiusAt
+// ============================================================
+
+TEST(EllipsoidTest, GetRadiusAtAlongPrincipalAxes) {
+    const RTB::Ellipsoid<double> prolate(2.0, 1.0, 1.0);
+
+    EXPECT_NEAR(prolate.getRadiusAt(0.0, 0.0), 2.0, k_tight);    // +x
+    EXPECT_NEAR(prolate.getRadiusAt(90.0, 0.0), 1.0, k_tight);   // +y
+    EXPECT_NEAR(prolate.getRadiusAt(0.0, 90.0), 1.0, k_tight);   // +z
+}
+
+TEST(EllipsoidTest, GetRadiusAtSphereIsConstant) {
+    const RTB::Ellipsoid<double> sphere(3.0, 3.0, 3.0);
+
+    EXPECT_NEAR(sphere.getRadiusAt(0.0, 0.0), 3.0, k_tight);
+    EXPECT_NEAR(sphere.getRadiusAt(37.0, 21.0), 3.0, k_tight);
+    EXPECT_NEAR(sphere.getRadiusAt(-123.0, 60.0), 3.0, k_tight);
+}
+
+// -----------------------------------------------------------------------------
+// Death tests (Debug-only asserts)
+// -----------------------------------------------------------------------------
+
+#ifndef NDEBUG
+
+TEST(EllipsoidTest, GetRadiusAtOnZeroDimensionsTriggersAssert) {
+    EXPECT_DEATH(
+        ([]() {
+            const RTB::Ellipsoid<double> ellipsoid;  // zero dimensions
+            [[maybe_unused]] const auto radius =
+                ellipsoid.getRadiusAt(0.0, 0.0);
+        }()),
+        "");
+}
+
+TEST(EllipsoidTest, IntersectRayOnZeroDimensionsTriggersAssert) {
+    EXPECT_DEATH(
+        ([]() {
+            const RTB::Ellipsoid<double> ellipsoid;  // zero dimensions
+            const RTB::Ray<double, 3> ray(RTB::Point<double, 3>{0, 0, 0},
+                                          RTB::Vector<double, 3>{1, 0, 0});
+            [[maybe_unused]] const auto result = ellipsoid.intersectRay(ray);
+        }()),
+        "");
+}
+
+TEST(EllipsoidTest, IntersectRayOnZeroLengthDirectionTriggersAssert) {
+    EXPECT_DEATH(
+        ([]() {
+            const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
+            const RTB::Ray<double, 3> ray(RTB::Point<double, 3>{0, 0, 0},
+                                          RTB::Vector<double, 3>{0, 0, 0});
+            [[maybe_unused]] const auto result = sphere.intersectRay(ray);
+        }()),
+        "");
+}
+
+#endif  // NDEBUG
+
+// ============================================================
 // intersectRay — basic geometry
 // ============================================================
 
@@ -421,7 +481,7 @@ TEST(EllipsoidTracePath, TangentPointLiesOnIntersectionEllipse) {
 // Independently re-derives the expected tangent length, tangent angle, and
 // arc length from the tangent-line geometry (not by reading tracePath's own
 // stored fields back at itself) to verify total_length is actually correct,
-// not merely self-consistent with straigh_length + arclength.
+// not merely self-consistent with straight_length + arclength.
 TEST(EllipsoidTracePath, PathlengthMatchesIndependentTangentGeometry) {
     const RTB::Ellipsoid<double> sphere(1.0, 1.0, 1.0);
     const double source_distance = 2.0;
@@ -445,7 +505,7 @@ TEST(EllipsoidTracePath, PathlengthMatchesIndependentTangentGeometry) {
     const double expected_total = expected_tangent_length + expected_arc_length;
 
     for (const auto& path : paths) {
-        EXPECT_NEAR(path->straigh_length, expected_tangent_length, k_med);
+        EXPECT_NEAR(path->straight_length, expected_tangent_length, k_med);
         EXPECT_NEAR(path->arclength, expected_arc_length, k_med);
         EXPECT_NEAR(path->total_length, expected_total, k_med);
     }
@@ -488,9 +548,10 @@ TEST(EllipsoidArcLength, SphereQuarterArc) {
     const RTB::Point<double, 3> p1{1.0, 0.0, 0.0};
     const RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
 
-    const double arc = sphere.arcLength(p1, p2);
+    const auto arc = sphere.arcLength(p1, p2);
+    ASSERT_TRUE(arc.has_value());
     const double expected = RTB::pi / 2.0;
-    EXPECT_NEAR(arc, expected, 1e-4);
+    EXPECT_NEAR(*arc, expected, 1e-4);
 }
 
 // For a sphere, arc length of half a great circle = pi
@@ -499,9 +560,10 @@ TEST(EllipsoidArcLength, SphereHalfArc) {
     const RTB::Point<double, 3> p1{1.0, 0.0, 0.0};
     const RTB::Point<double, 3> p2{-1.0, 0.0, 0.0};
 
-    const double arc = sphere.arcLength(p1, p2);
+    const auto arc = sphere.arcLength(p1, p2);
+    ASSERT_TRUE(arc.has_value());
     const double expected = RTB::pi;
-    EXPECT_NEAR(arc, expected, 1e-4);
+    EXPECT_NEAR(*arc, expected, 1e-4);
 }
 
 // For a sphere, points on same side give small arc
@@ -510,9 +572,10 @@ TEST(EllipsoidArcLength, SphereSmallArc) {
     const RTB::Point<double, 3> p1{1.0, 0.0, 0.0};
     const RTB::Point<double, 3> p2{std::cos(0.1), std::sin(0.1), 0.0};
 
-    const double arc = sphere.arcLength(p1, p2);
+    const auto arc = sphere.arcLength(p1, p2);
+    ASSERT_TRUE(arc.has_value());
     const double expected = 0.1;  // radian measure
-    EXPECT_NEAR(arc, expected, 1e-4);
+    EXPECT_NEAR(*arc, expected, 1e-4);
 }
 
 // For a sphere, arc length should be symmetric
@@ -521,9 +584,11 @@ TEST(EllipsoidArcLength, SphereArcSymmetric) {
     const RTB::Point<double, 3> p1{1.0, 0.0, 0.0};
     const RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
 
-    const double arc1 = sphere.arcLength(p1, p2);
-    const double arc2 = sphere.arcLength(p2, p1);
-    EXPECT_NEAR(arc1, arc2, k_tight);
+    const auto arc1 = sphere.arcLength(p1, p2);
+    const auto arc2 = sphere.arcLength(p2, p1);
+    ASSERT_TRUE(arc1.has_value());
+    ASSERT_TRUE(arc2.has_value());
+    EXPECT_NEAR(*arc1, *arc2, k_tight);
 }
 
 // For a sphere, arc length of full circle should equal circumference
@@ -539,8 +604,9 @@ TEST(EllipsoidArcLength, SphereFullCircle) {
     ASSERT_TRUE(ellipse.has_value());
 
     // arcLength between same point should be 0 (shorter arc)
-    const double arc = sphere.arcLength(p1, p1);
-    EXPECT_NEAR(arc, 0.0, k_tight);
+    const auto arc = sphere.arcLength(p1, p1);
+    ASSERT_TRUE(arc.has_value());
+    EXPECT_NEAR(*arc, 0.0, k_tight);
 }
 
 TEST(EllipsoidArcLength, ProlateEquatorialArc) {
@@ -548,13 +614,19 @@ TEST(EllipsoidArcLength, ProlateEquatorialArc) {
     const RTB::Point<double, 3> p1{2.0, 0.0, 0.0};
     const RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
 
-    const double arc = prolate.arcLength(p1, p2);
+    const auto arc = prolate.arcLength(p1, p2);
+    ASSERT_TRUE(arc.has_value());
 
-    // Known value from numerical integration
-    const double expected =
-        2.422;  // Approximate quarter perimeter of ellipse a=2, b=1
+    // Reference value independently computed via Simpson's rule at
+    // n=100000 for the quarter arc of ellipse a=2, b=1 (see the matching
+    // Ellipse test, ArcLength_NonCircularMatchesClosedFormReference).
+    // Tight tolerance: this would fail under the old
+    // Ellipse::parameterOf(), which used atan2(proj_y, proj_x) directly
+    // instead of atan2(proj_y / b, proj_x / a) and so computed the wrong
+    // parametric angle for any non-circular ellipse.
+    const double expected = 2.4221120551369446;
 
-    EXPECT_NEAR(arc, expected, 1e-3);
+    EXPECT_NEAR(*arc, expected, 1e-9);
 }
 
 // ============================================================
@@ -597,10 +669,12 @@ TEST(EllipsoidArcLength, LinearScaling) {
     const RTB::Point<double, 3> p1_l{scale, 0.0, 0.0};
     const RTB::Point<double, 3> p2_l{0.0, scale, 0.0};
 
-    const double arc_s = sphere_small.arcLength(p1_s, p2_s);
-    const double arc_l = sphere_large.arcLength(p1_l, p2_l);
+    const auto arc_s = sphere_small.arcLength(p1_s, p2_s);
+    const auto arc_l = sphere_large.arcLength(p1_l, p2_l);
+    ASSERT_TRUE(arc_s.has_value());
+    ASSERT_TRUE(arc_l.has_value());
 
-    EXPECT_NEAR(arc_l / arc_s, scale, 1e-4)
+    EXPECT_NEAR(*arc_l / *arc_s, scale, 1e-4)
         << "Arc length should scale linearly with ellipsoid size";
 }
 

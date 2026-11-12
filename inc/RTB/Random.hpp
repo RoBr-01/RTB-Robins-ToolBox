@@ -68,17 +68,19 @@ inline float randomHashValue(uint32_t state) {
  */
 template <typename T>
 Vector<T, 3> randSampleSphere(std::mt19937& generator) {
-    static std::uniform_real_distribution<T> uniform01(static_cast<T>(0),
-                                                       static_cast<T>(1));
+    std::uniform_real_distribution<T> uniform01(static_cast<T>(0),
+                                                static_cast<T>(1));
 
     const T theta =
         static_cast<T>(2) * static_cast<T>(pi) * uniform01(generator);
-    const T phi =
-        std::acos(static_cast<T>(1) - static_cast<T>(2) * uniform01(generator));
+    const T phi = std::acos(static_cast<T>(1) -
+                            (static_cast<T>(2) * uniform01(generator)));
     const T sinphi = std::sin(phi);
 
     return Vector<T, 3>{
-        sinphi * std::cos(theta), sinphi * std::sin(theta), std::cos(phi),
+        sinphi * std::cos(theta),
+        sinphi * std::sin(theta),
+        std::cos(phi),
     };
 }
 
@@ -90,16 +92,18 @@ Vector<T, 3> randSampleSphere(std::mt19937& generator) {
  */
 template <typename T>
 SphericalCoord<T> randSampleSpherePoint(std::mt19937& generator) {
-    static std::uniform_real_distribution<T> uniform01(static_cast<T>(0),
-                                                       static_cast<T>(1));
+    std::uniform_real_distribution<T> uniform01(static_cast<T>(0),
+                                                static_cast<T>(1));
 
     const T theta =
         static_cast<T>(2) * static_cast<T>(pi) * uniform01(generator);
-    const T phi =
-        std::acos(static_cast<T>(2) * uniform01(generator) - static_cast<T>(1));
+    const T phi = std::acos((static_cast<T>(2) * uniform01(generator)) -
+                            static_cast<T>(1));
 
     return SphericalCoord<T>{
-        rad2deg(theta), static_cast<T>(90) - rad2deg(phi), static_cast<T>(1),
+        rad2deg(theta),
+        static_cast<T>(90) - rad2deg(phi),
+        static_cast<T>(1),
     };
 }
 

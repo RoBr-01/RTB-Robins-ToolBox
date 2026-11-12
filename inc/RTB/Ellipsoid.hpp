@@ -23,8 +23,8 @@
 #include <RTB/Ray.hpp>
 #include <RTB/Vector.hpp>
 #include <array>
+#include <cassert>
 #include <cstddef>
-#include <cstdlib>
 #include <limits>
 #include <optional>
 
@@ -73,14 +73,17 @@ template <typename T, std::size_t N>
     return cross_sq <= epsilon * epsilon * mag_sq;
 }
 
+/**
+ * @brief A diffraction path from a source point around an ellipsoid to a
+ * point on its surface.
+ */
 template <typename T>
 struct Path {
-    T total_length{};
-    T straigh_length{};
-    T arclength{};
+    T total_length{};     ///< straight_length + arclength.
+    T straight_length{};  ///< Length of source2tanpoint.
+    T arclength{};        ///< Arc length along the ellipsoid's surface.
     Point<T, 3> tangent_point{};
-    // source to tangent point (unnormalised)
-    Vector<T, 3> source2tanpoint{};
+    Vector<T, 3> source2tanpoint{};  ///< Source to tangent point, unnormalized.
 };
 
 template <typename T>
@@ -91,23 +94,56 @@ class Ellipsoid {
 
     [[nodiscard]] std::array<T, 3> getDimensions() const;
 
-    [[nodiscard]] T getRadiusAt(float a_azimuth, float a_elevation) const;
+    /**
+     * @brief Returns the ellipsoid's radius along the direction given by
+     * azimuth/elevation (degrees).
+     *
+     * @warning Requires non-zero dimensions; a default-constructed
+     * Ellipsoid (all dimensions zero) divides by zero here.
+     */
+    [[nodiscard]] T getRadiusAt(T a_azimuth, T a_elevation) const;
 
     void setDimensions(T a_depth, T a_width, T a_height);
 
+    /**
+     * @brief Returns the ray parameter(s) at which ray intersects the
+     * ellipsoid: {t1, t2} for two intersections, {t, std::nullopt} for a
+     * tangent ray, or {std::nullopt, std::nullopt} for no intersection.
+     *
+     * @warning Requires non-zero dimensions and a non-zero-length ray
+     * direction; either divides by zero here.
+     */
     [[nodiscard]] std::array<std::optional<T>, 2> intersectRay(
-        Ray<T, 3> ray) const;
+        const Ray<T, 3>& ray) const;
 
     [[nodiscard]] std::optional<Ellipse<T>> intersectPlane(
-        Plane<T> plane) const;
+        const Plane<T>& plane) const;
 
-    // Basically the arclength of the ellipse defined by intersecting the plane
-    // formed by point_1, point_2 and the origin with the ellipsoid
-    [[nodiscard]] T arcLength(const Point<T, 3>& point_1,
-                              const Point<T, 3>& point_2) const;
+    /**
+     * @brief Returns the arc length of the ellipse formed by intersecting
+     * the ellipsoid with the plane through point_1, point_2, and the
+     * origin.
+     *
+     * Returns std::nullopt if that plane does not intersect the
+     * ellipsoid in a well-defined ellipse (e.g. a degenerate/zero-size
+     * ellipsoid).
+     */
+    [[nodiscard]] std::optional<T> arcLength(const Point<T, 3>& point_1,
+                                             const Point<T, 3>& point_2) const;
 
+    /**
+     * @brief Traces the diffraction path(s) from point_outside around the
+     * ellipsoid to point_on, a point on (or treated as on) its surface.
+     *
+     * Returns {path, std::nullopt} if point_on is directly visible from
+     * point_outside (unobstructed by the ellipsoid) — only one physical
+     * path exists in that case. Otherwise returns the two paths that
+     * diffract around either side of the ellipsoid, {path_a, path_b}.
+     * Returns {std::nullopt, std::nullopt} if no valid path could be
+     * computed (e.g. a degenerate/zero-size ellipsoid).
+     */
     [[nodiscard]] std::array<std::optional<Path<T>>, 2> tracePath(
-        Point<T, 3> point_outside, Point<T, 3> point_on) const;
+        const Point<T, 3>& point_outside, const Point<T, 3>& point_on) const;
 
    private:
     std::array<T, 3> m_dimensions{0};
@@ -125,15 +161,20 @@ std::array<T, 3> Ellipsoid<T>::getDimensions() const {
 }
 
 template <typename T>
-T Ellipsoid<T>::getRadiusAt(float a_azimuth, float a_elevation) const {
+T Ellipsoid<T>::getRadiusAt(T a_azimuth, T a_elevation) const {
     const T dim_a = m_dimensions[0];
     const T dim_b = m_dimensions[1];
     const T dim_c = m_dimensions[2];
 
-    const T cos_ele = static_cast<T>(RTB::cosd(a_elevation));
-    const T sin_ele = static_cast<T>(RTB::sind(a_elevation));
-    const T cos_azi = static_cast<T>(RTB::cosd(a_azimuth));
-    const T sin_azi = static_cast<T>(RTB::sind(a_azimuth));
+    assert(std::abs(dim_a) > std::numeric_limits<T>::epsilon() &&
+           std::abs(dim_b) > std::numeric_limits<T>::epsilon() &&
+           std::abs(dim_c) > std::numeric_limits<T>::epsilon() &&
+           "Ellipsoid::getRadiusAt() requires non-zero dimensions.");
+
+    const T cos_ele = RTB::cosd(a_elevation);
+    const T sin_ele = RTB::sind(a_elevation);
+    const T cos_azi = RTB::cosd(a_azimuth);
+    const T sin_azi = RTB::sind(a_azimuth);
 
     // Direction (cos_ele*cos_azi, cos_ele*sin_azi, sin_ele) is a unit vector;
     // solving the ellipsoid equation (x/a)^2+(y/b)^2+(z/c)^2=1 for r along
@@ -153,7 +194,7 @@ void Ellipsoid<T>::setDimensions(T a_depth, T a_width, T a_height) {
 
 template <typename T>
 std::array<std::optional<T>, 2> Ellipsoid<T>::intersectRay(
-    const Ray<T, 3> ray) const {
+    const Ray<T, 3>& ray) const {
     const auto dir = ray.getDirection();
     const Point<T, 3> origin = ray.getOrigin();
 
@@ -166,6 +207,14 @@ std::array<std::optional<T>, 2> Ellipsoid<T>::intersectRay(
     const T dim_a = m_dimensions[0];
     const T dim_b = m_dimensions[1];
     const T dim_c = m_dimensions[2];
+
+    assert(std::abs(dim_a) > std::numeric_limits<T>::epsilon() &&
+           std::abs(dim_b) > std::numeric_limits<T>::epsilon() &&
+           std::abs(dim_c) > std::numeric_limits<T>::epsilon() &&
+           "Ellipsoid::intersectRay() requires non-zero dimensions.");
+    assert(dir.magnitudeSquared() > std::numeric_limits<T>::epsilon() &&
+           "Ellipsoid::intersectRay() requires a non-zero-length ray "
+           "direction.");
 
     const T coeff_a = (vx * vx) / (dim_a * dim_a) +
                       (vy * vy) / (dim_b * dim_b) + (vz * vz) / (dim_c * dim_c);
@@ -183,9 +232,16 @@ std::array<std::optional<T>, 2> Ellipsoid<T>::intersectRay(
         return {std::nullopt, std::nullopt};
     }
 
+    // Scale-aware tolerance: the discriminant's natural scale is set by
+    // coeff_b^2 (and coeff_a*coeff_c), so an absolute machine-epsilon
+    // comparison is only meaningful relative to that scale.
+    const T tangent_eps =
+        std::numeric_limits<T>::epsilon() *
+        std::max<T>({T(1), coeff_b * coeff_b, std::abs(coeff_a * coeff_c)});
+
     const T sqrt_d = std::sqrt(discriminant);
 
-    if (std::abs(discriminant) < std::numeric_limits<T>::epsilon()) {
+    if (std::abs(discriminant) < tangent_eps) {
         const T step = -coeff_b / (static_cast<T>(2) * coeff_a);
         return {step, std::nullopt};
     }
@@ -197,7 +253,7 @@ std::array<std::optional<T>, 2> Ellipsoid<T>::intersectRay(
 
 template <typename T>
 std::optional<Ellipse<T>> Ellipsoid<T>::intersectPlane(
-    const Plane<T> plane) const {
+    const Plane<T>& plane) const {
     // Ellipsoid semi-axis lengths
     const T dim_a = m_dimensions[0];
     const T dim_b = m_dimensions[1];
@@ -361,8 +417,8 @@ std::optional<Ellipse<T>> Ellipsoid<T>::intersectPlane(
 }
 
 template <typename T>
-T Ellipsoid<T>::arcLength(const Point<T, 3>& point_1,
-                          const Point<T, 3>& point_2) const {
+std::optional<T> Ellipsoid<T>::arcLength(const Point<T, 3>& point_1,
+                                         const Point<T, 3>& point_2) const {
     const auto eps = std::numeric_limits<T>::epsilon();
     const auto colinear = areCollinear(eps, point_1, point_2, m_origin);
 
@@ -375,21 +431,16 @@ T Ellipsoid<T>::arcLength(const Point<T, 3>& point_1,
     }
 
     const auto ellipse = intersectPlane(plane);
-
-    T arclength{};
-    if (ellipse.has_value()) {
-        arclength = ellipse->arcLength(point_1, point_2);
-    } else {
-        // TODO: graceful exit somehow?
-        std::abort();
+    if (!ellipse.has_value()) {
+        return std::nullopt;
     }
 
-    return arclength;
+    return ellipse->arcLength(point_1, point_2);
 }
 
 template <typename T>
 std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
-    const Point<T, 3> point_outside, const Point<T, 3> point_on) const {
+    const Point<T, 3>& point_outside, const Point<T, 3>& point_on) const {
     const auto eps = std::numeric_limits<T>::epsilon();
 
     const T dim_a = m_dimensions[0];
@@ -412,8 +463,8 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
         Path<T> p1;
         p1.source2tanpoint = Vector<T, 3>(point_outside, point_on);
         p1.arclength = 0;
-        p1.straigh_length = p1.source2tanpoint.magnitude();
-        p1.total_length = p1.straigh_length;
+        p1.straight_length = p1.source2tanpoint.magnitude();
+        p1.total_length = p1.straight_length;
         p1.tangent_point = point_on;
 
         // Unobstructed: only one physical path exists.
@@ -517,15 +568,15 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
     Path<T> p1;
     p1.source2tanpoint = Vector<T, 3>(point_outside, tangent_a);
     p1.arclength = arc_a;
-    p1.straigh_length = p1.source2tanpoint.magnitude();
-    p1.total_length = arc_a + p1.straigh_length;
+    p1.straight_length = p1.source2tanpoint.magnitude();
+    p1.total_length = arc_a + p1.straight_length;
     p1.tangent_point = tangent_a;
 
     Path<T> p2;
     p2.source2tanpoint = Vector<T, 3>(point_outside, tangent_b);
     p2.arclength = arc_b;
-    p2.straigh_length = p2.source2tanpoint.magnitude();
-    p2.total_length = arc_b + p2.straigh_length;
+    p2.straight_length = p2.source2tanpoint.magnitude();
+    p2.total_length = arc_b + p2.straight_length;
     p2.tangent_point = tangent_b;
 
     std::array<std::optional<Path<T>>, 2> paths{p1, p2};

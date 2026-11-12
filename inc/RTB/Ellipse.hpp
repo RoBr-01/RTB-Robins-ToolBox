@@ -32,6 +32,20 @@ class Ellipse {
    public:
     Ellipse() = default;
 
+    /**
+     * @brief Constructs an ellipse from a center, basis, and axis lengths.
+     *
+     * @param center The ellipse's center.
+     * @param semi_axes An orthonormal basis {major_axis, minor_axis} for
+     *        the ellipse's plane.
+     * @param semi_axis_lengths {a, b}: the major and minor semi-axis
+     *        lengths, matching the order of semi_axes.
+     * @param normal The plane normal (semi_axes[0] x semi_axes[1]).
+     *
+     * This constructor does not validate that semi_axes is orthonormal
+     * or that the lengths/order match semi_axes; passing inconsistent
+     * values produces silently wrong arc lengths.
+     */
     Ellipse(const Point<T, 3>& center,
             const std::array<Vector<T, 3>, 2>& semi_axes,
             const std::array<T, 2>& semi_axis_lengths,
@@ -41,9 +55,19 @@ class Ellipse {
           m_semi_axis_lengths(semi_axis_lengths),
           m_normal(normal) {}
 
+    /**
+     * @brief Returns the length of the shorter of the two arcs between
+     * p1 and p2 along the ellipse.
+     *
+     * This always returns min(arc_1_to_2, arc_2_to_1); it cannot report
+     * the major arc (> half the circumference) between two points. p1
+     * and p2 are projected onto the ellipse's plane via parameterOf();
+     * they are not required to lie exactly on the ellipse.
+     */
     [[nodiscard]] T arcLength(const Point<T, 3>& p1,
                               const Point<T, 3>& p2) const;
 
+    /** @brief Returns the full perimeter of the ellipse. */
     [[nodiscard]] T circumference() const;
 
     [[nodiscard]] const Point<T, 3>& getCenter() const {
@@ -84,8 +108,13 @@ T Ellipse<T>::parameterOf(const Point<T, 3>& point) const {
     const T proj_x = dotProduct(delta, m_semi_axes[0]);
     const T proj_y = dotProduct(delta, m_semi_axes[1]);
 
-    // stable ellipse parameterization
-    T angle = std::atan2(proj_y, proj_x);
+    // The parametric angle t of (a*cos(t), b*sin(t)) is recovered by
+    // normalizing each projection by its own semi-axis length *before*
+    // atan2 — atan2(proj_y, proj_x) directly is only exact when a == b
+    // (a circle).
+    const T semi_major = m_semi_axis_lengths[0];
+    const T semi_minor = m_semi_axis_lengths[1];
+    T angle = std::atan2(proj_y / semi_minor, proj_x / semi_major);
 
     if (angle < T(0)) {
         angle += T(2) * pi;

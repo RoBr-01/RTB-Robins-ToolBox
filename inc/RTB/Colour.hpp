@@ -16,10 +16,12 @@
 #define RTB_COLOUR_HPP
 
 #include <RTB/Debug.hpp>
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <type_traits>
 
 // a colour is represented by an array of 3 or 4 bytes: RGB(A)
 
@@ -27,21 +29,32 @@ namespace RTB {
 
 template <typename T, std::size_t N>
 class Colour {
+    static_assert(std::is_arithmetic_v<T>,
+                  "Colour<T, N>: T must be an arithmetic type.");
+    static_assert(N > 0, "Colour<T, N>: N must be greater than zero.");
+
    public:
     Colour() {
         m_components.fill(static_cast<T>(0));
     }
 
-    Colour(const std::initializer_list<T>& values) {
+    /**
+     * @brief Constructs from an initializer list.
+     *
+     * If values.size() != N, logs a mismatch (Debug builds only) and
+     * copies only the overlapping elements: extra values are ignored,
+     * and any remaining components stay zero-initialized.
+     */
+    Colour(const std::initializer_list<T>& values) : m_components{} {
         if (values.size() != N) {
             RTB_DEBUG_LOG(
                 "[COLOUR_HPP] @ L22: Initializer list size does not match "
                 "dimension.\n");
         }
-        std::copy(values.begin(), values.end(), m_components.begin());
+        const auto count = std::min(values.size(), N);
+        std::copy_n(values.begin(), count, m_components.begin());
     }
 
-    void update() {}
     void clamp(const T& lowerbound, const T& upperbound) {
         for (auto& comp : m_components) {
             if (comp < lowerbound) {
@@ -52,6 +65,10 @@ class Colour {
         }
     }
 
+    [[nodiscard]] const std::array<T, N>& getComponents() const {
+        return m_components;
+    }
+
     // Overloaded functions
     //  Multiply (constant or other color)
     //  Add (constant or other color)
@@ -59,10 +76,8 @@ class Colour {
     std::array<T, N> m_components;
 };
 
-// Using int_fast8_t because its not worth risking wanting exactly 8 bits when
-// it might negatively impact speed
-using Colour8_3 = Colour<int_fast8_t, 3>;  // RGB - 8 bits per channel
-using Colour8_4 = Colour<int_fast8_t, 4>;  // RGBA - 8 bits per channel
+using Colour8_3 = Colour<uint8_t, 3>;  // RGB - 8 bits per channel, 0-255
+using Colour8_4 = Colour<uint8_t, 4>;  // RGBA - 8 bits per channel, 0-255
 
 }  // namespace RTB
 #endif /* RTB_COLOUR_HPP */

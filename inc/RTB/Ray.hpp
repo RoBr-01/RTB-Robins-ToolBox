@@ -17,11 +17,11 @@
 
 // STL
 #include <cstddef>
+#include <iostream>
 
 // LOCAL
 #include <RTB/Point.hpp>
 #include <RTB/Vector.hpp>
-#include <iostream>
 
 namespace RTB {
 
@@ -34,6 +34,15 @@ namespace RTB {
 template <typename T, std::size_t N>
 class Ray {
    public:
+    /**
+     * @brief Constructs a degenerate ray at the origin with a zero-length
+     * direction.
+     *
+     * A zero-length direction is meaningless for intersection/reflection
+     * use. normalize() leaves a zero-length direction unchanged rather
+     * than dividing by zero (see Vector::normalizeInPlace()), so calling
+     * it on a default-constructed Ray is a silent no-op.
+     */
     Ray() = default;
 
     Ray(const Point<T, N>& origin, const Vector<T, N>& direction);
@@ -41,7 +50,7 @@ class Ray {
     /**
      * @brief Sets a new origin and direction in one call.
      */
-    void set(const Point<T, N>& newOrigin, const Vector<T, N>& newDirection);
+    void set(const Point<T, N>& new_origin, const Vector<T, N>& new_direction);
 
     /**
      * @brief Normalizes the direction vector in-place.
@@ -78,10 +87,10 @@ Ray<T, N>::Ray(const Point<T, N>& origin, const Vector<T, N>& direction)
     : m_origin(origin), m_direction(direction) {}
 
 template <typename T, std::size_t N>
-void Ray<T, N>::set(const Point<T, N>& newOrigin,
-                    const Vector<T, N>& newDirection) {
-    m_origin = newOrigin;
-    m_direction = newDirection;
+void Ray<T, N>::set(const Point<T, N>& new_origin,
+                    const Vector<T, N>& new_direction) {
+    m_origin = new_origin;
+    m_direction = new_direction;
 }
 
 template <typename T, std::size_t N>

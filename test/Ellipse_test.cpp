@@ -48,7 +48,7 @@ TEST(Ellipse, ArcLength_Additivity) {
     const double arc_bc = ellipse.arcLength(point_b, point_c);
     const double arc_ac = ellipse.arcLength(point_a, point_c);
 
-    EXPECT_NEAR(arc_ab + arc_bc, arc_ac, 1e-6);
+    EXPECT_NEAR(arc_ab + arc_bc, arc_ac, 1e-8);
 }
 
 TEST(Ellipse, ArcLength_HalfPlusHalfEqualsCircumference) {
@@ -69,6 +69,27 @@ TEST(Ellipse, ArcLength_HalfPlusHalfEqualsCircumference) {
 
     // weak sanity check (ensures no degeneration)
     EXPECT_GT(forward, 0.0);
+}
+
+TEST(Ellipse, ArcLength_NonCircularMatchesClosedFormReference) {
+    // a = 2, b = 1. Reference value independently computed via Simpson's
+    // rule at n=100000 for the quarter arc from t=0 to t=pi/2, i.e.
+    // between (a, 0, 0) and (0, b, 0). Tight tolerance: this would fail
+    // under the old parameterOf(), which used atan2(proj_y, proj_x)
+    // directly instead of atan2(proj_y / b, proj_x / a), and so computed
+    // the wrong parametric angle for any non-circular ellipse.
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {2.0, 1.0},
+        {});
+
+    const RTB::Point<double, 3> point_1{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> point_2{0.0, 1.0, 0.0};
+
+    const double arc = ellipse.arcLength(point_1, point_2);
+
+    EXPECT_NEAR(arc, 2.4221120551369446, 1e-9);
 }
 
 TEST(Ellipse, Circle_BehavesLikeCircle) {

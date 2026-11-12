@@ -262,6 +262,21 @@ TEST(PlaneTest, ReflectOffHorizontalPlane) {
     expectVectorNear(ray.getDirection(), Vector3{0.0, 0.0, 1.0});
 }
 
+TEST(PlaneTest, ReflectWorksOnNonNormalizedPlane) {
+    // Plane 2z = 0 (equivalent to z = 0), never normalized: the normal
+    // (0, 0, 2) is not unit length. reflect() normalizes its own copy of
+    // the normal internally, so this should still behave correctly.
+    const Plane3 plane(0.0, 0.0, 2.0, 0.0);
+
+    // Pick a step directly rather than via getIntersection(), which does
+    // require a normalized plane.
+    Ray3 ray(Point3{0.0, 0.0, 1.0}, Vector3{0.0, 0.0, -1.0});
+    plane.reflect(ray, 1.0);
+
+    expectPointNear(ray.getOrigin(), Point3{0.0, 0.0, 0.0});
+    expectVectorNear(ray.getDirection(), Vector3{0.0, 0.0, 1.0});
+}
+
 TEST(PlaneTest, ReflectAt45Degrees) {
     // Plane y = 0
     Plane3 plane(0.0, 1.0, 0.0, 0.0);
@@ -444,5 +459,25 @@ TEST(PlaneTest, ReflectionPreservesIncidentAngleMagnitude) {
 
     expectVectorNear(ray.getDirection(), expected);
 }
+
+// -----------------------------------------------------------------------------
+// Death tests (Debug-only asserts)
+// -----------------------------------------------------------------------------
+
+#ifndef NDEBUG
+
+TEST(PlaneTest, GetIntersectionOnNonNormalizedPlaneTriggersAssert) {
+    EXPECT_DEATH(
+        ([]() {
+            // Plane 2x + 0y + 0z - 10 = 0 (equivalent to x = 5), never
+            // normalized: the normal (2, 0, 0) is not unit length.
+            const Plane3 plane(2.0, 0.0, 0.0, -10.0);
+            const Ray3 ray(Point3{0.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
+            [[maybe_unused]] const auto step = plane.getIntersection(ray);
+        }()),
+        "");
+}
+
+#endif  // NDEBUG
 
 }  // namespace
