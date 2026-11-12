@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.21...4.3.2)
-# TODO: add version number into the library (see buildtest for an example)
-project(RTB VERSION 0.0.1)
+project(RTB VERSION 0.1.0)
 
 include(CTest)
 include(cmake/Checks.cmake)
