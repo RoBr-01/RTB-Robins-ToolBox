@@ -14,11 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-)
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE compile_options)
 
@@ -43,6 +39,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     option(${PROJECT_NAME}_ENABLE_TESTING "Enable building of tests" OFF)
     option(${PROJECT_NAME}_ENABLE_BENCHMARK "Enable building of benchmarks" OFF)
     option(${PROJECT_NAME}_ENABLE_EXAMPLES "Enable building of examples" OFF)
+    option(${PROJECT_NAME}_ENABLE_DEV "Enable building of the dev playground" OFF)
 
     if(${PROJECT_NAME}_ENABLE_TESTING)
         message(STATUS "Building Unit Tests")

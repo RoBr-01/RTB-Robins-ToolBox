@@ -29,7 +29,6 @@ if(NOT TARGET compile_options)
         -DNDEBUG
         -fno-exceptions
         -fno-rtti
-        -s
         -fvisibility=hidden
         -fvisibility-inlines-hidden
         -fno-unwind-tables
@@ -47,6 +46,7 @@ if(NOT TARGET compile_options)
         $<$<PLATFORM_ID:Darwin>:
         -Wl,-dead_strip
         -Wl,-x
+        -Wl,-s
         >
         >
     )
