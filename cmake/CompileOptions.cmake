@@ -46,7 +46,6 @@ if(NOT TARGET compile_options)
         $<$<PLATFORM_ID:Darwin>:
         -Wl,-dead_strip
         -Wl,-x
-        -Wl,-s
         >
         >
     )
