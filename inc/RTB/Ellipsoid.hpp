@@ -1,11 +1,32 @@
-#ifndef ELLIPSOID_HPP
-#define ELLIPSOID_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
 
+ Ellipsoid.hpp
+ 3D ellipsoid: ray/plane intersection, path tracing, and arc length.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_ELLIPSOID_HPP
+#define RTB_ELLIPSOID_HPP
+
+#include <RTB/Debug.hpp>
 #include <RTB/Ellipse.hpp>
 #include <RTB/Math.hpp>
 #include <RTB/Plane.hpp>
 #include <RTB/Point.hpp>
+#include <RTB/Ray.hpp>
+#include <RTB/Vector.hpp>
 #include <array>
+#include <cstddef>
+#include <cstdlib>
+#include <limits>
+#include <optional>
 
 namespace RTB {
 
@@ -330,9 +351,11 @@ std::optional<Ellipse<T>> Ellipsoid<T>::intersectPlane(
     }
 
     // Ellipse center
-    const Point<T, 3> center{m_origin[0] + px + s0 * vec_u[0] + t0 * vec_v[0],
-                             m_origin[1] + py + s0 * vec_u[1] + t0 * vec_v[1],
-                             m_origin[2] + pz + s0 * vec_u[2] + t0 * vec_v[2]};
+    const Point<T, 3> center{
+        m_origin[0] + px + s0 * vec_u[0] + t0 * vec_v[0],
+        m_origin[1] + py + s0 * vec_u[1] + t0 * vec_v[1],
+        m_origin[2] + pz + s0 * vec_u[2] + t0 * vec_v[2],
+    };
 
     return Ellipse<T>{center, {axis1, axis2}, {semi1, semi2}, normal};
 }
@@ -458,29 +481,33 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
     const auto intersection_line = intersectPlanes(polar_plane, point_plane);
 
     if (!intersection_line) {
-        std::cerr << "No valid intersection between the planes!\n";
+        RTB_DEBUG_LOG("No valid intersection between the planes!\n");
+#ifndef NDEBUG
         polar_plane.print();
         point_plane.print();
+#endif
         return {std::nullopt, std::nullopt};
     }
 
     const auto intersections = intersectRay(intersection_line.value());
+    const std::optional<T>& intersection_a = intersections[0];
+    const std::optional<T>& intersection_b = intersections[1];
 
-    if (!intersections[0] || !intersections[1]) {
-        std::cerr << "No valid intersection between ray and ellipsoid!\n";
+    if (!intersection_a.has_value() || !intersection_b.has_value()) {
+        RTB_DEBUG_LOG("No valid intersection between ray and ellipsoid!\n");
         return {std::nullopt, std::nullopt};
     }
 
     const Point<T, 3> tangent_a =
-        intersection_line->getPosition(intersections[0].value());
+        intersection_line->getPosition(intersection_a.value());
 
     const Point<T, 3> tangent_b =
-        intersection_line->getPosition(intersections[1].value());
+        intersection_line->getPosition(intersection_b.value());
 
     const auto ellipse = intersectPlane(point_plane);
 
     if (!ellipse) {
-        std::cerr << "No valid ellipse!\n";
+        RTB_DEBUG_LOG("No valid ellipse!\n");
         return {std::nullopt, std::nullopt};
     }
 
@@ -507,4 +534,4 @@ std::array<std::optional<Path<T>>, 2> Ellipsoid<T>::tracePath(
 }
 
 }  // namespace RTB
-#endif /* ELLIPSOID_HPP */
+#endif /* RTB_ELLIPSOID_HPP */

@@ -1,11 +1,25 @@
-#ifndef COLOUR_HPP
-#define COLOUR_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
 
+ Colour.hpp
+ Fixed-size RGB/RGBA colour type.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_COLOUR_HPP
+#define RTB_COLOUR_HPP
+
+#include <RTB/Debug.hpp>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
-#include <iostream>
 
 // a colour is represented by an array of 3 or 4 bytes: RGB(A)
 
@@ -20,9 +34,9 @@ class Colour {
 
     Colour(const std::initializer_list<T>& values) {
         if (values.size() != N) {
-            std::cerr
-                << "[COLOUR_HPP] @ L22: Initializer list size does not match "
-                   "dimension.\n";
+            RTB_DEBUG_LOG(
+                "[COLOUR_HPP] @ L22: Initializer list size does not match "
+                "dimension.\n");
         }
         std::copy(values.begin(), values.end(), m_components.begin());
     }
@@ -51,4 +65,4 @@ using Colour8_3 = Colour<int_fast8_t, 3>;  // RGB - 8 bits per channel
 using Colour8_4 = Colour<int_fast8_t, 4>;  // RGBA - 8 bits per channel
 
 }  // namespace RTB
-#endif /* COLOUR_HPP */
+#endif /* RTB_COLOUR_HPP */

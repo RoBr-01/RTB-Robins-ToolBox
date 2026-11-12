@@ -5,7 +5,6 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <random>
 #include <sstream>
 #include <utility>
@@ -270,7 +269,7 @@ TEST(VectorTest, DotProductMixedTypes) {
     const RTB::Vector<float, 3> vf{1.0F, 2.0F, 3.0F};
     const RTB::Vector<double, 3> vd{4.0, -5.0, 6.0};
 
-    auto result = dotProduct(vf, vd);
+    const auto result = dotProduct(vf, vd);
 
     EXPECT_DOUBLE_EQ(result, 12.0);
 }
@@ -451,9 +450,9 @@ TEST(VectorTest, IntegerVectorNormalization) {
     const RTB::Vector<int, 3> vector{3, 4, 0};
 
     // magnitude() = 5, integer division truncates.
-    auto normal = vector.normalize();
+    const auto normal = vector.normalize();
 
-    auto test = RTB::Vector<int, 3>({0, 0, 0});
+    const auto test = RTB::Vector<int, 3>({0, 0, 0});
 
     EXPECT_EQ(normal, test);
 }

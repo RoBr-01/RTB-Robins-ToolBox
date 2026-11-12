@@ -1,110 +1,108 @@
 #include <gtest/gtest.h>
 
 #include <RTB/Ellipse.hpp>
+#include <RTB/Math.hpp>
+#include <RTB/Point.hpp>
+#include <RTB/Vector.hpp>
 
 TEST(Ellipse, ArcLength_SamePoint_IsZero) {
-    RTB::Ellipse<double> e;
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {2.0, 1.0},
+        {});
 
-    e.center = {0, 0, 0};
-    e.semi_axes = {RTB::Vector<double, 3>{1, 0, 0},
-                   RTB::Vector<double, 3>{0, 1, 0}};
-    e.semi_axis_lengths = {2.0, 1.0};
+    const RTB::Point<double, 3> point{2.0, 0.0, 0.0};
 
-    RTB::Point<double, 3> p{2.0, 0.0, 0.0};
-
-    EXPECT_NEAR(e.arcLength(p, p), 0.0, 1e-12);
+    EXPECT_NEAR(ellipse.arcLength(point, point), 0.0, 1e-12);
 }
 
 TEST(Ellipse, ArcLength_Symmetric) {
-    RTB::Ellipse<double> e;
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {2.0, 1.0},
+        {});
 
-    e.center = {0, 0, 0};
-    e.semi_axes = {RTB::Vector<double, 3>{1, 0, 0},
-                   RTB::Vector<double, 3>{0, 1, 0}};
-    e.semi_axis_lengths = {2.0, 1.0};
+    const RTB::Point<double, 3> point_1{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> point_2{0.0, 1.0, 0.0};
 
-    RTB::Point<double, 3> p1{2.0, 0.0, 0.0};
-    RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
+    const double forward = ellipse.arcLength(point_1, point_2);
+    const double backward = ellipse.arcLength(point_2, point_1);
 
-    double a = e.arcLength(p1, p2);
-    double b = e.arcLength(p2, p1);
-
-    EXPECT_NEAR(a, b, 1e-12);
+    EXPECT_NEAR(forward, backward, 1e-12);
 }
 
 TEST(Ellipse, ArcLength_Additivity) {
-    RTB::Ellipse<double> e;
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {2.0, 1.0},
+        {});
 
-    e.center = {0, 0, 0};
-    e.semi_axes = {RTB::Vector<double, 3>{1, 0, 0},
-                   RTB::Vector<double, 3>{0, 1, 0}};
-    e.semi_axis_lengths = {2.0, 1.0};
+    const RTB::Point<double, 3> point_a{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> point_b{0.0, 1.0, 0.0};
+    const RTB::Point<double, 3> point_c{-2.0, 0.0, 0.0};
 
-    RTB::Point<double, 3> a{2.0, 0.0, 0.0};
-    RTB::Point<double, 3> b{0.0, 1.0, 0.0};
-    RTB::Point<double, 3> c{-2.0, 0.0, 0.0};
+    const double arc_ab = ellipse.arcLength(point_a, point_b);
+    const double arc_bc = ellipse.arcLength(point_b, point_c);
+    const double arc_ac = ellipse.arcLength(point_a, point_c);
 
-    double ab = e.arcLength(a, b);
-    double bc = e.arcLength(b, c);
-    double ac = e.arcLength(a, c);
-
-    EXPECT_NEAR(ab + bc, ac, 1e-6);
+    EXPECT_NEAR(arc_ab + arc_bc, arc_ac, 1e-6);
 }
 
 TEST(Ellipse, ArcLength_HalfPlusHalfEqualsCircumference) {
-    RTB::Ellipse<double> e;
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {2.0, 1.0},
+        {});
 
-    e.center = {0, 0, 0};
-    e.semi_axes = {RTB::Vector<double, 3>{1, 0, 0},
-                   RTB::Vector<double, 3>{0, 1, 0}};
-    e.semi_axis_lengths = {2.0, 1.0};
+    const RTB::Point<double, 3> point_a{2.0, 0.0, 0.0};
+    const RTB::Point<double, 3> point_b{-2.0, 0.0, 0.0};
 
-    RTB::Point<double, 3> a{2.0, 0.0, 0.0};
-    RTB::Point<double, 3> b{-2.0, 0.0, 0.0};
-
-    double ab = e.arcLength(a, b);
-    double ba = e.arcLength(b, a);
+    const double forward = ellipse.arcLength(point_a, point_b);
+    const double backward = ellipse.arcLength(point_b, point_a);
 
     // symmetry must hold
-    EXPECT_NEAR(ab, ba, 1e-12);
+    EXPECT_NEAR(forward, backward, 1e-12);
 
     // weak sanity check (ensures no degeneration)
-    EXPECT_GT(ab, 0.0);
+    EXPECT_GT(forward, 0.0);
 }
 
 TEST(Ellipse, Circle_BehavesLikeCircle) {
-    RTB::Ellipse<double> e;
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {1.0, 1.0},
+        {});
 
-    e.center = {0, 0, 0};
-    e.semi_axes = {RTB::Vector<double, 3>{1, 0, 0},
-                   RTB::Vector<double, 3>{0, 1, 0}};
-    e.semi_axis_lengths = {1.0, 1.0};
+    const RTB::Point<double, 3> point_1{1.0, 0.0, 0.0};
+    const RTB::Point<double, 3> point_2{0.0, 1.0, 0.0};
 
-    RTB::Point<double, 3> p1{1.0, 0.0, 0.0};
-    RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
+    const double arc = ellipse.arcLength(point_1, point_2);
 
-    double arc = e.arcLength(p1, p2);
-
-    EXPECT_NEAR(arc, M_PI / 2.0, 1e-6);
+    EXPECT_NEAR(arc, RTB::pi / 2.0, 1e-6);
 }
 
 TEST(Ellipse, Rotation_Symmetry) {
-    RTB::Ellipse<double> e;
+    const RTB::Ellipse<double> ellipse(
+        {0, 0, 0},
+        {RTB::Vector<double, 3>{1, 0, 0}, RTB::Vector<double, 3>{0, 1, 0}},
+        {3.0, 1.0},
+        {});
 
-    e.center = {0, 0, 0};
-    e.semi_axes = {RTB::Vector<double, 3>{1, 0, 0},
-                   RTB::Vector<double, 3>{0, 1, 0}};
-    e.semi_axis_lengths = {3.0, 1.0};
+    const RTB::Point<double, 3> point_1{3.0, 0.0, 0.0};
+    const RTB::Point<double, 3> point_2{0.0, 1.0, 0.0};
 
-    RTB::Point<double, 3> p1{3.0, 0.0, 0.0};
-    RTB::Point<double, 3> p2{0.0, 1.0, 0.0};
+    const double arc = ellipse.arcLength(point_1, point_2);
 
-    double a = e.arcLength(p1, p2);
+    const RTB::Point<double, 3> point_1_rotated{0.0, 3.0, 0.0};
+    const RTB::Point<double, 3> point_2_rotated{-1.0, 0.0, 0.0};
 
-    RTB::Point<double, 3> p1r{0.0, 3.0, 0.0};
-    RTB::Point<double, 3> p2r{-1.0, 0.0, 0.0};
+    const double arc_rotated =
+        ellipse.arcLength(point_1_rotated, point_2_rotated);
 
-    double b = e.arcLength(p1r, p2r);
-
-    EXPECT_NEAR(a, b, 1e-6);
+    EXPECT_NEAR(arc, arc_rotated, 1e-6);
 }

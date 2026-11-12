@@ -1,3 +1,17 @@
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ RTB.hpp
+ Umbrella header: includes the entire RTB library.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
 #ifndef RTB_HPP
 #define RTB_HPP
 

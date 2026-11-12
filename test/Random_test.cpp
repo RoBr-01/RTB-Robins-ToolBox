@@ -10,6 +10,7 @@
 // LOCAL
 #include <RTB/Random.hpp>
 #include <RTB/Vector.hpp>
+
 #include "RTB/Math.hpp"
 
 namespace {
@@ -92,7 +93,7 @@ TEST(RandomTest, RandSampleSphereReturnsUnitVector) {
     std::mt19937 generator(12345U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto vector = RTB::randSampleSphere<double>(generator);
+        const auto vector = RTB::randSampleSphere<double>(generator);
         EXPECT_NEAR(vector.magnitude(), 1.0, epsilon);
     }
 }
@@ -101,7 +102,7 @@ TEST(RandomTest, RandSampleSphereComponentsWithinBounds) {
     std::mt19937 generator(42U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto vector = RTB::randSampleSphere<double>(generator);
+        const auto vector = RTB::randSampleSphere<double>(generator);
 
         for (size_t j = 0; j < 3; ++j) {
             EXPECT_GE(vector[j], -1.0);
@@ -115,8 +116,8 @@ TEST(RandomTest, RandSampleSphereIsDeterministicForSameSeed) {
     std::mt19937 gen2(12345U);  // NOLINT
 
     for (int i = 0; i < 100; ++i) {
-        auto v1 = RTB::randSampleSphere<double>(gen1);
-        auto v2 = RTB::randSampleSphere<double>(gen2);
+        const auto v1 = RTB::randSampleSphere<double>(gen1);
+        const auto v2 = RTB::randSampleSphere<double>(gen2);
 
         for (size_t j = 0; j < 3; ++j) {
             EXPECT_NEAR(v1[j], v2[j], epsilon);
@@ -127,9 +128,10 @@ TEST(RandomTest, RandSampleSphereIsDeterministicForSameSeed) {
 TEST(RandomTest, RandSampleSphereSupportsFloat) {
     std::mt19937 generator(123U);  // NOLINT
 
-    auto vector = RTB::randSampleSphere<float>(generator);
+    const auto vector = RTB::randSampleSphere<float>(generator);
 
-    static_assert(std::is_same_v<decltype(vector), RTB::Vector<float, 3>>);
+    static_assert(
+        std::is_same_v<std::decay_t<decltype(vector)>, RTB::Vector<float, 3>>);
     EXPECT_NEAR(vector.magnitude(), 1.0F, float_epsilon);
 }
 
@@ -141,7 +143,7 @@ TEST(RandomTest, RandSampleSpherePointReturnsRadiusOne) {
     std::mt19937 generator(12345U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto point = RTB::randSampleSpherePoint<double>(generator);
+        const auto point = RTB::randSampleSpherePoint<double>(generator);
         EXPECT_DOUBLE_EQ(point.radius, 1.0);
     }
 }
@@ -150,7 +152,7 @@ TEST(RandomTest, RandSampleSpherePointAzimuthInRange) {
     std::mt19937 generator(42U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto point = RTB::randSampleSpherePoint<double>(generator);
+        const auto point = RTB::randSampleSpherePoint<double>(generator);
 
         EXPECT_GE(point.azimuth, 0.0);
         EXPECT_LE(point.azimuth, 360.0);
@@ -161,7 +163,7 @@ TEST(RandomTest, RandSampleSpherePointElevationInRange) {
     std::mt19937 generator(42U);  // NOLINT
 
     for (int i = 0; i < 1000; ++i) {
-        auto point = RTB::randSampleSpherePoint<double>(generator);
+        const auto point = RTB::randSampleSpherePoint<double>(generator);
 
         EXPECT_GE(point.elevation, -90.0);
         EXPECT_LE(point.elevation, 90.0);
@@ -173,8 +175,8 @@ TEST(RandomTest, RandSampleSpherePointIsDeterministicForSameSeed) {
     std::mt19937 gen2(12345U);  // NOLINT
 
     for (int i = 0; i < 100; ++i) {
-        auto p1 = RTB::randSampleSpherePoint<double>(gen1);
-        auto p2 = RTB::randSampleSpherePoint<double>(gen2);
+        const auto p1 = RTB::randSampleSpherePoint<double>(gen1);
+        const auto p2 = RTB::randSampleSpherePoint<double>(gen2);
 
         EXPECT_NEAR(p1.azimuth, p2.azimuth, epsilon);
         EXPECT_NEAR(p1.elevation, p2.elevation, epsilon);
@@ -185,9 +187,10 @@ TEST(RandomTest, RandSampleSpherePointIsDeterministicForSameSeed) {
 TEST(RandomTest, RandSampleSpherePointSupportsFloat) {
     std::mt19937 generator(123U);  // NOLINT
 
-    auto point = RTB::randSampleSpherePoint<float>(generator);
+    const auto point = RTB::randSampleSpherePoint<float>(generator);
 
-    static_assert(std::is_same_v<decltype(point), RTB::SphericalCoord<float>>);
+    static_assert(std::is_same_v<std::decay_t<decltype(point)>,
+                                 RTB::SphericalCoord<float>>);
     EXPECT_NEAR(point.radius, 1.0F, float_epsilon);
 }
 

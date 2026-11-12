@@ -1,5 +1,19 @@
-#ifndef MATRIX_MIXER_HPP
-#define MATRIX_MIXER_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Mixer.hpp
+ SIMD-accelerated matrix mixer (summing matrix) for multichannel audio.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_MIXER_HPP
+#define RTB_MIXER_HPP
 
 // STL
 #include <algorithm>
@@ -312,4 +326,4 @@ namespace RTB {
 using HWY_NAMESPACE::MatrixMixer;
 }
 
-#endif  // MATRIX_MIXER_HPP
+#endif  // RTB_MIXER_HPP

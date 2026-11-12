@@ -1,5 +1,19 @@
-#ifndef RAY_HPP
-#define RAY_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Ray.hpp
+ A ray defined by an origin point and a direction vector.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_RAY_HPP
+#define RTB_RAY_HPP
 
 // STL
 #include <cstddef>
@@ -94,4 +108,4 @@ void Ray<T, N>::print() const {
 
 }  // namespace RTB
 
-#endif  // RAY_HPP
+#endif  // RTB_RAY_HPP

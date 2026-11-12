@@ -1,9 +1,24 @@
-#ifndef TIMER_HPP
-#define TIMER_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Timer.hpp
+ Simple stopwatch and scoped RAII timer.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_TIMER_HPP
+#define RTB_TIMER_HPP
 
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <utility>
 
 // Original by the cherno:
 // https://github.com/StudioCherno/Walnut/blob/master/Walnut/src/Walnut/Timer.h
@@ -107,4 +122,4 @@ class ScopedTimer {
 
 }  // namespace RTB
 
-#endif  // TIMER_HPP
+#endif  // RTB_TIMER_HPP

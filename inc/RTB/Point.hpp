@@ -1,5 +1,19 @@
-#ifndef POINT_HPP
-#define POINT_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Point.hpp
+ A fixed-size point in N-dimensional space.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_POINT_HPP
+#define RTB_POINT_HPP
 
 // STL
 #include <array>
@@ -34,7 +48,7 @@ class Point {
 
     template <typename... Args,
               typename = std::enable_if_t<(sizeof...(Args) == N)>>
-    Point(Args&&... args)
+    explicit Point(Args&&... args)
         : m_coords{static_cast<T>(std::forward<Args>(args))...} {
         static_assert(sizeof...(Args) == N,
                       "Point requires exactly N arguments");
@@ -115,4 +129,4 @@ template <typename T1, typename T2, std::size_t N>
 
 }  // namespace RTB
 
-#endif  // POINT_HPP
+#endif  // RTB_POINT_HPP

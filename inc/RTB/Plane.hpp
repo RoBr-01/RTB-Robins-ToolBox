@@ -1,5 +1,19 @@
-#ifndef PLANE_HPP
-#define PLANE_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Plane.hpp
+ Infinite plane: construction, intersection, and reflection.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_PLANE_HPP
+#define RTB_PLANE_HPP
 
 // STL
 #include <array>
@@ -146,7 +160,8 @@ void Plane<T>::print() const {
 template <typename T>
 Vector<T, 3> Plane<T>::getNormalVector() const {
     return Vector<T, 3>{
-        m_coefficients[0], m_coefficients[1], m_coefficients[2]};
+        m_coefficients[0], m_coefficients[1], m_coefficients[2],
+    };
 }
 
 template <typename T>
@@ -265,4 +280,4 @@ std::optional<Ray<T, 3>> intersectPlanes(const Plane<T>& plane_1,
 
 }  // namespace RTB
 
-#endif /* PLANE_HPP */
+#endif /* RTB_PLANE_HPP */

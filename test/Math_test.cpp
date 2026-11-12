@@ -315,7 +315,7 @@ TEST(Math, NextPowerOf2ExhaustiveSmallRange) {
 
         // power is minimal
         if (power > 1) {
-            EXPECT_LT(power >> 1, number);
+            EXPECT_LT(power >> 1U, number);
         }
     }
 }

@@ -1,5 +1,19 @@
-#ifndef RANDOM_HPP
-#define RANDOM_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Random.hpp
+ Pseudo-random and hash-based sampling helpers (uniform, sphere sampling).
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_RANDOM_HPP
+#define RTB_RANDOM_HPP
 
 // STL
 #include <cmath>
@@ -8,7 +22,6 @@
 
 // RTB
 #include <RTB/Math.hpp>
-#include <RTB/Standards.hpp>
 #include <RTB/Vector.hpp>
 
 namespace RTB {
@@ -26,8 +39,8 @@ namespace RTB {
  */
 inline float randomValue(uint32_t& state) {
     state = (state * 747796405U) + 2891336453U;
-    uint32_t result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737U;
-    result = (result >> 22) ^ result;
+    uint32_t result = ((state >> ((state >> 28U) + 4U)) ^ state) * 277803737U;
+    result = (result >> 22U) ^ result;
     return static_cast<float>(result) / 4294967295.0F;
 }
 
@@ -65,7 +78,8 @@ Vector<T, 3> randSampleSphere(std::mt19937& generator) {
     const T sinphi = std::sin(phi);
 
     return Vector<T, 3>{
-        sinphi * std::cos(theta), sinphi * std::sin(theta), std::cos(phi)};
+        sinphi * std::cos(theta), sinphi * std::sin(theta), std::cos(phi),
+    };
 }
 
 /**
@@ -85,9 +99,10 @@ SphericalCoord<T> randSampleSpherePoint(std::mt19937& generator) {
         std::acos(static_cast<T>(2) * uniform01(generator) - static_cast<T>(1));
 
     return SphericalCoord<T>{
-        rad2deg(theta), static_cast<T>(90) - rad2deg(phi), static_cast<T>(1)};
+        rad2deg(theta), static_cast<T>(90) - rad2deg(phi), static_cast<T>(1),
+    };
 }
 
 }  // namespace RTB
 
-#endif /* RANDOM_HPP */
+#endif /* RTB_RANDOM_HPP */

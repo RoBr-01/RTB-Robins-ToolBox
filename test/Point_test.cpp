@@ -162,9 +162,9 @@ TEST(PointTest, DistanceSupportsMixedTypes) {
     const RTB::Point<int, 3> point_1{0, 0, 0};
     const RTB::Point<double, 3> point_2{1.0, 2.0, 2.0};
 
-    auto distance = RTB::distance2Points(point_1, point_2);
+    const auto distance = RTB::distance2Points(point_1, point_2);
 
-    static_assert(std::is_same_v<decltype(distance), double>);
+    static_assert(std::is_same_v<std::decay_t<decltype(distance)>, double>);
     EXPECT_NEAR(distance, 3.0, epsilon);
 }
 
@@ -175,7 +175,7 @@ TEST(PointTest, DistanceSupportsMixedTypes) {
 TEST(PointTest, MidpointBetweenIdenticalPointsIsSamePoint) {
     const Point3d point{1.0, 2.0, 3.0};
 
-    auto mid = RTB::midpoint2Points(point, point);
+    const auto mid = RTB::midpoint2Points(point, point);
 
     expectPointNear(mid, point);
 }
@@ -218,8 +218,8 @@ TEST(PointTest, MidpointIsSymmetric) {
     const Point3d point_1{1.0, 2.0, 3.0};
     const Point3d point_2{7.0, 8.0, 9.0};
 
-    auto mid1 = RTB::midpoint2Points(point_1, point_2);
-    auto mid2 = RTB::midpoint2Points(point_2, point_1);
+    const auto mid1 = RTB::midpoint2Points(point_1, point_2);
+    const auto mid2 = RTB::midpoint2Points(point_2, point_1);
 
     expectPointNear(mid1, mid2);
 }

@@ -1,5 +1,19 @@
-#ifndef VECTOR_HPP
-#define VECTOR_HPP
+/*
+ ____ _____ ____
+|  _ \_   _| __ )
+| |_) || | |  _ \
+|  _ < | | | |_) |
+|_| \_\|_| |____/
+
+ Vector.hpp
+ Mathematical N-dimensional vector class.
+
+ Copyright (c) 2026 Robin Breugelmans
+ Licensed under the MIT License. See LICENSE in the project root.
+*/
+
+#ifndef RTB_VECTOR_HPP
+#define RTB_VECTOR_HPP
 
 // STL
 #include <algorithm>
@@ -358,9 +372,11 @@ auto crossProduct(const Vector<T, N>& vector_1, const Vector<T2, N>& vector_2)
     const R vector_2_2 = static_cast<R>(vector_2[1]);
     const R vector_2_3 = static_cast<R>(vector_2[2]);
 
-    return Vector<R, N>{vector_1_2 * vector_2_3 - vector_1_3 * vector_2_2,
-                        vector_1_3 * vector_2_1 - vector_1_1 * vector_2_3,
-                        vector_1_1 * vector_2_2 - vector_1_2 * vector_2_1};
+    return Vector<R, N>{
+        vector_1_2 * vector_2_3 - vector_1_3 * vector_2_2,
+        vector_1_3 * vector_2_1 - vector_1_1 * vector_2_3,
+        vector_1_1 * vector_2_2 - vector_1_2 * vector_2_1,
+    };
 }
 
 /**
@@ -432,4 +448,4 @@ bool operator!=(const Vector<T, N>& left_vector,
 
 }  // namespace RTB
 
-#endif /* VECTOR_HPP */
+#endif /* RTB_VECTOR_HPP */
